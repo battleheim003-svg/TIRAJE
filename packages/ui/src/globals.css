@@ -1,0 +1,131 @@
+@import "tailwindcss";
+
+@theme {
+  /* ── Typography ── */
+  --font-sans: "Vazirmatn", "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+
+  /* ── Radius ── */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+
+  /* ── Brand colors ── */
+  --color-brand-50: #eff6ff;
+  --color-brand-100: #dbeafe;
+  --color-brand-200: #bfdbfe;
+  --color-brand-300: #93c5fd;
+  --color-brand-400: #60a5fa;
+  --color-brand-500: #3b82f6;
+  --color-brand-600: #2563eb;
+  --color-brand-700: #1d4ed8;
+  --color-brand-800: #1e40af;
+  --color-brand-900: #1e3a8a;
+
+  /* ── Semantic surface tokens (light) ── */
+  --color-background: #f8f9fc;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f1f3f9;
+  --color-border: #e2e7f0;
+  --color-border-strong: #c7d0e0;
+
+  /* ── Text tokens (light) ── */
+  --color-text: #111827;
+  --color-text-muted: #6b7280;
+  --color-text-subtle: #9ca3af;
+
+  /* ── Accent (light) ── */
+  --color-accent: #2563eb;
+  --color-accent-hover: #1d4ed8;
+  --color-accent-foreground: #ffffff;
+  --color-accent-muted: #eff6ff;
+
+  /* ── Status ── */
+  --color-success: #16a34a;
+  --color-success-muted: #f0fdf4;
+  --color-warning: #d97706;
+  --color-warning-muted: #fffbeb;
+  --color-danger: #dc2626;
+  --color-danger-muted: #fef2f2;
+  --color-info: #0284c7;
+  --color-info-muted: #f0f9ff;
+}
+
+/* ── Dark mode overrides ── */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-background: #0f1117;
+    --color-surface: #1a1d27;
+    --color-surface-muted: #242838;
+    --color-border: #2d3348;
+    --color-border-strong: #3d4560;
+    --color-text: #e8eaf2;
+    --color-text-muted: #8b92b0;
+    --color-text-subtle: #5c6480;
+    --color-accent: #4d7cf4;
+    --color-accent-hover: #6090ff;
+    --color-accent-foreground: #ffffff;
+    --color-accent-muted: #1a2455;
+    --color-success: #4ade80;
+    --color-success-muted: #052e16;
+    --color-warning: #fbbf24;
+    --color-warning-muted: #1c1200;
+    --color-danger: #f87171;
+    --color-danger-muted: #1f0a0a;
+    --color-info: #38bdf8;
+    --color-info-muted: #082032;
+  }
+}
+
+:root[data-theme="dark"] {
+  --color-background: #0f1117;
+  --color-surface: #1a1d27;
+  --color-surface-muted: #242838;
+  --color-border: #2d3348;
+  --color-border-strong: #3d4560;
+  --color-text: #e8eaf2;
+  --color-text-muted: #8b92b0;
+  --color-text-subtle: #5c6480;
+  --color-accent: #4d7cf4;
+  --color-accent-hover: #6090ff;
+  --color-accent-foreground: #ffffff;
+  --color-accent-muted: #1a2455;
+  --color-success: #4ade80;
+  --color-success-muted: #052e16;
+  --color-warning: #fbbf24;
+  --color-warning-muted: #1c1200;
+  --color-danger: #f87171;
+  --color-danger-muted: #1f0a0a;
+  --color-info: #38bdf8;
+  --color-info-muted: #082032;
+}
+
+/* ── Base ── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* RTL-aware logical properties only — avoid ml/mr in components */
+[dir="rtl"] { text-align: right; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--color-surface-muted); }
+::-webkit-scrollbar-thumb { background: var(--color-border-strong); border-radius: 3px; }
+
+/* Focus visible */
+:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+
+/* ── Utility: hide scrollbar but keep scroll ── */
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+.scrollbar-hide::-webkit-scrollbar { display: none; }

@@ -1,0 +1,38 @@
+{
+  "name": "@tirajeh/integrations",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./payment/types": "./src/payment/types.ts",
+    "./payment/zarinpal": "./src/payment/zarinpal.ts",
+    "./payment/service": "./src/payment/service.ts",
+    "./email/service": "./src/email/service.ts",
+    "./email/templates": "./src/email/templates.tsx",
+    "./telegram/service": "./src/telegram/service.ts",
+    "./telegram/webhook": "./src/telegram/webhook.ts",
+    "./storage/service": "./src/storage/service.ts",
+    "./search/fts-migration.sql": "./src/search/fts-migration.sql"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.600.0",
+    "@aws-sdk/s3-request-presigner": "^3.600.0",
+    "@react-email/render": "^0.0.17",
+    "@tirajeh/database": "workspace:*",
+    "@tirajeh/shared": "workspace:*",
+    "grammy": "^1.26.0",
+    "next": "^15.0.0",
+    "react": "^18.3.0",
+    "redis": "^4.7.0",
+    "resend": "^3.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.3.0",
+    "typescript": "^5.4.0"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  }
+}

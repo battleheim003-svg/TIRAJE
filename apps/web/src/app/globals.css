@@ -1,0 +1,194 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-vazirmatn), "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+
+  /* Brand */
+  --color-accent: #1d6fa5;
+  --color-accent-hover: #155e8a;
+  --color-accent-foreground: #ffffff;
+  --color-accent-subtle: #dbeafe;
+
+  /* Surfaces */
+  --color-background: #f4f6f9;
+  --color-surface: #ffffff;
+  --color-surface-raised: #ffffff;
+  --color-surface-overlay: #ffffff;
+  --color-border: #e2e6ec;
+  --color-border-subtle: #edf0f4;
+
+  /* Text */
+  --color-text: #0f1923;
+  --color-text-secondary: #4a5568;
+  --color-text-muted: #8a96a5;
+  --color-text-disabled: #b5bec9;
+  --color-text-inverse: #ffffff;
+
+  /* Semantic */
+  --color-success: #059669;
+  --color-success-subtle: #d1fae5;
+  --color-warning: #d97706;
+  --color-warning-subtle: #fef3c7;
+  --color-danger: #dc2626;
+  --color-danger-subtle: #fee2e2;
+  --color-info: #0284c7;
+  --color-info-subtle: #e0f2fe;
+
+  /* Spacing scale */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+
+  /* Radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-base: 200ms ease;
+  --transition-slow: 300ms ease;
+}
+
+/* Dark mode — system preference */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-accent: #3b9fd6;
+    --color-accent-hover: #5ab3e0;
+    --color-accent-subtle: #1e3a5f;
+
+    --color-background: #0d1117;
+    --color-surface: #161b22;
+    --color-surface-raised: #1c2128;
+    --color-surface-overlay: #22272e;
+    --color-border: #2d333b;
+    --color-border-subtle: #21262d;
+
+    --color-text: #e6edf3;
+    --color-text-secondary: #adbac7;
+    --color-text-muted: #636e7b;
+    --color-text-disabled: #444c56;
+    --color-text-inverse: #0d1117;
+
+    --color-success: #2ea043;
+    --color-success-subtle: #0d2b1a;
+    --color-warning: #e3b341;
+    --color-warning-subtle: #2e1f00;
+    --color-danger: #f85149;
+    --color-danger-subtle: #2d0e0e;
+    --color-info: #58a6ff;
+    --color-info-subtle: #0c2040;
+  }
+}
+
+/* Dark mode — explicit toggle */
+:root[data-theme="dark"] {
+  --color-accent: #3b9fd6;
+  --color-accent-hover: #5ab3e0;
+  --color-accent-subtle: #1e3a5f;
+
+  --color-background: #0d1117;
+  --color-surface: #161b22;
+  --color-surface-raised: #1c2128;
+  --color-surface-overlay: #22272e;
+  --color-border: #2d333b;
+  --color-border-subtle: #21262d;
+
+  --color-text: #e6edf3;
+  --color-text-secondary: #adbac7;
+  --color-text-muted: #636e7b;
+  --color-text-disabled: #444c56;
+  --color-text-inverse: #0d1117;
+
+  --color-success: #2ea043;
+  --color-success-subtle: #0d2b1a;
+  --color-warning: #e3b341;
+  --color-warning-subtle: #2e1f00;
+  --color-danger: #f85149;
+  --color-danger-subtle: #2d0e0e;
+  --color-info: #58a6ff;
+  --color-info-subtle: #0c2040;
+}
+
+/* Base */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Focus visible */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}
+
+/* Selection */
+::selection {
+  background-color: var(--color-accent-subtle);
+  color: var(--color-accent);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Wide content containers */
+.overflow-table {
+  overflow-x: auto;
+}
+
+/* Numeric tabular */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
