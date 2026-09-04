@@ -31,6 +31,7 @@ export default function RegisterPage() {
         fd.append("name", name)
         fd.append("email", email)
         fd.append("password", password)
+        fd.append("confirmPassword", confirm)
         const result = await registerAction(fd)
         if (!result.success) {
           setError(result.error ?? (fa ? "خطا در ثبت‌نام. لطفاً دوباره تلاش کنید." : "Registration failed. Please try again."))

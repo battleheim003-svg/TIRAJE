@@ -24,7 +24,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           include: {
             role: {
               include: {
-                permissions: {
+                rolePermissions: {
                   include: { permission: true },
                 },
               },
@@ -33,18 +33,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         })
 
         if (!user || !user.passwordHash) return null
-        if (user.status !== "ACTIVE") return null
+        if (!user.isActive) return null
 
         const valid = await bcrypt.compare(parsed.data.password, user.passwordHash)
         if (!valid) return null
 
-        const permissions = user.role?.permissions.map((rp: any) => (rp.permission as any).name as string) ?? []
+        const permissions =
+          user.role?.rolePermissions.map(
+            (rp: any) => `${rp.permission.resource}:${rp.permission.action}`
+          ) ?? []
 
         return {
           id: user.id,
           email: user.email,
           name: user.name,
-          image: user.image,
+          image: (user as any).image ?? null,
           customerType: user.customerType,
           roleId: user.roleId,
           roleName: user.role?.name ?? null,

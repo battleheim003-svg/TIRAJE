@@ -11,12 +11,14 @@ export const RegisterSchema = z
     email: z.string().email("ایمیل معتبر وارد کنید"),
     phone: z
       .string()
-      .regex(/^09[0-9]{9}$/, "شماره موبایل معتبر وارد کنید"),
+      .regex(/^09[0-9]{9}$/, "شماره موبایل معتبر وارد کنید")
+      .optional()
+      .or(z.literal("")),
     password: z.string().min(8, "رمز عبور حداقل ۸ کاراکتر"),
-    confirmPassword: z.string(),
+    confirmPassword: z.string().optional(),
     customerType: z.enum(["NORMAL", "CONTRACTOR", "COMPANY"]).default("NORMAL"),
   })
-  .refine((d) => d.password === d.confirmPassword, {
+  .refine((d) => !d.confirmPassword || d.password === d.confirmPassword, {
     message: "رمز عبور و تکرار آن یکسان نیستند",
     path: ["confirmPassword"],
   })

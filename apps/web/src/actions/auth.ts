@@ -41,9 +41,10 @@ export async function registerAction(formData: FormData): Promise<ActionResult<{
   const parsed = RegisterSchema.safeParse(raw)
 
   if (!parsed.success) {
+    const firstError = parsed.error.issues[0]?.message ?? "اطلاعات ورودی نامعتبر"
     return {
       success: false,
-      error: "اطلاعات ورودی نامعتبر",
+      error: firstError,
       fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
     }
   }
@@ -57,8 +58,30 @@ export async function registerAction(formData: FormData): Promise<ActionResult<{
 
   const passwordHash = await bcrypt.hash(password, 12)
 
+  let customerRole = await db.role.findFirst({
+    where: { name: { in: ["customer", "user"] } },
+  })
+  if (!customerRole) {
+    customerRole = await db.role.create({
+      data: {
+        name: "customer",
+        displayName: "مشتری",
+        description: "نقش پیش‌فرض مشتریان",
+        isSystem: true,
+      },
+    })
+  }
+
   const user = await db.user.create({
-    data: { name, email, phone, passwordHash, customerType },
+    data: {
+      name,
+      email,
+      phone: phone || null,
+      passwordHash,
+      customerType: customerType ?? "NORMAL",
+      roleId: customerRole.id,
+      isActive: true,
+    },
     select: { id: true },
   })
 
