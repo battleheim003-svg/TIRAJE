@@ -48,16 +48,16 @@ export default async function ProductDetailPage({ params }: Props) {
   const BackIcon = fa ? ChevronRight : ChevronLeft
 
   const product = await db.product.findUnique({
-    where: { slug, isActive: true },
+    where: { slug },
     include: {
       images: { orderBy: { sortOrder: "asc" } },
       brand: true,
       factory: true,
-      productCategories: { include: { category: true }, orderBy: { sortOrder: "asc" } },
+      productCategories: { include: { category: true } },
     },
   })
 
-  if (!product) notFound()
+  if (!product || !product.isActive) notFound()
 
   // ── display values ─────────────────────────────────────────────────────────
   const name = fa ? product.nameFa : (product.nameEn ?? product.nameFa)

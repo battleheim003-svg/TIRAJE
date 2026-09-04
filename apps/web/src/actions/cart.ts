@@ -20,65 +20,37 @@ async function getSessionId(): Promise<string> {
 
 export async function addToCartAction(
   productId: string,
-  quantityTon: number
+  quantity: number
 ): Promise<ActionResult> {
   const session = await auth()
-  const sessionId = session ? undefined : await getSessionId()
+  const userId = session?.user ? (session.user as any).id : undefined
+  const sessionId = userId ? undefined : await getSessionId()
 
   const product = await db.product.findUnique({
-    where: { id: productId, isActive: true },
-    select: { id: true, stockTon: true, minOrderTon: true, maxOrderTon: true },
+    where: { id: productId },
+    select: { id: true, stockQty: true, minOrderQty: true, isActive: true, nameFa: true },
   })
 
-  if (!product) return { success: false, error: "محصول یافت نشد" }
-  if (Number(product.stockTon) < quantityTon)
+  if (!product || !product.isActive) return { success: false, error: "محصول یافت نشد" }
+  if (product.stockQty < quantity)
     return { success: false, error: "موجودی کافی نیست" }
-  if (quantityTon < Number(product.minOrderTon))
+  if (quantity < product.minOrderQty)
     return {
       success: false,
-      error: `حداقل سفارش ${product.minOrderTon} تن است`,
+      error: `حداقل سفارش ${product.minOrderQty} عدد است`,
     }
 
-  const where = session
-    ? { userId_productId: { userId: session.user!.id, productId } }
-    : { sessionId_productId: { sessionId: sessionId!, productId } }
-
-  const existing = await db.cartItem.findUnique({ where: where as never })
-
-  if (existing) {
-    await db.cartItem.update({
-      where: { id: existing.id },
-      data: { quantityTon: { increment: quantityTon } },
+  if (userId) {
+    await db.cartItem.upsert({
+      where: { userId_productId: { userId, productId } },
+      update: { quantity: { increment: quantity } },
+      create: { userId, productId, quantity },
     })
   } else {
-    let cartId: string
-
-    if (session) {
-      const cart = await db.cart.upsert({
-        where: { userId: session.user!.id },
-        update: {},
-        create: { userId: session.user!.id },
-        select: { id: true },
-      })
-      cartId = cart.id
-    } else {
-      const cart = await db.cart.upsert({
-        where: { sessionId: sessionId! },
-        update: {},
-        create: { sessionId: sessionId! },
-        select: { id: true },
-      })
-      cartId = cart.id
-    }
-
-    await db.cartItem.create({
-      data: {
-        cartId,
-        productId,
-        quantityTon,
-        userId: session?.user?.id ?? null,
-        sessionId: sessionId ?? null,
-      },
+    await db.cartItem.upsert({
+      where: { sessionId_productId: { sessionId: sessionId!, productId } },
+      update: { quantity: { increment: quantity } },
+      create: { sessionId: sessionId!, productId, quantity },
     })
   }
 
@@ -88,16 +60,13 @@ export async function addToCartAction(
 
 export async function removeFromCartAction(itemId: string): Promise<ActionResult> {
   const session = await auth()
-  const sessionId = session ? undefined : await getSessionId()
+  const userId = session?.user ? (session.user as any).id : undefined
+  const sessionId = userId ? undefined : await getSessionId()
 
   const item = await db.cartItem.findUnique({ where: { id: itemId } })
   if (!item) return { success: false, error: "آیتم یافت نشد" }
 
-  // Security: ensure ownership
-  const owned = session
-    ? item.userId === session.user?.id
-    : item.sessionId === sessionId
-
+  const owned = userId ? item.userId === userId : item.sessionId === sessionId
   if (!owned) return { success: false, error: "دسترسی غیرمجاز" }
 
   await db.cartItem.delete({ where: { id: itemId } })
@@ -107,27 +76,28 @@ export async function removeFromCartAction(itemId: string): Promise<ActionResult
 
 export async function updateCartItemAction(
   itemId: string,
-  quantityTon: number
+  quantity: number
 ): Promise<ActionResult> {
   const session = await auth()
-  const sessionId = session ? undefined : await getSessionId()
+  const userId = session?.user ? (session.user as any).id : undefined
+  const sessionId = userId ? undefined : await getSessionId()
 
   const item = await db.cartItem.findUnique({
     where: { id: itemId },
-    include: { product: { select: { stockTon: true, minOrderTon: true, maxOrderTon: true } } },
+    include: { product: { select: { stockQty: true, minOrderQty: true } } },
   })
 
   if (!item) return { success: false, error: "آیتم یافت نشد" }
 
-  const owned = session ? item.userId === session.user?.id : item.sessionId === sessionId
+  const owned = userId ? item.userId === userId : item.sessionId === sessionId
   if (!owned) return { success: false, error: "دسترسی غیرمجاز" }
 
-  if (quantityTon < Number(item.product.minOrderTon))
-    return { success: false, error: `حداقل سفارش ${item.product.minOrderTon} تن` }
-  if (Number(item.product.stockTon) < quantityTon)
+  if (quantity < item.product.minOrderQty)
+    return { success: false, error: `حداقل سفارش ${item.product.minOrderQty} عدد است` }
+  if (item.product.stockQty < quantity)
     return { success: false, error: "موجودی کافی نیست" }
 
-  await db.cartItem.update({ where: { id: itemId }, data: { quantityTon } })
+  await db.cartItem.update({ where: { id: itemId }, data: { quantity } })
   revalidatePath("/cart")
   return { success: true, data: undefined }
 }
@@ -136,47 +106,26 @@ export async function updateCartItemAction(
 export async function mergeCartAction(): Promise<void> {
   const session = await auth()
   if (!session?.user) return
+  const userId = (session.user as any).id
 
   const store = await cookies()
   const sessionId = store.get("session_id")?.value
   if (!sessionId) return
 
-  const guestCart = await db.cart.findUnique({
+  const guestItems = await db.cartItem.findMany({
     where: { sessionId },
-    include: { items: true },
   })
 
-  if (!guestCart || guestCart.items.length === 0) return
+  if (guestItems.length === 0) return
 
-  const userCart = await db.cart.upsert({
-    where: { userId: session.user!.id },
-    update: {},
-    create: { userId: session.user!.id },
-  })
-
-  for (const item of guestCart.items) {
-    const existing = await db.cartItem.findUnique({
-      where: { userId_productId: { userId: session.user!.id, productId: item.productId } },
+  for (const item of guestItems) {
+    await db.cartItem.upsert({
+      where: { userId_productId: { userId, productId: item.productId } },
+      update: { quantity: { increment: item.quantity } },
+      create: { userId, productId: item.productId, quantity: item.quantity },
     })
-
-    if (existing) {
-      await db.cartItem.update({
-        where: { id: existing.id },
-        data: { quantityTon: { increment: Number(item.quantityTon) } },
-      })
-    } else {
-      await db.cartItem.create({
-        data: {
-          cartId: userCart.id,
-          productId: item.productId,
-          quantityTon: item.quantityTon,
-          userId: session.user!.id,
-          sessionId: null,
-        },
-      })
-    }
   }
 
-  await db.cart.delete({ where: { id: guestCart.id } })
+  await db.cartItem.deleteMany({ where: { sessionId } })
   store.delete("session_id")
 }
