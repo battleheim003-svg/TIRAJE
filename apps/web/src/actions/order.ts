@@ -1,205 +1,120 @@
 "use server"
 
 import { db } from "@tirajeh/database"
-import { CheckoutSchema, CancelOrderSchema } from "@tirajeh/shared"
-import { safeAction, parseOrThrow, NotFoundError, ValidationError } from "@tirajeh/shared"
-import { requireAuth } from "@tirajeh/auth"
-import { calculateFreight } from "@tirajeh/shared"
-import type { ActionResult } from "@tirajeh/shared"
+import { auth } from "@tirajeh/auth"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
-import { randomUUID } from "crypto"
+import { getLocale } from "next-intl/server"
 
-function extractAddress(raw: Record<string, FormDataEntryValue>) {
-  return {
-    recipientName: raw["address.recipientName"],
-    phone: raw["address.phone"],
-    province: raw["address.province"],
-    city: raw["address.city"],
-    district: raw["address.district"],
-    street: raw["address.street"],
-    postalCode: raw["address.postalCode"],
-  }
-}
+export async function checkoutAction(
+  formData: FormData
+): Promise<{ success: false; error: string }> {
+  const session = await auth()
+  if (!session?.user) return { success: false, error: "لطفاً ابتدا وارد شوید" }
+  const userId = (session.user as any).id
+  const locale = await getLocale()
 
-export const checkoutAction = safeAction(
-  "checkout",
-  async (formData: FormData): Promise<ActionResult<{ orderId: string }>> => {
-    const session = await requireAuth()
-    const raw = Object.fromEntries(formData)
-
-    const data = parseOrThrow(CheckoutSchema, {
-      shippingAddress: extractAddress(raw),
-      shippingRateId: raw.shippingRateId,
-      couponCode: raw.couponCode,
-      note: raw.note,
-      paymentGateway: raw.paymentGateway,
-    })
-
-    // Load cart with products
-    const cart = await db.cart.findUnique({
-      where: { userId: session.user.id },
-      include: {
-        items: {
-          include: {
-            product: {
-              select: {
-                id: true,
-                name: true,
-                pricePerTon: true,
-                stockTon: true,
-                weightPerUnit: true,
-                isActive: true,
-              },
-            },
-          },
-        },
+  const cartItems = await db.cartItem.findMany({
+    where: { userId },
+    include: {
+      product: {
+        select: { id: true, nameFa: true, price: true, stockQty: true, isActive: true },
       },
-    })
+    },
+  })
 
-    if (!cart || cart.items.length === 0)
-      throw new ValidationError("سبد خرید خالی است")
+  if (cartItems.length === 0) return { success: false, error: "سبد خرید خالی است" }
 
-    // Validate stock for every item before opening transaction
-    for (const item of cart.items) {
-      if (!item.product.isActive)
-        throw new ValidationError(`محصول "${item.product.name}" در دسترس نیست`)
-      if (Number(item.product.stockTon) < Number(item.quantityTon))
-        throw new ValidationError(`موجودی محصول "${item.product.name}" کافی نیست`)
+  for (const item of cartItems) {
+    if (!item.product.isActive)
+      return { success: false, error: `محصول ${item.product.nameFa} در دسترس نیست` }
+    if (item.product.stockQty < item.quantity)
+      return { success: false, error: `موجودی ${item.product.nameFa} کافی نیست` }
+  }
+
+  const shippingAddress = {
+    recipientName: (formData.get("recipientName") as string).trim(),
+    phone: (formData.get("phone") as string).trim(),
+    province: (formData.get("province") as string).trim(),
+    city: (formData.get("city") as string).trim(),
+    street: (formData.get("street") as string).trim(),
+    postalCode: ((formData.get("postalCode") as string) || "").trim() || null,
+  }
+  const note = ((formData.get("note") as string) || "").trim() || null
+
+  const subtotal = cartItems.reduce(
+    (sum, item) => sum + Number(item.product.price) * item.quantity,
+    0
+  )
+
+  const order = await db.$transaction(async (tx) => {
+    for (const item of cartItems) {
+      const p = await tx.product.findUnique({
+        where: { id: item.productId },
+        select: { stockQty: true },
+      })
+      if (!p || p.stockQty < item.quantity)
+        throw new Error(`موجودی ${item.product.nameFa} کافی نیست`)
     }
 
-    const shippingRate = await db.shippingRate.findUnique({
-      where: { id: data.shippingRateId },
-    })
-    if (!shippingRate) throw new NotFoundError("روش ارسال")
-
-    const totalWeightTon = cart.items.reduce(
-      (s: number, i: any) => s + Number(i.quantityTon),
-      0
-    )
-    const subtotal = cart.items.reduce(
-      (s: number, i: any) => s + Number(i.product.pricePerTon) * Number(i.quantityTon),
-      0
-    )
-    const freightCost = calculateFreight(
-      Number(shippingRate.baseCost),
-      Number(shippingRate.costPerTon),
-      totalWeightTon
-    )
-    const taxAmount = Math.round(subtotal * 0.1)
-    const totalAmount = subtotal + freightCost + taxAmount
-
-    const orderNumber = `ORD-${Date.now()}-${randomUUID().slice(0, 6).toUpperCase()}`
-    const { shippingAddress: addr } = data
-
-    // Atomic transaction: order + stock + cart clear + payment record
-    const order = await db.$transaction(async (tx) => {
-      // Re-check stock inside transaction to prevent race condition
-      for (const item of cart.items) {
-        const fresh = await tx.product.findUnique({
-          where: { id: item.productId },
-          select: { stockTon: true, name: true },
-        })
-        if (!fresh || Number(fresh.stockTon) < Number(item.quantityTon)) {
-          throw new ValidationError(
-            `موجودی محصول "${item.product.name}" در زمان ثبت سفارش ناکافی بود`
-          )
-        }
-      }
-
-      const o = await tx.order.create({
-        data: {
-          orderNumber,
-          userId: session.user.id,
-          status: "PENDING",
-          subtotal,
-          shippingCost: freightCost,
-          taxAmount,
-          totalAmount,
-          shippingRateId: data.shippingRateId,
-          shippingZoneId: shippingRate.zoneId,
-          recipientName: addr.recipientName,
-          recipientPhone: addr.phone,
-          deliveryProvince: addr.province,
-          deliveryCity: addr.city,
-          deliveryDistrict: addr.district ?? null,
-          deliveryStreet: addr.street,
-          deliveryPostalCode: addr.postalCode ?? null,
-          deliveryLatitude: addr.latitude ?? null,
-          deliveryLongitude: addr.longitude ?? null,
-          note: data.note ?? null,
-          items: {
-            create: cart.items.map((i: any) => ({
-              productId: i.productId,
-              productName: i.product.name,
-              pricePerTon: i.product.pricePerTon,
-              quantityTon: i.quantityTon,
-              weightKg: Number(i.quantityTon) * Number(i.product.weightPerUnit),
-              subtotal: Number(i.product.pricePerTon) * Number(i.quantityTon),
-            })),
-          },
+    const o = await tx.order.create({
+      data: {
+        userId,
+        status: "PENDING",
+        subtotal,
+        shippingCost: 0,
+        totalAmount: subtotal,
+        shippingAddress,
+        notes: note,
+        items: {
+          create: cartItems.map((item) => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            unitPrice: Number(item.product.price),
+            totalPrice: Number(item.product.price) * item.quantity,
+          })),
         },
-        select: { id: true },
-      })
-
-      // Decrement stock
-      for (const item of cart.items) {
-        await tx.product.update({
-          where: { id: item.productId },
-          data: { stockTon: { decrement: Number(item.quantityTon) } },
-        })
-      }
-
-      // Clear cart
-      await tx.cartItem.deleteMany({ where: { cartId: cart.id } })
-
-      // Payment record (PENDING — gateway call happens in payment route handler)
-      await tx.payment.create({
-        data: {
-          orderId: o.id,
-          amount: totalAmount,
-          gateway: data.paymentGateway as "ZARINPAL" | "IDPAY",
-          status: "PENDING",
-        },
-      })
-
-      return o
+      },
+      select: { id: true, orderNumber: true },
     })
 
-    revalidatePath("/cart")
-    redirect(`/checkout/payment?orderId=${order.id}`)
-  }
-)
-
-export const cancelOrderAction = safeAction(
-  "cancelOrder",
-  async (formData: FormData): Promise<ActionResult> => {
-    const session = await requireAuth()
-    const data = parseOrThrow(CancelOrderSchema, Object.fromEntries(formData))
-
-    const order = await db.order.findUnique({
-      where: { id: data.orderId },
-      select: { id: true, userId: true, status: true },
-    })
-
-    if (!order || order.userId !== session.user.id) throw new NotFoundError("سفارش")
-
-    if (!["PENDING", "CONFIRMED"].includes(order.status))
-      throw new ValidationError("این سفارش قابل لغو نیست")
-
-    await db.$transaction(async (tx: any) => {
-      await tx.order.update({ where: { id: order.id }, data: { status: "CANCELLED" } })
-      await tx.orderStatusHistory.create({
-        data: {
-          orderId: order.id,
-          status: "CANCELLED",
-          note: data.reason,
-          changedBy: session.user.id,
-        },
+    for (const item of cartItems) {
+      await tx.product.update({
+        where: { id: item.productId },
+        data: { stockQty: { decrement: item.quantity } },
       })
-    })
+    }
 
-    revalidatePath("/account/orders")
-    return { success: true, data: undefined }
-  }
-)
+    await tx.cartItem.deleteMany({ where: { userId } })
+
+    return o
+  })
+
+  revalidatePath("/cart")
+  revalidatePath("/account/orders")
+  redirect(`/${locale}/checkout/success?order=${order.orderNumber}`)
+}
+
+export async function cancelOrderAction(
+  formData: FormData
+): Promise<{ success: boolean; error?: string }> {
+  const session = await auth()
+  if (!session?.user) return { success: false, error: "لطفاً وارد شوید" }
+  const userId = (session.user as any).id
+
+  const orderId = (formData.get("orderId") as string | null)?.trim()
+  if (!orderId) return { success: false, error: "سفارش مشخص نشده" }
+
+  const order = await db.order.findUnique({
+    where: { id: orderId },
+    select: { id: true, userId: true, status: true },
+  })
+  if (!order || order.userId !== userId) return { success: false, error: "سفارش یافت نشد" }
+  if (!["PENDING", "CONFIRMED"].includes(order.status))
+    return { success: false, error: "این سفارش قابل لغو نیست" }
+
+  await db.order.update({ where: { id: orderId }, data: { status: "CANCELLED" } })
+
+  revalidatePath("/account/orders")
+  return { success: true }
+}
