@@ -104,6 +104,9 @@ export function ProductCard({ product, locale }: ProductCardProps) {
             {Math.round((1 - priceNum / compareNum) * 100)}%
           </span>
         )}
+        <span className={styles["web-pcard__wholesale-badge"]}>
+          {fa ? "عمده" : "Bulk"}
+        </span>
       </div>
 
       {/* Body */}

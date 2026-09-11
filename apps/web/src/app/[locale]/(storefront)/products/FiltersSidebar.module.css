@@ -136,6 +136,34 @@
   box-shadow: 0 0 0 3px var(--color-accent-subtle);
 }
 
+/* ── More filters (nested collapse) ── */
+
+.web-fltr__more {
+  border-block-start: 1px solid var(--color-border-subtle);
+}
+
+.web-fltr__more-summary {
+  padding: var(--space-3) var(--space-5);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-accent);
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+}
+
+.web-fltr__more-summary::-webkit-details-marker {
+  display: none;
+}
+
+.web-fltr__more[open] > .web-fltr__more-summary {
+  border-block-end: 1px solid var(--color-border-subtle);
+}
+
+.web-fltr__more .web-fltr__group {
+  padding-inline: var(--space-5);
+}
+
 /* ── Checks ── */
 
 .web-fltr__checks {

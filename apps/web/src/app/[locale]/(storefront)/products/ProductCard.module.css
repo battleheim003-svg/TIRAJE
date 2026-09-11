@@ -69,6 +69,21 @@
   z-index: var(--z-index-base);
 }
 
+.web-pcard__wholesale-badge {
+  position: absolute;
+  top: var(--space-2);
+  inset-inline-end: var(--space-2);
+  background-color: var(--color-accent);
+  color: var(--color-accent-foreground);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  padding-block: var(--space-1);
+  padding-inline: var(--space-2);
+  border-radius: var(--radius-sm);
+  line-height: var(--line-height-tight);
+  z-index: var(--z-index-base);
+}
+
 /* ── Body ─────────────────────────────────────── */
 
 .web-pcard__body {

@@ -189,84 +189,98 @@ export function FiltersSidebar({
             </fieldset>
           )}
 
-          {/* ── Factories ── */}
-          {factories.length > 0 && (
+          {/* ── More filters (collapsed by default) ── */}
+          <details
+            className={styles["web-fltr__more"]}
+            open={
+              current.factories.length > 0 ||
+              current.packagingTypes.length > 0 ||
+              current.cementTypes.length > 0
+            }
+          >
+            <summary className={styles["web-fltr__more-summary"]}>
+              {fa ? "فیلترهای بیشتر" : "More filters"}
+            </summary>
+
+            {/* ── Factories ── */}
+            {factories.length > 0 && (
+              <fieldset className={styles["web-fltr__group"]}>
+                <legend className={styles["web-fltr__legend"]}>{t.factories}</legend>
+                <div className={styles["web-fltr__checks"]}>
+                  {factories.map((factory) => {
+                    const label = fa ? factory.nameFa : (factory.nameEn ?? factory.nameFa)
+                    const sub = fa
+                      ? `${factory.city}، ${factory.province}`
+                      : `${factory.city}, ${factory.province}`
+                    const checked = current.factories.includes(factory.id)
+                    return (
+                      <label key={factory.id} className={styles["web-fltr__check-label"]}>
+                        <input
+                          type="checkbox"
+                          name="factory"
+                          value={factory.id}
+                          defaultChecked={checked}
+                          className={styles["web-fltr__checkbox"]}
+                        />
+                        <span>
+                          {label}
+                          <span className={styles["web-fltr__check-sub"]}>{sub}</span>
+                        </span>
+                      </label>
+                    )
+                  })}
+                </div>
+              </fieldset>
+            )}
+
+            {/* ── Packaging Type ── */}
             <fieldset className={styles["web-fltr__group"]}>
-              <legend className={styles["web-fltr__legend"]}>{t.factories}</legend>
+              <legend className={styles["web-fltr__legend"]}>{t.packagingType}</legend>
               <div className={styles["web-fltr__checks"]}>
-                {factories.map((factory) => {
-                  const label = fa ? factory.nameFa : (factory.nameEn ?? factory.nameFa)
-                  const sub = fa
-                    ? `${factory.city}، ${factory.province}`
-                    : `${factory.city}, ${factory.province}`
-                  const checked = current.factories.includes(factory.id)
+                {PACKAGING_KEYS.map((key) => {
+                  const label = fa
+                    ? PACKAGING_LABEL[key]!.fa
+                    : PACKAGING_LABEL[key]!.en
                   return (
-                    <label key={factory.id} className={styles["web-fltr__check-label"]}>
+                    <label key={key} className={styles["web-fltr__check-label"]}>
                       <input
                         type="checkbox"
-                        name="factory"
-                        value={factory.id}
-                        defaultChecked={checked}
+                        name="packaging"
+                        value={key}
+                        defaultChecked={current.packagingTypes.includes(key)}
                         className={styles["web-fltr__checkbox"]}
                       />
-                      <span>
-                        {label}
-                        <span className={styles["web-fltr__check-sub"]}>{sub}</span>
-                      </span>
+                      <span>{label}</span>
                     </label>
                   )
                 })}
               </div>
             </fieldset>
-          )}
 
-          {/* ── Packaging Type ── */}
-          <fieldset className={styles["web-fltr__group"]}>
-            <legend className={styles["web-fltr__legend"]}>{t.packagingType}</legend>
-            <div className={styles["web-fltr__checks"]}>
-              {PACKAGING_KEYS.map((key) => {
-                const label = fa
-                  ? PACKAGING_LABEL[key]!.fa
-                  : PACKAGING_LABEL[key]!.en
-                return (
-                  <label key={key} className={styles["web-fltr__check-label"]}>
-                    <input
-                      type="checkbox"
-                      name="packaging"
-                      value={key}
-                      defaultChecked={current.packagingTypes.includes(key)}
-                      className={styles["web-fltr__checkbox"]}
-                    />
-                    <span>{label}</span>
-                  </label>
-                )
-              })}
-            </div>
-          </fieldset>
-
-          {/* ── Cement Type ── */}
-          <fieldset className={styles["web-fltr__group"]}>
-            <legend className={styles["web-fltr__legend"]}>{t.cementType}</legend>
-            <div className={styles["web-fltr__checks"]}>
-              {CEMENT_TYPE_KEYS.map((key) => {
-                const label = fa
-                  ? CEMENT_TYPE_LABEL[key]!.fa
-                  : CEMENT_TYPE_LABEL[key]!.en
-                return (
-                  <label key={key} className={styles["web-fltr__check-label"]}>
-                    <input
-                      type="checkbox"
-                      name="cementType"
-                      value={key}
-                      defaultChecked={current.cementTypes.includes(key)}
-                      className={styles["web-fltr__checkbox"]}
-                    />
-                    <span>{label}</span>
-                  </label>
-                )
-              })}
-            </div>
-          </fieldset>
+            {/* ── Cement Type ── */}
+            <fieldset className={styles["web-fltr__group"]}>
+              <legend className={styles["web-fltr__legend"]}>{t.cementType}</legend>
+              <div className={styles["web-fltr__checks"]}>
+                {CEMENT_TYPE_KEYS.map((key) => {
+                  const label = fa
+                    ? CEMENT_TYPE_LABEL[key]!.fa
+                    : CEMENT_TYPE_LABEL[key]!.en
+                  return (
+                    <label key={key} className={styles["web-fltr__check-label"]}>
+                      <input
+                        type="checkbox"
+                        name="cementType"
+                        value={key}
+                        defaultChecked={current.cementTypes.includes(key)}
+                        className={styles["web-fltr__checkbox"]}
+                      />
+                      <span>{label}</span>
+                    </label>
+                  )
+                })}
+              </div>
+            </fieldset>
+          </details>
 
           {/* ── Stock ── */}
           <fieldset className={styles["web-fltr__group"]}>
