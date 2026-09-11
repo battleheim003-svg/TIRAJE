@@ -2,7 +2,7 @@ import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import styles from "./Button.module.css"
 
-export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger"
+export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "success"
 export type ButtonSize = "sm" | "md" | "lg" | "icon"
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {

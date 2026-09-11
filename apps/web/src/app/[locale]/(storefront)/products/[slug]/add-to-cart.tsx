@@ -179,7 +179,7 @@ export default function AddToCartButton({
 
         <Button
           type="button"
-          variant="primary"
+          variant="success"
           size="lg"
           disabled={isOutOfStock || isPending}
           onClick={handleAdd}

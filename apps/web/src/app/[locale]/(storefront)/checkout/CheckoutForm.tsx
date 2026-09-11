@@ -398,7 +398,7 @@ export default function CheckoutForm({ subtotal, items, locale }: CheckoutFormPr
 
         <Button
           type="submit"
-          variant="primary"
+          variant="success"
           size="lg"
           disabled={isPending}
           className={styles["web-chk__submit-btn"]}

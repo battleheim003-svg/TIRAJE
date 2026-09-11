@@ -21,14 +21,18 @@ export default async function CartPage() {
   const cookieStore = await cookies()
   const sessionId = cookieStore.get("session_id")?.value
 
-  const items: any[] = await db.cartItem.findMany({
-    where: session?.user
-      ? { userId: (session.user as any).id }
-      : sessionId
-      ? { sessionId }
-      : { id: "never" },
-    include: { product: { include: { images: { where: { isPrimary: true } } } } },
-  })
+  const cartFilter = session?.user
+    ? { userId: (session.user as any).id }
+    : sessionId
+    ? { sessionId }
+    : null
+
+  const items: any[] = cartFilter
+    ? await db.cartItem.findMany({
+        where: cartFilter,
+        include: { product: { include: { images: { where: { isPrimary: true } } } } },
+      })
+    : []
 
   const subtotal = items.reduce(
     (sum: number, item: any) => sum + Number(item.product.price) * item.quantity,
@@ -139,7 +143,7 @@ export default async function CartPage() {
             </div>
 
             <div className={styles["web-cart__summary-actions"]}>
-              <Button asChild variant="primary" size="lg" className={styles["web-cart__summary-btn"]}>
+              <Button asChild variant="success" size="lg" className={styles["web-cart__summary-btn"]}>
                 <Link href={`/${locale}/checkout`}>
                   {fa ? "ادامه فرآیند خرید" : "Proceed to Checkout"}
                 </Link>

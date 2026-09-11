@@ -62,6 +62,16 @@
   color: var(--color-text);
 }
 
+.ui-btn--success {
+  background-color: var(--color-success-500);
+  color: var(--color-accent-foreground, var(--color-bg-elevated));
+  border-color: var(--color-success-500);
+}
+.ui-btn--success:hover:not(:disabled) {
+  background-color: var(--color-success-700);
+  border-color: var(--color-success-700);
+}
+
 .ui-btn--danger {
   background-color: var(--color-error-500);
   color: var(--color-accent-foreground, var(--color-bg-elevated));
