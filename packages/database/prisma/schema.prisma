@@ -47,6 +47,14 @@ enum PackagingType {
   BULK
 }
 
+/// Bulk purchase tiers offered per product (single bag up to full trailer loads).
+enum PackagingTier {
+  SINGLE
+  PAIR
+  TRUCK_6W
+  TRUCK_10W
+}
+
 enum StockStatus {
   IN_STOCK
   LOW_STOCK
@@ -356,6 +364,7 @@ model Product {
   priceHistory      ProductPriceHistory[]
   quoteRequests     QuoteRequest[]
   dailyPriceItems   DailyPriceItem[]
+  packagingOptions  ProductPackagingOption[]
 
   @@index([brandId])
   @@index([factoryId])
@@ -366,6 +375,30 @@ model Product {
   @@index([price])
   @@index([slug])
   @@map("products")
+}
+
+/// One purchasable bulk tier for a product, e.g. single (50 bags) up to a 10-wheel trailer (500 bags).
+model ProductPackagingOption {
+  id           String        @id @default(uuid()) @db.Uuid
+  productId    String        @map("product_id") @db.Uuid
+  tier         PackagingTier
+  labelFa      String        @map("label_fa")
+  labelEn      String?       @map("label_en")
+  bagCount     Int           @map("bag_count")
+  price        Decimal       @db.Decimal(15, 0)
+  comparePrice Decimal?      @map("compare_price") @db.Decimal(15, 0)
+  stockQty     Int           @default(0) @map("stock_qty")
+  isDefault    Boolean       @default(false) @map("is_default")
+  sortOrder    Int           @default(0) @map("sort_order")
+  isActive     Boolean       @default(true) @map("is_active")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, tier])
+  @@index([productId])
+  @@map("product_packaging_options")
 }
 
 model ProductImage {
