@@ -1,0 +1,242 @@
+:root {
+  /* ==========================================================================
+     1. Color Tokens (Tirajeh Brand - Building Materials)
+     ========================================================================== */
+
+  /* Primary Palette (Warm orange / terracotta / brown: hsl(28, 85%, X%)) */
+  --color-primary-50: hsl(28, 85%, 96%);
+  --color-primary-100: hsl(28, 85%, 90%);
+  --color-primary-200: hsl(28, 85%, 80%);
+  --color-primary-300: hsl(28, 85%, 68%);
+  --color-primary-400: hsl(28, 85%, 56%);
+  --color-primary-500: hsl(28, 85%, 46%);
+  --color-primary-600: hsl(28, 85%, 38%);
+  --color-primary-700: hsl(28, 85%, 30%);
+  --color-primary-800: hsl(28, 85%, 22%);
+  --color-primary-900: hsl(28, 85%, 15%);
+  --color-primary-950: hsl(28, 85%, 9%);
+
+  /* Neutral Palette (Warm Gray) */
+  --color-neutral-50: hsl(30, 15%, 98%);
+  --color-neutral-100: hsl(30, 12%, 94%);
+  --color-neutral-200: hsl(30, 10%, 88%);
+  --color-neutral-300: hsl(30, 8%, 76%);
+  --color-neutral-400: hsl(30, 6%, 60%);
+  --color-neutral-500: hsl(30, 5%, 45%);
+  --color-neutral-600: hsl(30, 6%, 33%);
+  --color-neutral-700: hsl(30, 7%, 22%);
+  --color-neutral-800: hsl(30, 8%, 14%);
+  --color-neutral-900: hsl(30, 9%, 9%);
+  --color-neutral-950: hsl(30, 10%, 5%);
+
+  /* Success Palette (Green) */
+  --color-success-100: hsl(142, 60%, 92%);
+  --color-success-500: hsl(142, 70%, 36%);
+  --color-success-700: hsl(142, 72%, 22%);
+
+  /* Error Palette (Red) */
+  --color-error-100: hsl(0, 80%, 94%);
+  --color-error-500: hsl(0, 75%, 45%);
+  --color-error-700: hsl(0, 72%, 28%);
+
+  /* Warning Palette (Yellow / Amber) */
+  --color-warning-100: hsl(38, 92%, 92%);
+  --color-warning-500: hsl(38, 92%, 44%);
+  --color-warning-700: hsl(38, 90%, 28%);
+
+  /* Info Palette (Blue) */
+  --color-info-100: hsl(205, 75%, 92%);
+  --color-info-500: hsl(205, 75%, 42%);
+  --color-info-700: hsl(205, 75%, 26%);
+
+  /* Semantic Aliases on :root */
+  --color-bg: var(--color-neutral-50);
+  --color-bg-elevated: #ffffff;
+  --color-text: var(--color-neutral-900);
+  --color-text-muted: var(--color-neutral-500);
+  --color-border: var(--color-neutral-200);
+  --color-border-strong: var(--color-neutral-400);
+  --color-accent: var(--color-primary-600);
+  --color-accent-hover: var(--color-primary-700);
+
+  /* Component Compatibility Aliases */
+  --color-background: var(--color-bg);
+  --color-surface: var(--color-bg-elevated);
+  --color-surface-raised: var(--color-bg-elevated);
+  --color-surface-overlay: var(--color-bg-elevated);
+  --color-border-subtle: var(--color-neutral-100);
+  --color-text-secondary: var(--color-neutral-600);
+  --color-text-disabled: var(--color-neutral-400);
+  --color-text-inverse: var(--color-neutral-50);
+  --color-accent-foreground: #ffffff;
+  --color-accent-text: var(--color-primary-700);
+  --color-accent-subtle: var(--color-primary-100);
+  --color-success: var(--color-success-500);
+  --color-success-subtle: var(--color-success-100);
+  --color-warning: var(--color-warning-500);
+  --color-warning-subtle: var(--color-warning-100);
+  --color-danger: var(--color-error-500);
+  --color-danger-subtle: var(--color-error-100);
+  --color-info: var(--color-info-500);
+  --color-info-subtle: var(--color-info-100);
+
+  /* Telegram UI Theme Tokens (for Post Preview simulation) */
+  --color-tg-chat-bg: #0e1621;
+  --color-tg-chat-pattern: #1e293b;
+  --color-tg-bubble-bg: #1c2433;
+  --color-tg-img-bg: #2b3547;
+  --color-tg-text-muted: #708499;
+  --color-tg-text-body: #d1d7de;
+  --color-tg-link: #5ea8f4;
+  --color-tg-channel: #728b9f;
+  --color-tg-btn-bg: #2b5278;
+
+  /* ==========================================================================
+     2. Border Radius
+     ========================================================================== */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-full: 9999px;
+
+  /* ==========================================================================
+     3. Shadow
+     ========================================================================== */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+  /* ==========================================================================
+     4. Transition
+     ========================================================================== */
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+  --transition-slow: 400ms ease;
+
+  /* ==========================================================================
+     5. Typography
+     ========================================================================== */
+  --font-family-sans: var(--font-vazirmatn), "Vazirmatn", system-ui, sans-serif;
+  --font-family-mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+  --font-sans: var(--font-family-sans);
+  --font-mono: var(--font-family-mono);
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --line-height-tight: 1.25;
+  --line-height-snug: 1.375;
+  --line-height-base: 1.6;
+  --line-height-relaxed: 1.75;
+
+  --letter-spacing-tight: -0.025em;
+  --letter-spacing-normal: 0em;
+  --letter-spacing-wide: 0.025em;
+
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 1.875rem;
+  --font-size-4xl: 2.25rem;
+  --font-size-display-min: 5rem;
+  --font-size-display-max: 8rem;
+
+  /* ==========================================================================
+     6. Spacing
+     ========================================================================== */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-9: 2.25rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+
+  /* Spacing Scale Aliases */
+  --spacing-xs: var(--space-1);
+  --spacing-sm: var(--space-2);
+  --spacing-md: var(--space-4);
+  --spacing-lg: var(--space-6);
+  --spacing-xl: var(--space-8);
+  --spacing-2xl: var(--space-12);
+}
+
+/* ==========================================================================
+   Dark Mode Tokens
+   ========================================================================== */
+[data-theme="dark"] {
+  --color-bg: var(--color-neutral-950);
+  --color-bg-elevated: var(--color-neutral-900);
+  --color-text: var(--color-neutral-50);
+  --color-text-muted: var(--color-neutral-400);
+  --color-border: var(--color-neutral-700);
+  --color-border-strong: var(--color-neutral-500);
+  --color-accent: var(--color-primary-400);
+  --color-accent-hover: var(--color-primary-300);
+
+  /* Component Compatibility Aliases */
+  --color-background: var(--color-bg);
+  --color-surface: var(--color-neutral-900);
+  --color-surface-raised: var(--color-neutral-800);
+  --color-surface-overlay: var(--color-neutral-800);
+  --color-border-subtle: var(--color-neutral-800);
+  --color-text-secondary: var(--color-neutral-300);
+  --color-text-disabled: var(--color-neutral-600);
+  --color-text-inverse: var(--color-neutral-950);
+  --color-accent-foreground: var(--color-neutral-950);
+  --color-accent-text: var(--color-primary-300);
+  --color-accent-subtle: hsl(28, 85%, 15%);
+  --color-success: var(--color-success-500);
+  --color-success-subtle: hsl(142, 70%, 15%);
+  --color-warning: var(--color-warning-500);
+  --color-warning-subtle: hsl(38, 92%, 15%);
+  --color-danger: var(--color-error-500);
+  --color-danger-subtle: hsl(0, 75%, 15%);
+  --color-info: var(--color-info-500);
+  --color-info-subtle: hsl(205, 60%, 15%);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-bg: var(--color-neutral-950);
+    --color-bg-elevated: var(--color-neutral-900);
+    --color-text: var(--color-neutral-50);
+    --color-text-muted: var(--color-neutral-400);
+    --color-border: var(--color-neutral-700);
+    --color-border-strong: var(--color-neutral-500);
+    --color-accent: var(--color-primary-400);
+    --color-accent-hover: var(--color-primary-300);
+
+    /* Component Compatibility Aliases */
+    --color-background: var(--color-bg);
+    --color-surface: var(--color-neutral-900);
+    --color-surface-raised: var(--color-neutral-800);
+    --color-surface-overlay: var(--color-neutral-800);
+    --color-border-subtle: var(--color-neutral-800);
+    --color-text-secondary: var(--color-neutral-300);
+    --color-text-disabled: var(--color-neutral-600);
+    --color-text-inverse: var(--color-neutral-950);
+    --color-accent-foreground: var(--color-neutral-950);
+    --color-accent-text: var(--color-primary-300);
+    --color-accent-subtle: hsl(28, 85%, 15%);
+    --color-success: var(--color-success-500);
+    --color-success-subtle: hsl(142, 70%, 15%);
+    --color-warning: var(--color-warning-500);
+    --color-warning-subtle: hsl(38, 92%, 15%);
+    --color-danger: var(--color-error-500);
+    --color-danger-subtle: hsl(0, 75%, 15%);
+    --color-info: var(--color-info-500);
+    --color-info-subtle: hsl(205, 60%, 15%);
+  }
+}

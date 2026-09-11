@@ -1,0 +1,194 @@
+﻿/* prefix: web-ftr */
+
+.web-ftr {
+  background-color: var(--color-neutral-900);
+  color: var(--color-neutral-200);
+  border-block-start: 1px solid var(--color-neutral-700);
+  padding-block: var(--space-12) var(--space-8);
+  font-family: var(--font-family-sans);
+}
+
+[data-theme="dark"] .web-ftr {
+  background-color: var(--color-neutral-950);
+  border-block-start-color: var(--color-neutral-800);
+}
+
+.web-ftr__inner {
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: var(--space-4);
+}
+
+.web-ftr__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-8);
+}
+
+@media (min-width: 640px) {
+  .web-ftr__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .web-ftr__grid {
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+  }
+}
+
+/* ── Brand Section ────────────────────────────── */
+
+.web-ftr__brand {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.web-ftr__logo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-primary-400);
+  text-decoration: none;
+  width: fit-content;
+  transition: color var(--transition-fast);
+}
+
+.web-ftr__logo:hover {
+  color: var(--color-primary-300);
+}
+
+.web-ftr__logo:focus-visible {
+  outline: 2px solid var(--color-primary-400);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.web-ftr__logo-text {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+.web-ftr__tagline {
+  font-size: var(--font-size-sm);
+  color: var(--color-neutral-400);
+  line-height: var(--line-height-relaxed);
+  max-width: 24rem;
+  margin: 0;
+}
+
+/* ── Contact Details ──────────────────────────── */
+
+.web-ftr__contact {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-block-start: var(--space-2);
+}
+
+.web-ftr__contact-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-neutral-300);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a.web-ftr__contact-item:hover {
+  color: var(--color-neutral-100);
+}
+
+.web-ftr__contact-item--top {
+  align-self: flex-start;
+}
+
+/* ── Nav Column ───────────────────────────────── */
+
+.web-ftr__col-title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-neutral-100);
+  margin: 0;
+  margin-block-end: var(--space-4);
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.web-ftr__links {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.web-ftr__link {
+  font-size: var(--font-size-sm);
+  color: var(--color-neutral-400);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.web-ftr__link:hover {
+  color: var(--color-neutral-100);
+}
+
+.web-ftr__link:focus-visible {
+  outline: 2px solid var(--color-primary-400);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ── Bottom Bar ───────────────────────────────── */
+
+.web-ftr__bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-block-start: var(--space-8);
+  padding-block-start: var(--space-6);
+  border-block-start: 1px solid var(--color-neutral-700);
+  flex-wrap: wrap;
+}
+
+[data-theme="dark"] .web-ftr__bottom {
+  border-block-start-color: var(--color-neutral-800);
+}
+
+@media (min-width: 640px) {
+  .web-ftr__bottom {
+    flex-direction: row;
+  }
+}
+
+.web-ftr__copy {
+  font-size: var(--font-size-xs);
+  color: var(--color-neutral-500);
+  margin: 0;
+}
+
+/* ── Social Icons ─────────────────────────────── */
+
+.web-ftr__socials {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.web-ftr__social-link {
+  color: var(--color-neutral-400);
+  transition: color var(--transition-fast);
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.web-ftr__social-link:hover {
+  color: var(--color-neutral-100);
+}

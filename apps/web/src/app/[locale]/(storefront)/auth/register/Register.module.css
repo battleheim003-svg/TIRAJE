@@ -1,0 +1,109 @@
+﻿/* prefix: web-reg */
+
+.web-reg {
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-block: var(--space-12);
+  padding-inline: var(--space-4);
+  font-family: var(--font-family-sans);
+}
+
+.web-reg__card {
+  width: 100%;
+  max-width: 28rem;
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.web-reg__head {
+  text-align: center;
+}
+
+.web-reg__title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  margin: 0;
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+.web-reg__sub {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin: 0;
+  margin-block-start: var(--space-2);
+}
+
+.web-reg__link {
+  color: var(--color-accent);
+  text-decoration: underline;
+  font-weight: var(--font-weight-medium);
+  transition: color var(--transition-fast);
+}
+
+.web-reg__link:hover {
+  color: var(--color-accent-hover);
+}
+
+.web-reg__error {
+  font-size: var(--font-size-sm);
+  color: var(--color-error-500);
+  background-color: color-mix(in srgb, var(--color-error-500) 12%, transparent);
+  border: 1px solid var(--color-error-500);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  margin: 0;
+}
+
+.web-reg__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.web-reg__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.web-reg__password-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.web-reg__password-wrap input {
+  padding-inline-end: var(--space-10);
+}
+
+.web-reg__pw-toggle {
+  position: absolute;
+  inset-inline-end: var(--space-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: var(--space-1);
+  border-radius: var(--radius-sm);
+  transition: color var(--transition-fast);
+}
+
+.web-reg__pw-toggle:hover {
+  color: var(--color-text);
+}
+
+.web-reg__submit {
+  width: 100%;
+}

@@ -3,7 +3,7 @@
 import * as React from "react"
 import * as ToastPrimitive from "@radix-ui/react-toast"
 import { X, CheckCircle2, AlertCircle, Info } from "lucide-react"
-import { cn } from "../lib/utils"
+import styles from "./Toast.module.css"
 
 export const ToastProvider = ToastPrimitive.Provider
 export const ToastViewport = React.forwardRef<
@@ -12,10 +12,7 @@ export const ToastViewport = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <ToastPrimitive.Viewport
     ref={ref}
-    className={cn(
-      "fixed bottom-0 end-0 z-[100] flex max-h-screen flex-col-reverse gap-2 p-4 sm:bottom-0 sm:flex-col sm:max-w-[380px]",
-      className
-    )}
+    className={[styles["ui-toast__viewport"], className].filter(Boolean).join(" ")}
     {...props}
   />
 ))
@@ -30,48 +27,56 @@ interface ToastProps extends React.ComponentPropsWithoutRef<typeof ToastPrimitiv
 }
 
 const variantStyles: Record<ToastVariant, string> = {
-  default: "bg-[var(--color-surface)] border border-[var(--color-border)]",
-  success: "bg-[var(--color-success-muted)] border border-[var(--color-success)]",
-  error: "bg-[var(--color-danger-muted)] border border-[var(--color-danger)]",
-  info: "bg-[var(--color-info-muted)] border border-[var(--color-info)]",
+  default: styles["ui-toast--default"],
+  success: styles["ui-toast--success"],
+  error: styles["ui-toast--error"],
+  info: styles["ui-toast--info"],
 }
 
 const variantIcons: Record<ToastVariant, React.ReactNode> = {
   default: null,
-  success: <CheckCircle2 className="h-4 w-4 text-[var(--color-success)] flex-shrink-0" />,
-  error: <AlertCircle className="h-4 w-4 text-[var(--color-danger)] flex-shrink-0" />,
-  info: <Info className="h-4 w-4 text-[var(--color-info)] flex-shrink-0" />,
+  success: (
+    <CheckCircle2
+      className={`${styles["ui-toast__icon"]} ${styles["ui-toast__icon--success"]}`}
+      style={{ width: "1rem", height: "1rem" }}
+    />
+  ),
+  error: (
+    <AlertCircle
+      className={`${styles["ui-toast__icon"]} ${styles["ui-toast__icon--error"]}`}
+      style={{ width: "1rem", height: "1rem" }}
+    />
+  ),
+  info: (
+    <Info
+      className={`${styles["ui-toast__icon"]} ${styles["ui-toast__icon--info"]}`}
+      style={{ width: "1rem", height: "1rem" }}
+    />
+  ),
 }
 
 export function Toast({ className, variant = "default", title, description, children, ...props }: ToastProps) {
   return (
     <ToastPrimitive.Root
-      className={cn(
-        "group pointer-events-auto relative flex w-full items-start gap-3 overflow-hidden rounded-lg p-4 shadow-lg transition-all",
-        "data-[state=open]:animate-in data-[state=closed]:animate-out",
-        "data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-end-full",
-        "data-[state=open]:slide-in-from-end-full",
-        variantStyles[variant],
-        className
-      )}
+      className={[styles["ui-toast__root"], variantStyles[variant], className].filter(Boolean).join(" ")}
       {...props}
     >
       {variantIcons[variant]}
-      <div className="flex-1 min-w-0">
+      <div className={styles["ui-toast__body"]}>
         {title && (
-          <ToastPrimitive.Title className="text-sm font-semibold text-[var(--color-text)]">
+          <ToastPrimitive.Title className={styles["ui-toast__title"]}>
             {title}
           </ToastPrimitive.Title>
         )}
         {description && (
-          <ToastPrimitive.Description className="text-sm text-[var(--color-text-muted)] mt-0.5">
+          <ToastPrimitive.Description className={styles["ui-toast__description"]}>
             {description}
           </ToastPrimitive.Description>
         )}
         {children}
       </div>
-      <ToastPrimitive.Close className="flex-shrink-0 rounded p-0.5 text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors">
-        <X className="h-4 w-4" />
+      <ToastPrimitive.Close className={styles["ui-toast__close"]}>
+        <X style={{ width: "1rem", height: "1rem" }} />
       </ToastPrimitive.Close>
     </ToastPrimitive.Root>
   )

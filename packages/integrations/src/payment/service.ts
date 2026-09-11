@@ -15,13 +15,14 @@ export class PaymentService {
       where: { id: orderId },
       include: {
         user: { select: { phone: true, email: true } },
-        payment: true,
+        payments: true,
       },
     })
 
     if (!order) throw new AppError("سفارش یافت نشد", "NOT_FOUND", 404)
-    if (!order.payment) throw new AppError("رکورد پرداخت یافت نشد", "NOT_FOUND", 404)
-    if (order.payment.status === "PAID")
+    const latestPayment = order.payments[0]
+    if (!latestPayment) throw new AppError("رکورد پرداخت یافت نشد", "NOT_FOUND", 404)
+    if (latestPayment.status === "COMPLETED")
       throw new AppError("این سفارش قبلاً پرداخت شده", "CONFLICT", 409)
 
     const result = await this.gateway.init({
@@ -35,9 +36,9 @@ export class PaymentService {
 
     // Persist authority for verification step
     await db.payment.update({
-      where: { id: order.payment.id },
+      where: { id: latestPayment.id },
       data: {
-        authority: result.authority,
+        gatewayRef: result.authority,
         gateway: this.gateway.name as "ZARINPAL" | "IDPAY",
         gatewayResponse: result.rawResponse as never,
       },
@@ -56,14 +57,14 @@ export class PaymentService {
     refId: string | null
   }> {
     const payment = await db.payment.findFirst({
-      where: { authority },
+      where: { gatewayRef: authority },
       include: { order: { select: { id: true, totalAmount: true, orderNumber: true } } },
     })
 
     if (!payment) throw new AppError("رکورد پرداخت یافت نشد", "NOT_FOUND", 404)
-    if (payment.status === "PAID") {
+    if (payment.status === "COMPLETED") {
       // Idempotent: already verified, return cached result
-      return { success: true, orderId: payment.orderId, refId: payment.refId }
+      return { success: true, orderId: payment.orderId, refId: payment.gatewayTrackId }
     }
 
     const result = await this.gateway.verify({
@@ -76,8 +77,8 @@ export class PaymentService {
         db.payment.update({
           where: { id: payment.id },
           data: {
-            status: "PAID",
-            refId: result.refId,
+            status: "COMPLETED",
+            gatewayTrackId: result.refId,
             paidAt: new Date(),
             gatewayResponse: result.rawResponse as never,
           },
@@ -86,7 +87,7 @@ export class PaymentService {
           where: { id: payment.orderId },
           data: { status: "CONFIRMED" },
         }),
-        db.orderStatusHistory.create({
+        db.orderEvent.create({
           data: {
             orderId: payment.orderId,
             status: "CONFIRMED",
@@ -106,4 +107,21 @@ export class PaymentService {
 
     return { success: result.success, orderId: payment.orderId, refId: result.refId }
   }
+}
+
+import { getZarinpalAdapter } from "./zarinpal"
+
+let _service: PaymentService | null = null
+function getService(): PaymentService {
+  if (!_service) {
+    _service = new PaymentService(getZarinpalAdapter())
+  }
+  return _service
+}
+
+export const paymentService = {
+  initiatePayment: (orderId: string, callbackUrl: string) =>
+    getService().initiatePayment(orderId, callbackUrl),
+  verifyPayment: (authority: string) =>
+    getService().verifyPayment(authority),
 }

@@ -1,11 +1,11 @@
 import * as React from "react"
-import { cn } from "../lib/utils"
+import styles from "./Table.module.css"
 
 export function Table({ className, ...props }: React.HTMLAttributes<HTMLTableElement>) {
   return (
-    <div className="w-full overflow-x-auto">
+    <div className={styles["ui-tbl__wrapper"]}>
       <table
-        className={cn("w-full caption-bottom text-sm", className)}
+        className={[styles["ui-tbl"], className].filter(Boolean).join(" ")}
         {...props}
       />
     </div>
@@ -15,23 +15,25 @@ export function Table({ className, ...props }: React.HTMLAttributes<HTMLTableEle
 export function TableHeader({ className, ...props }: React.HTMLAttributes<HTMLTableSectionElement>) {
   return (
     <thead
-      className={cn("border-b border-[var(--color-border)] bg-[var(--color-surface-muted)]", className)}
+      className={[styles["ui-tbl__header"], className].filter(Boolean).join(" ")}
       {...props}
     />
   )
 }
 
 export function TableBody({ className, ...props }: React.HTMLAttributes<HTMLTableSectionElement>) {
-  return <tbody className={cn("divide-y divide-[var(--color-border)]", className)} {...props} />
+  return (
+    <tbody
+      className={[styles["ui-tbl__body"], className].filter(Boolean).join(" ")}
+      {...props}
+    />
+  )
 }
 
 export function TableRow({ className, ...props }: React.HTMLAttributes<HTMLTableRowElement>) {
   return (
     <tr
-      className={cn(
-        "bg-[var(--color-surface)] hover:bg-[var(--color-surface-muted)] transition-colors",
-        className
-      )}
+      className={[styles["ui-tbl__row"], className].filter(Boolean).join(" ")}
       {...props}
     />
   )
@@ -40,10 +42,7 @@ export function TableRow({ className, ...props }: React.HTMLAttributes<HTMLTable
 export function TableHead({ className, ...props }: React.ThHTMLAttributes<HTMLTableCellElement>) {
   return (
     <th
-      className={cn(
-        "h-10 px-4 text-start text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider",
-        className
-      )}
+      className={[styles["ui-tbl__head"], className].filter(Boolean).join(" ")}
       {...props}
     />
   )
@@ -52,7 +51,7 @@ export function TableHead({ className, ...props }: React.ThHTMLAttributes<HTMLTa
 export function TableCell({ className, ...props }: React.TdHTMLAttributes<HTMLTableCellElement>) {
   return (
     <td
-      className={cn("px-4 py-3 text-sm text-[var(--color-text)] align-middle", className)}
+      className={[styles["ui-tbl__cell"], className].filter(Boolean).join(" ")}
       {...props}
     />
   )
@@ -61,7 +60,7 @@ export function TableCell({ className, ...props }: React.TdHTMLAttributes<HTMLTa
 export function TableCaption({ className, ...props }: React.HTMLAttributes<HTMLTableCaptionElement>) {
   return (
     <caption
-      className={cn("mt-4 text-sm text-[var(--color-text-muted)]", className)}
+      className={[styles["ui-tbl__caption"], className].filter(Boolean).join(" ")}
       {...props}
     />
   )

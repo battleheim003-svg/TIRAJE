@@ -14,6 +14,7 @@
     "db:migrate": "turbo db:migrate --filter=@tirajeh/database",
     "db:seed": "turbo db:seed --filter=@tirajeh/database",
     "db:studio": "cd packages/database && npx prisma studio",
+    "test:bot": "node --env-file=apps/web/.env.local --env-file=packages/database/.env ./packages/database/node_modules/tsx/dist/cli.mjs scripts/test-bot.ts",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
     "clean": "turbo clean && find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +"
   },
@@ -21,6 +22,7 @@
     "@types/node": "^22.0.0",
     "eslint": "^9.0.0",
     "prettier": "^3.3.0",
+    "tsx": "^4.0.0",
     "turbo": "^2.0.0",
     "typescript": "^5.5.0"
   },

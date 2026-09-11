@@ -22,31 +22,27 @@ export async function getFreightQuotesAction(
   // Find matching zone
   const zone = await db.shippingZone.findFirst({
     where: {
-      isActive: true,
-      provinces: { has: province },
+      province,
     },
     include: {
-      rates: {
+      shippingRates: {
         where: {
           isActive: true,
-          minLoadTon: { lte: totalWeightTon },
-          capacityTon: { gte: totalWeightTon },
         },
-        orderBy: { capacityTon: "asc" },
       },
     },
   })
 
-  if (!zone || zone.rates.length === 0) {
+  if (!zone || zone.shippingRates.length === 0) {
     return {
       success: false,
       error: "در حال حاضر ارسال به این منطقه امکان‌پذیر نیست",
     }
   }
 
-  const quotes: FreightQuote[] = zone.rates.map((rate: any) => ({
+  const quotes: FreightQuote[] = zone.shippingRates.map((rate: any) => ({
     zoneId: zone.id,
-    zoneName: zone.name,
+    zoneName: zone.nameFa,
     truckType: rate.truckType,
     baseCost: Number(rate.baseCost),
     costPerTon: Number(rate.costPerTon),
@@ -56,8 +52,8 @@ export async function getFreightQuotesAction(
       Number(rate.costPerTon),
       totalWeightTon
     ),
-    estimatedDaysMin: rate.estimatedDaysMin,
-    estimatedDaysMax: rate.estimatedDaysMax,
+    estimatedDaysMin: rate.estimatedDays ?? 1,
+    estimatedDaysMax: (rate.estimatedDays ?? 1) + 2,
   }))
 
   return { success: true, data: quotes }

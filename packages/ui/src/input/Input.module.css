@@ -1,0 +1,106 @@
+/* prefix: ui-inp */
+
+/* ── Label ───────────────────────────────────── */
+
+.ui-inp__label {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+  margin-block-end: var(--space-1);
+}
+
+.ui-inp__label--required::after {
+  content: " *";
+  color: var(--color-error-500);
+}
+
+/* ── Base field ──────────────────────────────── */
+
+.ui-inp__field {
+  display: block;
+  width: 100%;
+  padding-block: var(--space-2);
+  padding-inline: var(--space-3);
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text);
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition: border-color var(--transition-fast),
+              box-shadow var(--transition-fast);
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.ui-inp__field::placeholder {
+  color: var(--color-text-muted);
+}
+
+.ui-inp__field:hover:not(:disabled):not([aria-invalid="true"]) {
+  border-color: var(--color-border-strong);
+}
+
+.ui-inp__field:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 20%, transparent);
+}
+
+.ui-inp__field:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: var(--color-bg);
+}
+
+.ui-inp__field[aria-invalid="true"] {
+  border-color: var(--color-error-500);
+}
+.ui-inp__field[aria-invalid="true"]:focus {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-error-500) 20%, transparent);
+}
+
+/* ── Textarea ─────────────────────────────────── */
+
+.ui-inp__textarea {
+  resize: vertical;
+  min-height: 6rem;
+  line-height: var(--line-height-base);
+}
+
+/* ── Wrapper (for icon support) ──────────────── */
+
+.ui-inp__wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.ui-inp__wrapper .ui-inp__field {
+  padding-inline-start: var(--space-9);
+}
+
+.ui-inp__icon {
+  position: absolute;
+  inset-inline-start: var(--space-3);
+  color: var(--color-text-muted);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+}
+
+/* ── Helper / error text ─────────────────────── */
+
+.ui-inp__helper {
+  margin-block-start: var(--space-1);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.ui-inp__error {
+  margin-block-start: var(--space-1);
+  font-size: var(--font-size-xs);
+  color: var(--color-error-500);
+}

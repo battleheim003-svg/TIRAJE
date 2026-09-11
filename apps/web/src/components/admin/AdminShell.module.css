@@ -1,0 +1,36 @@
+/* prefix: web-adm */
+
+.web-adm__root {
+  display: grid;
+  grid-template-columns: 1fr;
+  min-height: 100dvh;
+  background-color: var(--color-bg);
+  position: relative;
+}
+
+@media (min-width: 64rem) {
+  .web-adm__root {
+    grid-template-columns: 15rem 1fr;
+  }
+}
+
+.web-adm__main {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  min-width: 0;
+  background-color: var(--color-bg);
+}
+
+.web-adm__content {
+  flex: 1;
+  padding: var(--space-6);
+  min-width: 0;
+  overflow-y: auto;
+}
+
+@media (max-width: 48rem) {
+  .web-adm__content {
+    padding: var(--space-4);
+  }
+}

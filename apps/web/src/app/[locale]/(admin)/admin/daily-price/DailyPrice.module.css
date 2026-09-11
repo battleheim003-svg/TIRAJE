@@ -1,0 +1,523 @@
+/* DailyPrice.module.css - prefix web-adm-price */
+
+.web-adm-price__wrapper,
+.dpWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  width: 100%;
+}
+
+.web-adm-price__headerCard,
+.dpHeaderCard {
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  box-shadow: var(--shadow-sm);
+}
+
+.web-adm-price__headerMain,
+.dpHeaderMain {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.web-adm-price__headerIconBox,
+.dpHeaderIconBox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: var(--radius-lg);
+  background-color: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  color: var(--color-accent-text);
+  flex-shrink: 0;
+}
+
+.web-adm-price__title,
+.dpTitle {
+  font-size: var(--font-size-2xl);
+  font-weight: 800;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.web-adm-price__subtitle,
+.dpSubtitle {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-block-start: var(--space-1);
+}
+
+.web-adm-price__dateBadge,
+.dpDateBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-full);
+  padding-block: var(--space-2);
+  padding-inline: var(--space-4);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.web-adm-price__warningAlert,
+.dpWarningAlert {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background-color: var(--color-warning-subtle);
+  border: 1px solid var(--color-warning-500);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+  color: var(--color-warning-500);
+}
+
+.web-adm-price__warningText,
+.dpWarningText {
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  color: var(--color-text);
+}
+
+.web-adm-price__formCard,
+.dpFormCard {
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+}
+
+.web-adm-price__controlsBar,
+.dpControlsBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  padding: var(--space-5) var(--space-6);
+  border-block-end: 1px solid var(--color-border-subtle);
+  background-color: color-mix(in srgb, var(--color-neutral-100) 60%, transparent);
+}
+
+.web-adm-price__searchBox,
+.dpSearchBox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding-block: var(--space-2);
+  padding-inline: var(--space-3);
+  width: 100%;
+  max-width: 20rem;
+  color: var(--color-text-muted);
+}
+
+.web-adm-price__searchInput,
+.dpSearchInput {
+  border: none;
+  background: transparent;
+  outline: none;
+  width: 100%;
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+}
+
+.web-adm-price__selectionActions,
+.dpSelectionActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.web-adm-price__btnSecondary,
+.dpBtnSecondary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding-block: var(--space-2);
+  padding-inline: var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-bg-elevated);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.web-adm-price__btnSecondary:hover,
+.dpBtnSecondary:hover {
+  background-color: var(--color-border-subtle);
+  color: var(--color-text);
+}
+
+.web-adm-price__countPill,
+.dpCountPill {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-accent-text);
+  background-color: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  padding-block: var(--space-1);
+  padding-inline: var(--space-3);
+  border-radius: var(--radius-full);
+}
+
+.web-adm-price__tableContainer,
+.dpTableContainer {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.web-adm-price__table,
+.dpTable {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: start;
+}
+
+.web-adm-price__table th,
+.dpTable th {
+  background-color: color-mix(in srgb, var(--color-neutral-100) 60%, transparent);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  padding-block: var(--space-3);
+  padding-inline: var(--space-4);
+  border-block-end: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.web-adm-price__table td,
+.dpTable td {
+  padding-block: var(--space-3);
+  padding-inline: var(--space-4);
+  border-block-end: 1px solid var(--color-border-subtle);
+  font-size: var(--font-size-sm);
+}
+
+.web-adm-price__tableRow,
+.dpTableRow {
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.web-adm-price__tableRow:hover,
+.dpTableRow:hover {
+  background-color: var(--color-border-subtle);
+}
+
+.web-adm-price__tableRow--selected,
+.dpTableRowSelected {
+  background-color: color-mix(in srgb, var(--color-accent) 6%, transparent);
+}
+
+.web-adm-price__checkboxLabel,
+.dpCheckboxLabel {
+  display: inline-flex;
+  cursor: pointer;
+}
+
+.web-adm-price__checkbox,
+.dpCheckbox {
+  width: 1.125rem;
+  height: 1.125rem;
+  accent-color: var(--color-accent);
+  cursor: pointer;
+}
+
+.web-adm-price__prodInfo,
+.dpProdInfo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.web-adm-price__prodName,
+.dpProdName {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.web-adm-price__prodMeta,
+.dpProdMeta {
+  display: flex;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+}
+
+.web-adm-price__badge,
+.dpBadge {
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  padding-block: 2px;
+  padding-inline: var(--space-2);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-border-subtle);
+  color: var(--color-text-muted);
+}
+
+.web-adm-price__badge--bag,
+.dpBadgeBag {
+  background-color: var(--color-info-subtle);
+  color: var(--color-info-500);
+}
+
+.web-adm-price__badge--jumbo,
+.dpBadgeJumbo {
+  background-color: var(--color-warning-subtle);
+  color: var(--color-warning-500);
+}
+
+.web-adm-price__badge--bulk,
+.dpBadgeBulk {
+  background-color: var(--color-success-subtle);
+  color: var(--color-success-500);
+}
+
+.web-adm-price__brandName,
+.dpBrandName {
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.web-adm-price__priceInputWrapper,
+.dpPriceInputWrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding-block: var(--space-1);
+  padding-inline: var(--space-2);
+  transition: border-color var(--transition-fast);
+}
+
+.web-adm-price__priceInputWrapper:focus-within,
+.dpPriceInputWrapper:focus-within {
+  border-color: var(--color-accent-text);
+  outline: 2px solid color-mix(in srgb, var(--color-accent) 15%, transparent);
+}
+
+.web-adm-price__priceInput,
+.dpPriceInput {
+  border: none;
+  background: transparent;
+  outline: none;
+  width: 100%;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+  text-align: end;
+}
+
+.web-adm-price__priceInput--disabled,
+.dpPriceInputDisabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.web-adm-price__priceUnit,
+.dpPriceUnit {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.web-adm-price__priceChangeHint,
+.dpPriceChangeHint {
+  font-size: var(--font-size-xs);
+  color: var(--color-accent-text);
+  margin-block-start: var(--space-1);
+  text-align: end;
+}
+
+.web-adm-price__emptyRow,
+.dpEmptyRow {
+  text-align: center;
+  padding: var(--space-10) var(--space-4) !important;
+  color: var(--color-text-muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.web-adm-price__formFooter,
+.dpFormFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  padding: var(--space-5) var(--space-6);
+  background-color: color-mix(in srgb, var(--color-neutral-100) 60%, transparent);
+  border-block-start: 1px solid var(--color-border);
+}
+
+.web-adm-price__telegramToggle,
+.dpTelegramToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.web-adm-price__btnSubmit,
+.dpBtnSubmit {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  background-color: var(--color-accent);
+  color: var(--color-accent-foreground);
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  padding-block: var(--space-3);
+  padding-inline: var(--space-6);
+  border-radius: var(--radius-lg);
+  border: none;
+  cursor: pointer;
+  transition: background-color var(--transition-fast), transform var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+}
+
+.web-adm-price__btnSubmit:hover:not(:disabled),
+.dpBtnSubmit:hover:not(:disabled) {
+  background-color: var(--color-accent-hover);
+}
+
+.web-adm-price__btnSubmit:active:not(:disabled),
+.dpBtnSubmit:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.web-adm-price__btnSubmit:disabled,
+.dpBtnSubmit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.web-adm-price__spin,
+.dpSpin {
+  animation: dpSpin 1s linear infinite;
+}
+
+@keyframes dpSpin {
+  100% { transform: rotate(360deg); }
+}
+
+.web-adm-price__historyCard,
+.dpHistoryCard {
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  box-shadow: var(--shadow-sm);
+}
+
+.web-adm-price__historyHeader,
+.dpHistoryHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  border-block-end: 1px solid var(--color-border-subtle);
+  padding-block-end: var(--space-3);
+}
+
+.web-adm-price__historyTitleBox,
+.dpHistoryTitleBox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.web-adm-price__historyTitle,
+.dpHistoryTitle {
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.web-adm-price__historyMeta,
+.dpHistoryMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.web-adm-price__historyPublisher,
+.dpHistoryPublisher {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  background-color: var(--color-border-subtle);
+  padding-block: 2px;
+  padding-inline: var(--space-2);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+}
+
+.web-adm-price__historyGrid,
+.dpHistoryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: var(--space-3);
+}
+
+.web-adm-price__historyItem,
+.dpHistoryItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  padding-block: var(--space-2);
+  padding-inline: var(--space-3);
+}
+
+.web-adm-price__historyItemName,
+.dpHistoryItemName {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.web-adm-price__historyItemPrice,
+.dpHistoryItemPrice {
+  font-size: var(--font-size-sm);
+  color: var(--color-accent-text);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}

@@ -1,8 +1,16 @@
 "use client"
 
-import { useTransition, useState } from "react"
+import React, { useState, useTransition, useMemo } from "react"
 import { useRouter } from "next/navigation"
-import { adminCreatePostAction, adminUpdatePostAction, adminDeletePostAction } from "@/actions/admin-blog"
+import Link from "next/link"
+import { Send, Save } from "lucide-react"
+import { adminCreatePostAction, adminUpdatePostAction } from "@/actions/admin-blog"
+import { useToast } from "@/components/admin/Toast"
+import { TagInput } from "@/components/admin/TagInput"
+import { TelegramPostPreview } from "@/components/admin/TelegramPostPreview"
+import { ImageUploadDropzone } from "@/components/admin/ImageUploadDropzone"
+import { buildPostHashtags } from "@tirajeh/integrations/telegram/hashtags"
+import styles from "./BlogForm.module.css"
 
 interface Category {
   id: string
@@ -35,20 +43,56 @@ interface Props {
   post?: PostData
 }
 
-const STATUS_OPTIONS = [
-  { value: "DRAFT",     labelFa: "پیش‌نویس",   labelEn: "Draft"     },
-  { value: "PUBLISHED", labelFa: "منتشر شده",  labelEn: "Published" },
-  { value: "SCHEDULED", labelFa: "زمان‌بندی",  labelEn: "Scheduled" },
-  { value: "ARCHIVED",  labelFa: "بایگانی",    labelEn: "Archived"  },
-]
+const DEFAULT_CHANNEL =
+  process.env.NEXT_PUBLIC_TELEGRAM_CHANNEL_USERNAME || "@TirajehConcrete"
 
 export function PostForm({ locale, fa, categories, post }: Props) {
   const router = useRouter()
-  const [pending, startTransition] = useTransition()
-  const [error, setError] = useState<string | null>(null)
-  const [status, setStatus] = useState(post?.status ?? "DRAFT")
-  const [deleting, setDeleting] = useState(false)
+  const { toast } = useToast()
+  const [isPending, startTransition] = useTransition()
   const isEdit = Boolean(post)
+
+  // Form State
+  const [featuredImage, setFeaturedImage] = useState<string | null>(
+    post?.featuredImage ?? null
+  )
+  const [titleFa, setTitleFa] = useState(post?.titleFa ?? "")
+  const [titleEn, setTitleEn] = useState(post?.titleEn ?? "")
+  const [slug, setSlug] = useState(post?.slug ?? "")
+  const [excerptFa, setExcerptFa] = useState(post?.excerptFa ?? "")
+  const [contentFa, setContentFa] = useState(post?.contentFa ?? "")
+  const [categoryId, setCategoryId] = useState(post?.categoryId ?? "")
+  const [status, setStatus] = useState(post?.status ?? "DRAFT")
+  const [scheduledAt, setScheduledAt] = useState("")
+  const [channelUsername, setChannelUsername] = useState(DEFAULT_CHANNEL)
+
+  // Auto-generate initial hashtags based on category
+  const selectedCategory = useMemo(
+    () => categories.find((c) => c.id === categoryId),
+    [categories, categoryId]
+  )
+
+  const [hashtags, setHashtags] = useState<string[]>(() => {
+    return buildPostHashtags({
+      categoryFa: selectedCategory?.nameFa ?? null,
+      tagFa: [],
+    })
+  })
+
+  // When category changes and user hasn't heavily customized, update category tag
+  const handleCategoryChange = (catId: string) => {
+    setCategoryId(catId)
+    const cat = categories.find((c) => c.id === catId)
+    setHashtags((prev) => {
+      const updated = buildPostHashtags({
+        categoryFa: cat?.nameFa ?? null,
+        tagFa: [],
+      })
+      // Keep any custom user-added tags that aren't the standard blog tags
+      const extras = prev.filter((t) => t !== "#وبلاگ" && t !== "#تیراژه")
+      return [...new Set([...updated, ...extras])].slice(0, 8)
+    })
+  }
 
   function slugify(v: string) {
     return v
@@ -58,401 +102,316 @@ export function PostForm({ locale, fa, categories, post }: Props) {
       .replace(/-+/g, "-")
   }
 
-  function handleTitleBlur(e: React.FocusEvent<HTMLInputElement>) {
-    const slugInput = document.getElementById("pf-slug") as HTMLInputElement | null
-    if (!post && slugInput && !slugInput.value) {
-      slugInput.value = slugify(e.target.value)
+  const handleTitleFaChange = (val: string) => {
+    setTitleFa(val)
+    if (!isEdit && !slug) {
+      setSlug(slugify(val))
     }
   }
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setError(null)
-    const fd = new FormData(e.currentTarget)
+
+    const fd = new FormData()
+    if (isEdit && post) fd.set("id", post.id)
+    fd.set("titleFa", titleFa)
+    if (titleEn) fd.set("titleEn", titleEn)
+    fd.set("slug", slug || slugify(titleFa))
+    fd.set("excerptFa", excerptFa)
+    fd.set("contentFa", contentFa)
+    if (featuredImage) fd.set("featuredImage", featuredImage)
+    if (categoryId) fd.set("categoryId", categoryId)
+    fd.set("status", status)
+    if (status === "SCHEDULED" && scheduledAt) {
+      fd.set("scheduledAt", scheduledAt)
+    }
+    fd.set("channelUsername", channelUsername)
+    fd.set("customHashtags", JSON.stringify(hashtags))
+
     startTransition(async () => {
       try {
         if (isEdit) {
           await adminUpdatePostAction(fd)
-          router.refresh()
+          toast.success(
+            status === "PUBLISHED"
+              ? fa
+                ? "مقاله ویرایش و به تلگرام ارسال شد"
+                : "Post updated and published to Telegram"
+              : fa
+              ? "تغییرات مقاله ذخیره شد"
+              : "Post changes saved"
+          )
+          router.push(`/${locale}/admin/blog`)
         } else {
-          const { postId } = await adminCreatePostAction(fd)
-          router.push(`/${locale}/admin/blog/${postId}`)
+          await adminCreatePostAction(fd)
+          toast.success(
+            status === "PUBLISHED"
+              ? fa
+                ? "مقاله منتشر و به تلگرام ارسال شد"
+                : "Post published and sent to Telegram"
+              : fa
+              ? "پیش‌نویس مقاله ذخیره شد"
+              : "Post draft saved"
+          )
+          router.push(`/${locale}/admin/blog`)
         }
-      } catch (err: any) {
-        setError(err?.message ?? (fa ? "خطایی رخ داد" : "An error occurred"))
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : (fa ? "خطا در ذخیره‌سازی مقاله" : "Failed to save post")
+        toast.error(message)
       }
     })
   }
-
-  function handleDelete() {
-    if (!post) return
-    if (!confirm(fa ? "این مقاله حذف شود؟ این عمل برگشت‌پذیر نیست." : "Delete this post? This cannot be undone.")) return
-    setDeleting(true)
-    const fd = new FormData()
-    fd.set("id", post.id)
-    startTransition(async () => {
-      try {
-        await adminDeletePostAction(fd)
-        router.push(`/${locale}/admin/blog`)
-      } catch (err: any) {
-        setError(err?.message ?? (fa ? "خطا در حذف" : "Delete failed"))
-        setDeleting(false)
-      }
-    })
-  }
-
-  const scheduledAt = post?.publishedAt && post.status === "SCHEDULED"
-    ? new Date(post.publishedAt).toISOString().slice(0, 16)
-    : ""
 
   return (
-    <>
-      <form onSubmit={handleSubmit} className="pf-form">
-        {isEdit && <input type="hidden" name="id" value={post!.id} />}
-
-        {error && (
-          <div className="pf-error-banner" role="alert">{error}</div>
-        )}
-
-        {/* Main fields */}
-        <div className="pf-card">
-          <h2 className="pf-section-title">{fa ? "محتوای اصلی" : "Main content"}</h2>
-
-          <div className="pf-field">
-            <label className="pf-label" htmlFor="pf-titleFa">
-              {fa ? "عنوان فارسی" : "Persian title"} <span className="pf-req" aria-hidden="true">*</span>
+    <div className={styles.tflContainer}>
+      {/* Left Column (60%): Form Fields */}
+      <div className={styles.tflFormCol}>
+        <form onSubmit={handleSubmit} className={styles.tflFormCol}>
+          {/* 1. Featured Image (Drag & drop zone) */}
+          <div className={styles.tflField}>
+            <label className={styles.tflLabel}>
+              {fa ? "تصویر شاخص (عکس پست تلگرام) *" : "Featured Image (Telegram Photo) *"}
             </label>
-            <input
-              id="pf-titleFa"
-              name="titleFa"
-              type="text"
-              required
-              defaultValue={post?.titleFa}
-              onBlur={handleTitleBlur}
-              className="pf-input"
-              placeholder={fa ? "عنوان مقاله به فارسی" : "Article title in Persian"}
+            <ImageUploadDropzone
+              name="featuredImage"
+              value={featuredImage}
+              onChange={(img) => setFeaturedImage(img)}
+              label={fa ? "انتخاب یا کشیدن تصویر شاخص" : "Upload or drag featured image"}
+              hint={fa ? "این تصویر در پست تلگرام و هدر مقاله نمایش داده می‌شود" : "Displayed in Telegram post and article header"}
             />
           </div>
 
-          <div className="pf-field">
-            <label className="pf-label" htmlFor="pf-titleEn">
-              {fa ? "عنوان انگلیسی" : "English title"}
-            </label>
-            <input
-              id="pf-titleEn"
-              name="titleEn"
-              type="text"
-              defaultValue={post?.titleEn ?? ""}
-              dir="ltr"
-              className="pf-input"
-              placeholder="Article title in English"
-            />
+          {/* 2. Title (Fa + En) */}
+          <div className={`${styles.tflRow} ${styles.tflRowTwo}`}>
+            <div className={styles.tflField}>
+              <label htmlFor="pf-titleFa" className={styles.tflLabel}>
+                {fa ? "موضوع / عنوان (فارسی) *" : "Title (Persian) *"}
+              </label>
+              <input
+                id="pf-titleFa"
+                type="text"
+                required
+                dir="rtl"
+                value={titleFa}
+                onChange={(e) => handleTitleFaChange(e.target.value)}
+                placeholder={fa ? "عنوان جذاب مقاله..." : "Persian title..."}
+                className={styles.tflInput}
+              />
+            </div>
+            <div className={styles.tflField}>
+              <label htmlFor="pf-titleEn" className={styles.tflLabel}>
+                {fa ? "عنوان (انگلیسی)" : "Title (English)"}
+              </label>
+              <input
+                id="pf-titleEn"
+                type="text"
+                dir="ltr"
+                value={titleEn}
+                onChange={(e) => setTitleEn(e.target.value)}
+                placeholder="English title..."
+                className={styles.tflInput}
+              />
+            </div>
           </div>
 
-          <div className="pf-row">
-            <div className="pf-field">
-              <label className="pf-label" htmlFor="pf-slug">
-                Slug <span className="pf-req" aria-hidden="true">*</span>
+          {/* Slug & Category */}
+          <div className={`${styles.tflRow} ${styles.tflRowTwo}`}>
+            <div className={styles.tflField}>
+              <label htmlFor="pf-slug" className={styles.tflLabel}>
+                {fa ? "نامک (Slug) *" : "Slug *"}
               </label>
               <input
                 id="pf-slug"
-                name="slug"
                 type="text"
                 required
-                defaultValue={post?.slug}
                 dir="ltr"
-                pattern="[a-z0-9-]+"
-                title="فقط حروف کوچک، اعداد و خط تیره"
-                className="pf-input pf-input--mono"
-                placeholder="article-slug"
+                value={slug}
+                onChange={(e) => setSlug(e.target.value)}
+                className={styles.tflInput}
               />
             </div>
-            <div className="pf-field">
-              <label className="pf-label" htmlFor="pf-readingTime">
-                {fa ? "زمان مطالعه (دقیقه)" : "Reading time (min)"}
-              </label>
-              <input
-                id="pf-readingTime"
-                name="readingTimeMin"
-                type="number"
-                min={1}
-                max={999}
-                defaultValue={post?.readingTimeMin ?? ""}
-                className="pf-input"
-              />
-            </div>
-          </div>
-
-          <div className="pf-field">
-            <label className="pf-label" htmlFor="pf-contentFa">
-              {fa ? "محتوا (فارسی)" : "Content (Persian)"} <span className="pf-req" aria-hidden="true">*</span>
-            </label>
-            <textarea
-              id="pf-contentFa"
-              name="contentFa"
-              required
-              rows={18}
-              defaultValue={post?.contentFa}
-              className="pf-textarea"
-              placeholder={fa ? "محتوای مقاله به فارسی (Markdown)" : "Article content in Persian (Markdown)"}
-            />
-            <span className="pf-hint">{fa ? "فرمت Markdown پشتیبانی می‌شود." : "Markdown formatting is supported."}</span>
-          </div>
-
-          <div className="pf-field">
-            <label className="pf-label" htmlFor="pf-contentEn">
-              {fa ? "محتوا (انگلیسی)" : "Content (English)"}
-            </label>
-            <textarea
-              id="pf-contentEn"
-              name="contentEn"
-              rows={10}
-              defaultValue={post?.contentEn ?? ""}
-              dir="ltr"
-              className="pf-textarea"
-              placeholder="Article content in English (Markdown)"
-            />
-          </div>
-        </div>
-
-        {/* Excerpts */}
-        <div className="pf-card">
-          <h2 className="pf-section-title">{fa ? "خلاصه و تصویر" : "Excerpt & image"}</h2>
-
-          <div className="pf-field">
-            <label className="pf-label" htmlFor="pf-excerptFa">
-              {fa ? "خلاصه فارسی" : "Persian excerpt"}
-            </label>
-            <textarea
-              id="pf-excerptFa"
-              name="excerptFa"
-              rows={3}
-              defaultValue={post?.excerptFa ?? ""}
-              className="pf-textarea"
-              placeholder={fa ? "خلاصه‌ای کوتاه از مقاله (نمایش در لیست)" : "Short summary shown in listing"}
-            />
-          </div>
-
-          <div className="pf-field">
-            <label className="pf-label" htmlFor="pf-excerptEn">
-              {fa ? "خلاصه انگلیسی" : "English excerpt"}
-            </label>
-            <textarea
-              id="pf-excerptEn"
-              name="excerptEn"
-              rows={3}
-              defaultValue={post?.excerptEn ?? ""}
-              dir="ltr"
-              className="pf-textarea"
-            />
-          </div>
-
-          <div className="pf-field">
-            <label className="pf-label" htmlFor="pf-featuredImage">
-              {fa ? "آدرس تصویر شاخص" : "Featured image URL"}
-            </label>
-            <input
-              id="pf-featuredImage"
-              name="featuredImage"
-              type="url"
-              defaultValue={post?.featuredImage ?? ""}
-              dir="ltr"
-              className="pf-input"
-              placeholder="https://..."
-            />
-          </div>
-        </div>
-
-        {/* SEO */}
-        <div className="pf-card">
-          <h2 className="pf-section-title">SEO</h2>
-          <div className="pf-field">
-            <label className="pf-label" htmlFor="pf-seoTitle">
-              {fa ? "عنوان SEO" : "SEO title"}
-            </label>
-            <input
-              id="pf-seoTitle"
-              name="seoTitle"
-              type="text"
-              defaultValue={post?.seoTitle ?? ""}
-              className="pf-input"
-              maxLength={70}
-            />
-          </div>
-          <div className="pf-field">
-            <label className="pf-label" htmlFor="pf-seoDescription">
-              {fa ? "توضیحات SEO" : "SEO description"}
-            </label>
-            <textarea
-              id="pf-seoDescription"
-              name="seoDescription"
-              rows={2}
-              defaultValue={post?.seoDescription ?? ""}
-              className="pf-textarea"
-              maxLength={160}
-            />
-          </div>
-        </div>
-
-        {/* Sidebar: publish settings */}
-        <div className="pf-sidebar">
-          <div className="pf-card">
-            <h2 className="pf-section-title">{fa ? "انتشار" : "Publishing"}</h2>
-
-            <div className="pf-field">
-              <label className="pf-label" htmlFor="pf-status">{fa ? "وضعیت" : "Status"}</label>
-              <select
-                id="pf-status"
-                name="status"
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                className="pf-select"
-              >
-                {STATUS_OPTIONS.map((s) => (
-                  <option key={s.value} value={s.value}>
-                    {fa ? s.labelFa : s.labelEn}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {status === "SCHEDULED" && (
-              <div className="pf-field">
-                <label className="pf-label" htmlFor="pf-scheduledAt">
-                  {fa ? "زمان انتشار" : "Publish at"}
-                </label>
-                <input
-                  id="pf-scheduledAt"
-                  name="scheduledAt"
-                  type="datetime-local"
-                  defaultValue={scheduledAt}
-                  className="pf-input"
-                  dir="ltr"
-                />
-              </div>
-            )}
-
-            <div className="pf-field">
-              <label className="pf-label" htmlFor="pf-category">
+            <div className={styles.tflField}>
+              <label htmlFor="pf-category" className={styles.tflLabel}>
                 {fa ? "دسته‌بندی" : "Category"}
               </label>
               <select
                 id="pf-category"
-                name="categoryId"
-                defaultValue={post?.categoryId ?? ""}
-                className="pf-select"
+                value={categoryId}
+                onChange={(e) => handleCategoryChange(e.target.value)}
+                className={styles.tflSelect}
               >
-                <option value="">{fa ? "بدون دسته" : "No category"}</option>
+                <option value="">{fa ? "— بدون دسته‌بندی —" : "— None —"}</option>
                 {categories.map((c) => (
                   <option key={c.id} value={c.id}>
-                    {fa ? c.nameFa : (c.nameEn ?? c.nameFa)}
+                    {fa ? c.nameFa : (c.nameEn || c.nameFa)}
                   </option>
                 ))}
               </select>
             </div>
+          </div>
 
-            <div className="pf-actions">
-              <button type="submit" disabled={pending} className="pf-btn-save">
-                {pending
-                  ? (fa ? "در حال ذخیره…" : "Saving…")
-                  : isEdit
-                    ? (fa ? "ذخیره تغییرات" : "Save changes")
-                    : (fa ? "ساخت مقاله" : "Create post")}
-              </button>
+          {/* 3. Excerpt (Telegram caption - max 900 chars) */}
+          <div className={styles.tflField}>
+            <div className={styles.tflLabel}>
+              <span>{fa ? "خلاصه / توضیحات کلی (کپشن تلگرام) *" : "Excerpt (Telegram Caption) *"}</span>
+              <span
+                className={`${styles.tflCounter} ${
+                  excerptFa.length > 900
+                    ? styles.tflCounterDanger
+                    : excerptFa.length > 800
+                    ? styles.tflCounterWarn
+                    : ""
+                }`}
+              >
+                {excerptFa.length} / 900
+              </span>
+            </div>
+            <textarea
+              id="pf-excerptFa"
+              rows={4}
+              required
+              dir="rtl"
+              maxLength={900}
+              value={excerptFa}
+              onChange={(e) => setExcerptFa(e.target.value)}
+              placeholder={
+                fa
+                  ? "متن کوتاه و جذاب که در زیر عکس پست تلگرام قرار می‌گیرد..."
+                  : "Short summary that appears in the Telegram post..."
+              }
+              className={styles.tflTextarea}
+            />
+          </div>
 
-              {isEdit && (
-                <button
-                  type="button"
-                  onClick={handleDelete}
-                  disabled={pending || deleting}
-                  className="pf-btn-delete"
-                >
-                  {deleting ? (fa ? "در حال حذف…" : "Deleting…") : (fa ? "حذف مقاله" : "Delete")}
-                </button>
-              )}
+          {/* 4. Visual Divider & Main Content (Site only) */}
+          <div className={styles.tflDivider}>
+            <div className={styles.tflDividerLine} />
+            <span className={styles.tflDividerBadge}>
+              {fa ? "فقط در سایت نمایش داده می‌شود" : "Displayed on website only"}
+            </span>
+            <div className={styles.tflDividerLine} />
+          </div>
+
+          <div className={styles.tflField}>
+            <label htmlFor="pf-contentFa" className={styles.tflLabel}>
+              {fa ? "متن کامل مقاله (فارسی) *" : "Full Article Content (Persian) *"}
+            </label>
+            <textarea
+              id="pf-contentFa"
+              rows={10}
+              required
+              dir="rtl"
+              value={contentFa}
+              onChange={(e) => setContentFa(e.target.value)}
+              placeholder={fa ? "متن کامل مقاله خود را در اینجا بنویسید..." : "Write full article..."}
+              className={styles.tflTextarea}
+            />
+          </div>
+
+          {/* 5. Hashtags (TagInput - max 8) */}
+          <div className={styles.tflField}>
+            <label className={styles.tflLabel}>
+              {fa ? "هشتگ‌های تلگرام (حداکثر ۸ عدد)" : "Telegram Hashtags (Max 8)"}
+            </label>
+            <TagInput
+              value={hashtags}
+              onChange={setHashtags}
+              max={8}
+              placeholder={fa ? "هشتگ جدید تایپ کنید و Enter بزنید..." : "Type tag and press Enter..."}
+            />
+          </div>
+
+          {/* 6. Channel Username & 7. Status */}
+          <div className={`${styles.tflRow} ${styles.tflRowTwo}`}>
+            <div className={styles.tflField}>
+              <label htmlFor="pf-channel" className={styles.tflLabel}>
+                {fa ? "آیدی کانال تلگرام" : "Telegram Channel Username"}
+              </label>
+              <input
+                id="pf-channel"
+                type="text"
+                dir="ltr"
+                value={channelUsername}
+                onChange={(e) => setChannelUsername(e.target.value)}
+                placeholder="@TirajehConcrete"
+                className={styles.tflInput}
+              />
+            </div>
+            <div className={styles.tflField}>
+              <label htmlFor="pf-status" className={styles.tflLabel}>
+                {fa ? "وضعیت انتشار *" : "Publish Status *"}
+              </label>
+              <select
+                id="pf-status"
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                className={styles.tflSelect}
+              >
+                <option value="DRAFT">{fa ? "پیش‌نویس" : "Draft"}</option>
+                <option value="PUBLISHED">{fa ? "منتشر شده (ارسال به تلگرام)" : "Published (Send to Telegram)"}</option>
+                <option value="SCHEDULED">{fa ? "زمان‌بندی شده" : "Scheduled"}</option>
+                <option value="ARCHIVED">{fa ? "بایگانی" : "Archived"}</option>
+              </select>
             </div>
           </div>
-        </div>
-      </form>
 
-      <style>{`
-        .pf-form {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 1.25rem;
-        }
-        @media (min-width: 1024px) {
-          .pf-form {
-            grid-template-columns: 1fr 17rem;
-            align-items: start;
-          }
-          /* sidebar spans all rows in the last column */
-          .pf-sidebar { grid-row: 1 / -1; grid-column: 2; }
-          /* main content cards stay in column 1 */
-          .pf-card:not(.pf-sidebar .pf-card) { grid-column: 1; }
-        }
-        .pf-card {
-          background-color: var(--color-surface);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-lg);
-          padding: 1.5rem;
-          display: flex; flex-direction: column; gap: 1.125rem;
-        }
-        .pf-sidebar { display: flex; flex-direction: column; gap: 1.25rem; }
-        .pf-section-title {
-          font-size: 0.9375rem; font-weight: 700; color: var(--color-text);
-          padding-bottom: 0.75rem; border-bottom: 1px solid var(--color-border);
-          margin-bottom: 0.25rem;
-        }
-        .pf-row { display: grid; grid-template-columns: 1fr; gap: 1.125rem; }
-        @media (min-width: 640px) { .pf-row { grid-template-columns: 1fr 8rem; } }
-        .pf-field { display: flex; flex-direction: column; gap: 0.375rem; }
-        .pf-label { font-size: 0.875rem; font-weight: 500; color: var(--color-text); }
-        .pf-req { color: var(--color-danger); }
-        .pf-hint { font-size: 0.75rem; color: var(--color-text-muted); }
-        .pf-input, .pf-textarea, .pf-select {
-          width: 100%; padding: 0.5625rem 0.875rem;
-          background-color: var(--color-background);
-          border: 1px solid var(--color-border); border-radius: var(--radius-md);
-          font-size: 0.9375rem; font-family: inherit; color: var(--color-text);
-          outline: none;
-          transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-        }
-        .pf-input:focus, .pf-textarea:focus, .pf-select:focus {
-          border-color: var(--color-accent);
-          box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 12%, transparent);
-        }
-        .pf-input--mono { font-family: monospace; font-size: 0.875rem; direction: ltr; }
-        .pf-textarea { resize: vertical; min-height: 6rem; }
-        .pf-select { cursor: pointer; }
-        .pf-actions { display: flex; flex-direction: column; gap: 0.5rem; padding-top: 0.5rem; }
-        .pf-btn-save {
-          width: 100%; padding: 0.625rem 1rem;
-          background-color: var(--color-accent); color: #fff;
-          border: none; border-radius: var(--radius-md);
-          font-size: 0.9375rem; font-weight: 600; font-family: inherit;
-          cursor: pointer; transition: background-color var(--transition-fast), opacity var(--transition-fast);
-        }
-        .pf-btn-save:hover:not(:disabled) { background-color: var(--color-accent-hover); }
-        .pf-btn-save:disabled { opacity: 0.65; cursor: not-allowed; }
-        .pf-btn-save:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
-        .pf-btn-delete {
-          width: 100%; padding: 0.5rem 1rem;
-          background: none; border: 1px solid var(--color-danger);
-          border-radius: var(--radius-md);
-          font-size: 0.875rem; font-weight: 500; font-family: inherit;
-          color: var(--color-danger); cursor: pointer;
-          transition: background-color var(--transition-fast), opacity var(--transition-fast);
-        }
-        .pf-btn-delete:hover:not(:disabled) { background-color: var(--color-danger-subtle); }
-        .pf-btn-delete:disabled { opacity: 0.5; cursor: not-allowed; }
-        .pf-error-banner {
-          grid-column: 1 / -1;
-          padding: 0.75rem 1rem;
-          background-color: var(--color-danger-subtle); color: var(--color-danger);
-          border-radius: var(--radius-md); font-size: 0.875rem;
-        }
-      `}</style>
-    </>
+          {/* Scheduled At input if status === SCHEDULED */}
+          {status === "SCHEDULED" && (
+            <div className={styles.tflField}>
+              <label htmlFor="pf-scheduled" className={styles.tflLabel}>
+                {fa ? "تاریخ و زمان انتشار خودکار" : "Scheduled Date & Time"}
+              </label>
+              <input
+                id="pf-scheduled"
+                type="datetime-local"
+                value={scheduledAt}
+                onChange={(e) => setScheduledAt(e.target.value)}
+                className={styles.tflInput}
+              />
+            </div>
+          )}
+
+          {/* 8. Submit Button */}
+          <div className={styles.tflSubmitArea}>
+            <button
+              type="submit"
+              disabled={isPending}
+              className={`${styles.tflSubmitBtn} ${
+                status === "PUBLISHED" ? styles.tflSubmitBtnSuccess : ""
+              }`}
+            >
+              {status === "PUBLISHED" ? (
+                <>
+                  <Send style={{ width: "1.125rem", height: "1.125rem" }} aria-hidden="true" />
+                  <span>{isPending ? (fa ? "در حال ارسال..." : "Publishing...") : (fa ? "انتشار و ارسال به تلگرام" : "Publish to Telegram")}</span>
+                </>
+              ) : (
+                <>
+                  <Save style={{ width: "1.125rem", height: "1.125rem" }} aria-hidden="true" />
+                  <span>{isPending ? (fa ? "در حال ذخیره..." : "Saving...") : (fa ? "ذخیره پیش‌نویس" : "Save Draft")}</span>
+                </>
+              )}
+            </button>
+
+            <Link href={`/${locale}/admin/blog`} className={styles.tflCancelBtn}>
+              {fa ? "انصراف" : "Cancel"}
+            </Link>
+          </div>
+        </form>
+      </div>
+
+      {/* Right Column (40%): Live Telegram Preview */}
+      <div className={styles.tflPreviewCol}>
+        <TelegramPostPreview
+          image={featuredImage}
+          title={titleFa}
+          excerpt={excerptFa}
+          hashtags={hashtags}
+          linkLabel="📖 مطالعه مقاله کامل"
+          linkUrl={`https://tirajeconcrete.com/fa/blog/${slug || "slug"}`}
+          channelUsername={channelUsername}
+        />
+      </div>
+    </div>
   )
 }

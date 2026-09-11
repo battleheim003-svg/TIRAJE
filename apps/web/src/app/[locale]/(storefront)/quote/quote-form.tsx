@@ -1,8 +1,10 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { Loader2, CheckCircle2 } from "lucide-react"
+import { PlusCircle, Trash2, CheckCircle2 } from "lucide-react"
+import { Card, Button, Input, Label, Select, Textarea } from "@tirajeh/ui"
 import { createQuoteAction } from "@/actions/quote"
+import styles from "./Quote.module.css"
 
 interface Product {
   id: string
@@ -15,15 +17,35 @@ interface QuoteFormProps {
   locale: string
 }
 
+interface LineItem {
+  id: string
+  productId: string
+  packaging: string
+  quantityTon: string
+}
+
 const CUSTOMER_TYPES_FA = [
-  { value: "NORMAL", label: "خریدار عادی" },
-  { value: "CONTRACTOR", label: "پیمانکار" },
-  { value: "COMPANY", label: "شرکت / حقوقی" },
+  { value: "NORMAL", label: "خریدار عادی / شخصی" },
+  { value: "CONTRACTOR", label: "پیمانکار ساختمانی" },
+  { value: "COMPANY", label: "شرکت / سازمان حقوقی" },
 ]
+
 const CUSTOMER_TYPES_EN = [
   { value: "NORMAL", label: "Individual Buyer" },
   { value: "CONTRACTOR", label: "Contractor" },
-  { value: "COMPANY", label: "Company / Corporate" },
+  { value: "COMPANY", label: "Corporate / Company" },
+]
+
+const PACKAGING_OPTIONS_FA = [
+  { value: "BAG_50", label: "کیسه ۵۰ کیلویی" },
+  { value: "BULK", label: "فله (حمل با بونکر)" },
+  { value: "JUMBO", label: "جامبوبگ ۱.۵ تنی" },
+]
+
+const PACKAGING_OPTIONS_EN = [
+  { value: "BAG_50", label: "50kg Bag" },
+  { value: "BULK", label: "Bulk (Pneumatic Tanker)" },
+  { value: "JUMBO", label: "1.5-ton Jumbo Bag" },
 ]
 
 export function QuoteForm({ products, locale }: QuoteFormProps) {
@@ -33,13 +55,73 @@ export function QuoteForm({ products, locale }: QuoteFormProps) {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({})
   const [globalError, setGlobalError] = useState<string | null>(null)
 
+  const [lineItems, setLineItems] = useState<LineItem[]>([
+    {
+      id: "row-1",
+      productId: products[0]?.id ?? "",
+      packaging: "BAG_50",
+      quantityTon: "25",
+    },
+  ])
+
   const customerTypes = fa ? CUSTOMER_TYPES_FA : CUSTOMER_TYPES_EN
+  const packagingOptions = fa ? PACKAGING_OPTIONS_FA : PACKAGING_OPTIONS_EN
+  const productOptions = products.map((p) => ({
+    value: p.id,
+    label: fa ? p.nameFa : p.nameEn ?? p.nameFa,
+  }))
+
+  function handleAddRow() {
+    setLineItems((prev) => [
+      ...prev,
+      {
+        id: `row-${Date.now()}`,
+        productId: products[0]?.id ?? "",
+        packaging: "BAG_50",
+        quantityTon: "25",
+      },
+    ])
+  }
+
+  function handleRemoveRow(id: string) {
+    if (lineItems.length <= 1) return
+    setLineItems((prev) => prev.filter((item) => item.id !== id))
+  }
+
+  function handleItemChange(id: string, field: keyof LineItem, val: string) {
+    setLineItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, [field]: val } : item))
+    )
+  }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    const formData = new FormData(e.currentTarget)
     setFieldErrors({})
     setGlobalError(null)
+
+    const form = e.currentTarget
+    const formData = new FormData(form)
+
+    // Ensure primary product and quantity are set from first line item
+    const primary = lineItems[0]
+    if (primary) {
+      formData.set("productId", primary.productId)
+      formData.set("quantityTon", primary.quantityTon)
+    }
+
+    // If multiple line items exist, append summary to message
+    if (lineItems.length > 1) {
+      const lineDetails = lineItems
+        .map((item, idx) => {
+          const prodName = products.find((p) => p.id === item.productId)?.nameFa ?? item.productId
+          const packName = packagingOptions.find((o) => o.value === item.packaging)?.label ?? item.packaging
+          return `ردیف ${idx + 1}: ${prodName} - بسته‌بندی: ${packName} - تناژ: ${item.quantityTon} تن`
+        })
+        .join("\n")
+
+      const userNote = (formData.get("message") as string) || ""
+      formData.set("message", `${userNote}\n\n[اقلام درخواستی استعلام]:\n${lineDetails}`.trim())
+    }
 
     startTransition(async () => {
       const result = await createQuoteAction(formData)
@@ -56,263 +138,241 @@ export function QuoteForm({ products, locale }: QuoteFormProps) {
 
   if (success) {
     return (
-      <div className="qf-success">
-        <CheckCircle2 className="qf-success-icon" aria-hidden="true" />
-        <p className="qf-success-title">
-          {fa ? "درخواست شما ثبت شد" : "Your request has been submitted"}
-        </p>
-        <p className="qf-success-body">
-          {fa
-            ? "کارشناسان تیراژه ظرف ۲۴ ساعت کاری با شما تماس خواهند گرفت."
-            : "Tirajeh specialists will contact you within 24 business hours."}
-        </p>
-      </div>
+      <Card variant="raised" className={styles["web-rfq__card"]}>
+        <div className={styles["web-rfq__success"]}>
+          <CheckCircle2
+            className={styles["web-rfq__success-icon"]}
+            style={{ width: "3.5rem", height: "3.5rem" }}
+            aria-hidden="true"
+          />
+          <h2 className={styles["web-rfq__success-title"]}>
+            {fa ? "درخواست استعلام قیمت شما با موفقیت ثبت شد" : "Quote Request Successfully Submitted"}
+          </h2>
+          <p className={styles["web-rfq__success-desc"]}>
+            {fa
+              ? "پیش‌فاکتور رسمی و بهترین قیمت روز پس از بررسی توسط واحد فروش، ظرف حداکثر ۲۴ ساعت کاری ارسال خواهد شد."
+              : "Our commercial team will review your requirements and provide an official quotation within 24 business hours."}
+          </p>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => setSuccess(false)}
+          >
+            {fa ? "ثبت درخواست استعلام دیگر" : "Submit Another RFQ"}
+          </Button>
+        </div>
+      </Card>
     )
   }
 
   return (
-    <>
-      <form onSubmit={handleSubmit} className="qf-form" noValidate>
-        {/* Row 1: name + phone */}
-        <div className="qf-row">
-          <div className="qf-field">
-            <label htmlFor="qf-name" className="qf-label">
-              {fa ? "نام و نام خانوادگی" : "Full Name"} <span className="qf-req" aria-hidden="true">*</span>
-            </label>
-            <input
+    <Card variant="raised" className={styles["web-rfq__card"]}>
+      <form onSubmit={handleSubmit} className={styles["web-rfq__form"]} noValidate>
+        {globalError && (
+          <div className={styles["web-rfq__error-banner"]} role="alert">
+            {globalError}
+          </div>
+        )}
+
+        {/* Section 1: Customer Info */}
+        <h3 className={styles["web-rfq__section-title"]}>
+          {fa ? "۱. اطلاعات متقاضی و خریدار" : "1. Buyer & Contact Information"}
+        </h3>
+
+        <div className={styles["web-rfq__grid"]}>
+          <div className={styles["web-rfq__field"]}>
+            <Label htmlFor="qf-name" required>
+              {fa ? "نام و نام خانوادگی" : "Full Name"}
+            </Label>
+            <Input
               id="qf-name"
               name="name"
               type="text"
               required
               autoComplete="name"
-              className={`qf-input${fieldErrors.name ? " qf-input--error" : ""}`}
               placeholder={fa ? "علی محمدی" : "Ali Mohammadi"}
+              error={!!fieldErrors.name}
+              errorText={fieldErrors.name?.[0]}
             />
-            {fieldErrors.name && <p className="qf-field-error">{fieldErrors.name[0]}</p>}
           </div>
 
-          <div className="qf-field">
-            <label htmlFor="qf-phone" className="qf-label">
-              {fa ? "شماره موبایل" : "Mobile Number"} <span className="qf-req" aria-hidden="true">*</span>
-            </label>
-            <input
+          <div className={styles["web-rfq__field"]}>
+            <Label htmlFor="qf-phone" required>
+              {fa ? "شماره تلفن همراه" : "Mobile Phone"}
+            </Label>
+            <Input
               id="qf-phone"
               name="phone"
               type="tel"
               required
               dir="ltr"
               autoComplete="tel"
-              className={`qf-input${fieldErrors.phone ? " qf-input--error" : ""}`}
               placeholder="09123456789"
+              error={!!fieldErrors.phone}
+              errorText={fieldErrors.phone?.[0]}
             />
-            {fieldErrors.phone && <p className="qf-field-error">{fieldErrors.phone[0]}</p>}
           </div>
-        </div>
 
-        {/* Row 2: email + companyName */}
-        <div className="qf-row">
-          <div className="qf-field">
-            <label htmlFor="qf-email" className="qf-label">
-              {fa ? "ایمیل" : "Email"}
-            </label>
-            <input
+          <div className={styles["web-rfq__field"]}>
+            <Label htmlFor="qf-email">
+              {fa ? "پست الکترونیک" : "Email"}
+            </Label>
+            <Input
               id="qf-email"
               name="email"
               type="email"
               dir="ltr"
               autoComplete="email"
-              className={`qf-input${fieldErrors.email ? " qf-input--error" : ""}`}
-              placeholder="ali@example.com"
+              placeholder="name@company.com"
+              error={!!fieldErrors.email}
+              errorText={fieldErrors.email?.[0]}
             />
-            {fieldErrors.email && <p className="qf-field-error">{fieldErrors.email[0]}</p>}
           </div>
 
-          <div className="qf-field">
-            <label htmlFor="qf-company" className="qf-label">
-              {fa ? "نام شرکت" : "Company Name"}
-            </label>
-            <input
+          <div className={styles["web-rfq__field"]}>
+            <Label htmlFor="qf-company">
+              {fa ? "نام شرکت / پروژه ساختمانی" : "Company or Project Name"}
+            </Label>
+            <Input
               id="qf-company"
               name="companyName"
               type="text"
-              className="qf-input"
-              placeholder={fa ? "شرکت ساختمانی نمونه" : "Example Construction Co."}
+              placeholder={fa ? "شرکت عمران سازه پیشرو" : "Omran Sazeh Co."}
             />
           </div>
-        </div>
 
-        {/* Row 3: customerType + deliveryCity */}
-        <div className="qf-row">
-          <div className="qf-field">
-            <label htmlFor="qf-type" className="qf-label">
-              {fa ? "نوع مشتری" : "Customer Type"} <span className="qf-req" aria-hidden="true">*</span>
-            </label>
-            <select id="qf-type" name="customerType" required className="qf-select">
-              {customerTypes.map((t) => (
-                <option key={t.value} value={t.value}>{t.label}</option>
-              ))}
-            </select>
+          <div className={styles["web-rfq__field"]}>
+            <Label htmlFor="qf-type" required>
+              {fa ? "نوع مشتری" : "Customer Type"}
+            </Label>
+            <Select
+              id="qf-type"
+              name="customerType"
+              required
+              options={customerTypes}
+            />
           </div>
 
-          <div className="qf-field">
-            <label htmlFor="qf-city" className="qf-label">
-              {fa ? "شهر تحویل" : "Delivery City"}
-            </label>
-            <input
+          <div className={styles["web-rfq__field"]}>
+            <Label htmlFor="qf-city">
+              {fa ? "شهر و محل پروژه جهت تحویل" : "Delivery City / Location"}
+            </Label>
+            <Input
               id="qf-city"
               name="deliveryCity"
               type="text"
-              className="qf-input"
-              placeholder={fa ? "تهران" : "Tehran"}
+              placeholder={fa ? "مثال: تهران / اصفهان" : "e.g. Tehran"}
             />
           </div>
         </div>
 
-        {/* Row 4: productId + quantityTon */}
-        <div className="qf-row">
-          <div className="qf-field">
-            <label htmlFor="qf-product" className="qf-label">
-              {fa ? "نوع محصول" : "Product"} <span className="qf-req" aria-hidden="true">*</span>
-            </label>
-            <select
-              id="qf-product"
-              name="productId"
-              required
-              className={`qf-select${fieldErrors.productId ? " qf-input--error" : ""}`}
-            >
-              <option value="">{fa ? "انتخاب محصول" : "Select product"}</option>
-              {products.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {fa ? p.nameFa : (p.nameEn ?? p.nameFa)}
-                </option>
-              ))}
-            </select>
-            {fieldErrors.productId && <p className="qf-field-error">{fieldErrors.productId[0]}</p>}
-          </div>
+        {/* Section 2: Dynamic Line Items */}
+        <h3 className={styles["web-rfq__section-title"]}>
+          {fa ? "۲. مشخصات اقلام و تناژ درخواستی" : "2. Product Requirements & Tonnage"}
+        </h3>
 
-          <div className="qf-field">
-            <label htmlFor="qf-qty" className="qf-label">
-              {fa ? "مقدار تقریبی (تن)" : "Estimated Quantity (tons)"} <span className="qf-req" aria-hidden="true">*</span>
-            </label>
-            <input
-              id="qf-qty"
-              name="quantityTon"
-              type="number"
-              required
-              min="1"
-              max="10000"
-              step="1"
-              dir="ltr"
-              className={`qf-input${fieldErrors.quantityTon ? " qf-input--error" : ""}`}
-              placeholder="50"
-            />
-            {fieldErrors.quantityTon && <p className="qf-field-error">{fieldErrors.quantityTon[0]}</p>}
-          </div>
+        <div className={styles["web-rfq__items-container"]}>
+          {lineItems.map((item, index) => (
+            <div key={item.id} className={styles["web-rfq__line-item"]}>
+              <div className={styles["web-rfq__field"]}>
+                <Label htmlFor={`prod-${item.id}`} required>
+                  {fa ? `محصول (${index + 1})` : `Product (${index + 1})`}
+                </Label>
+                <Select
+                  id={`prod-${item.id}`}
+                  options={productOptions}
+                  value={item.productId}
+                  onChange={(e) => handleItemChange(item.id, "productId", e.target.value)}
+                />
+              </div>
+
+              <div className={styles["web-rfq__field"]}>
+                <Label htmlFor={`pack-${item.id}`}>
+                  {fa ? "نوع بسته‌بندی" : "Packaging"}
+                </Label>
+                <Select
+                  id={`pack-${item.id}`}
+                  options={packagingOptions}
+                  value={item.packaging}
+                  onChange={(e) => handleItemChange(item.id, "packaging", e.target.value)}
+                />
+              </div>
+
+              <div className={styles["web-rfq__field"]}>
+                <Label htmlFor={`qty-${item.id}`} required>
+                  {fa ? "مقدار (تن)" : "Qty (Tons)"}
+                </Label>
+                <Input
+                  id={`qty-${item.id}`}
+                  type="number"
+                  min="1"
+                  max="10000"
+                  step="1"
+                  dir="ltr"
+                  value={item.quantityTon}
+                  onChange={(e) => handleItemChange(item.id, "quantityTon", e.target.value)}
+                />
+              </div>
+
+              <button
+                type="button"
+                disabled={lineItems.length <= 1}
+                onClick={() => handleRemoveRow(item.id)}
+                className={styles["web-rfq__remove-btn"]}
+                aria-label={fa ? "حذف این ردیف" : "Remove item row"}
+              >
+                <Trash2 style={{ width: "1.125rem", height: "1.125rem" }} />
+              </button>
+            </div>
+          ))}
+
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={handleAddRow}
+            className={styles["web-rfq__add-row-btn"]}
+          >
+            <PlusCircle style={{ width: "1.125rem", height: "1.125rem" }} />
+            <span>{fa ? "افزودن محصول دیگر به استعلام" : "Add Another Product"}</span>
+          </Button>
         </div>
 
-        {/* Message */}
-        <div className="qf-field">
-          <label htmlFor="qf-msg" className="qf-label">
-            {fa ? "توضیحات" : "Notes"}
-          </label>
-          <textarea
+        {/* Section 3: Notes */}
+        <div className={styles["web-rfq__field"]}>
+          <Label htmlFor="qf-msg">
+            {fa ? "توضیحات تکمیلی یا شرایط خاص تخلیه" : "Additional Notes or Unloading Conditions"}
+          </Label>
+          <Textarea
             id="qf-msg"
             name="message"
-            rows={4}
-            className="qf-textarea"
-            placeholder={fa ? "جزئیات بیشتر مانند نوع بسته‌بندی، زمان تحویل مطلوب..." : "Further details such as packaging, preferred delivery window..."}
+            rows={3}
+            placeholder={fa ? "در صورت نیاز به زمان‌بندی خاص، شیوه پرداخت یا استانداردهای آزمایشگاهی، یادداشت فرمایید..." : "Specify special delivery schedule, payment terms or test certificates..."}
           />
         </div>
 
-        {globalError && (
-          <p className="qf-global-error" role="alert">{globalError}</p>
-        )}
+        {/* Submit */}
+        <Button
+          type="submit"
+          variant="primary"
+          size="lg"
+          disabled={isPending}
+          className={styles["web-rfq__submit-btn"]}
+        >
+          {isPending
+            ? fa
+              ? "در حال ثبت درخواست..."
+              : "Submitting..."
+            : fa
+            ? "ارسال فرم استعلام قیمت"
+            : "Submit Quote Request"}
+        </Button>
 
-        <div className="qf-footer">
-          <button type="submit" disabled={isPending} className="qf-submit">
-            {isPending ? (
-              <>
-                <Loader2 className="qf-spinner" aria-hidden="true" />
-                {fa ? "در حال ارسال..." : "Submitting..."}
-              </>
-            ) : (
-              fa ? "ارسال درخواست" : "Submit Request"
-            )}
-          </button>
-          <p className="qf-footer-note">
-            {fa ? "با ارسال این فرم، شرایط و قوانین تیراژه را می‌پذیرید." : "By submitting, you accept Tirajeh's terms and conditions."}
-          </p>
-        </div>
+        <p className={styles["web-rfq__footer-note"]}>
+          {fa
+            ? "با ارسال این فرم، درخواست شما مستقیماً در کارتابل واحد بازرگانی ثبت و پیگیری خواهد شد."
+            : "Your RFQ will be processed directly by our commercial sales desk."}
+        </p>
       </form>
-
-      <style>{`
-        .qf-form { display: flex; flex-direction: column; gap: 1.25rem; }
-        .qf-row { display: grid; grid-template-columns: 1fr; gap: 1rem; }
-        @media (min-width: 480px) { .qf-row { grid-template-columns: 1fr 1fr; } }
-
-        .qf-field { display: flex; flex-direction: column; gap: 0.3125rem; }
-        .qf-label {
-          font-size: 0.8125rem; font-weight: 600; color: var(--color-text-secondary);
-        }
-        .qf-req { color: var(--color-danger); margin-inline-start: 0.125rem; }
-
-        .qf-input, .qf-select, .qf-textarea {
-          width: 100%; padding: 0.5625rem 0.75rem;
-          background-color: var(--color-background);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-md);
-          font-size: 0.9375rem; font-family: inherit;
-          color: var(--color-text); outline: none;
-          transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-        }
-        .qf-input::placeholder, .qf-textarea::placeholder { color: var(--color-text-muted); }
-        .qf-input:focus, .qf-select:focus, .qf-textarea:focus {
-          border-color: var(--color-accent);
-          box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 12%, transparent);
-        }
-        .qf-input--error { border-color: var(--color-danger); }
-        .qf-input--error:focus {
-          box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-danger) 12%, transparent);
-        }
-        .qf-textarea { resize: vertical; min-height: 6rem; }
-
-        .qf-field-error { font-size: 0.75rem; color: var(--color-danger); margin-top: 0.125rem; }
-        .qf-global-error {
-          font-size: 0.875rem; color: var(--color-danger);
-          padding: 0.75rem 1rem;
-          background-color: color-mix(in srgb, var(--color-danger) 8%, transparent);
-          border: 1px solid color-mix(in srgb, var(--color-danger) 20%, transparent);
-          border-radius: var(--radius-md);
-        }
-
-        .qf-footer { display: flex; flex-direction: column; gap: 0.625rem; }
-        .qf-submit {
-          display: inline-flex; align-items: center; gap: 0.375rem; align-self: flex-start;
-          background-color: var(--color-accent); color: #fff;
-          font-size: 0.9375rem; font-weight: 700; font-family: inherit;
-          padding: 0.625rem 1.75rem; border: none; border-radius: var(--radius-md);
-          cursor: pointer;
-          transition: background-color var(--transition-fast), opacity var(--transition-fast);
-        }
-        .qf-submit:hover:not(:disabled) { background-color: var(--color-accent-hover); }
-        .qf-submit:disabled { opacity: 0.65; cursor: not-allowed; }
-        .qf-spinner { width: 1rem; height: 1rem; animation: qf-spin 0.8s linear infinite; }
-        @keyframes qf-spin { to { transform: rotate(360deg); } }
-
-        .qf-footer-note { font-size: 0.75rem; color: var(--color-text-muted); }
-
-        .qf-success {
-          display: flex; flex-direction: column; align-items: center;
-          gap: 0.75rem; text-align: center;
-          padding: 3rem 2rem;
-          background-color: var(--color-surface);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-xl);
-        }
-        .qf-success-icon { width: 2.5rem; height: 2.5rem; color: var(--color-success, #16a34a); }
-        .qf-success-title { font-size: 1.125rem; font-weight: 700; color: var(--color-text); }
-        .qf-success-body { font-size: 0.9375rem; color: var(--color-text-secondary); max-width: 36ch; line-height: 1.65; }
-      `}</style>
-    </>
+    </Card>
   )
 }

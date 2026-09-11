@@ -3,6 +3,8 @@
 import { db } from "@tirajeh/database"
 import { auth } from "@tirajeh/auth"
 import { revalidatePath } from "next/cache"
+import { publishProductToChannel } from "@tirajeh/integrations"
+import { CEMENT_TYPE_LABEL, PACKAGING_LABEL } from "@/lib/cement"
 
 const ADMIN_ROLES = ["admin", "super_admin"]
 
@@ -94,10 +96,80 @@ export async function adminCreateProductAction(
     })
 
     revalidatePath("/admin/products")
+
+    const imageUrl = ((formData.get("imageUrl") || formData.get("featuredImage")) as string | null)?.trim()
+    if (imageUrl) {
+      await db.productImage.create({
+        data: {
+          productId: product.id,
+          url: imageUrl,
+          isPrimary: true,
+          sortOrder: 0,
+        },
+      })
+    }
+
+    const channelUsername = (formData.get("channelUsername") as string | null)?.trim() || undefined
+    const customHashtagsRaw = (formData.get("customHashtags") as string | null)?.trim()
+    let customHashtags: string[] | undefined = undefined
+    if (customHashtagsRaw) {
+      try {
+        customHashtags = JSON.parse(customHashtagsRaw)
+      } catch {
+        customHashtags = customHashtagsRaw.split(",").map((s) => s.trim()).filter(Boolean)
+      }
+    }
+
+    if (data.isActive) {
+      void syncProductToTelegram(product.id, { customHashtags, channelUsername })
+    }
+
     return { productId: product.id }
   } catch (err: any) {
     if (err?.code === "P2002") throw new Error("این اسلاگ قبلاً استفاده شده است")
     throw err
+  }
+}
+
+async function syncProductToTelegram(
+  productId: string,
+  options?: { customHashtags?: string[]; channelUsername?: string }
+): Promise<void> {
+  try {
+    const full = await db.product.findUnique({
+      where: { id: productId },
+      include: {
+        images: { orderBy: [{ isPrimary: "desc" }, { sortOrder: "asc" }] },
+        brand: true,
+        productCategories: { include: { category: true } },
+      },
+    })
+    if (!full || !full.isActive) return
+
+    const primaryImage = full.images.find((img) => img.isPrimary) ?? full.images[0] ?? null
+    const cementTypeLabel = full.cementType && CEMENT_TYPE_LABEL[full.cementType]
+      ? CEMENT_TYPE_LABEL[full.cementType].fa
+      : null
+    const packagingLabel = full.packagingType && PACKAGING_LABEL[full.packagingType]
+      ? PACKAGING_LABEL[full.packagingType].fa
+      : null
+
+    await publishProductToChannel({
+      id: full.id,
+      nameFa: full.nameFa,
+      descriptionFa: full.descriptionFa,
+      primaryImageUrl: primaryImage?.url ?? null,
+      price: Number(full.price),
+      categoriesFa: full.productCategories.map((pc) => pc.category.nameFa),
+      brandFa: full.brand?.nameFa ?? null,
+      cementTypeLabelFa: cementTypeLabel,
+      packagingLabelFa: packagingLabel,
+      slug: full.slug,
+      customHashtags: options?.customHashtags,
+      channelUsername: options?.channelUsername,
+    })
+  } catch (err) {
+    console.error("[telegram:syncProductToTelegram] error:", err)
   }
 }
 
@@ -140,6 +212,79 @@ export async function adminUpdateProductAction(
   }
 
   revalidatePath(`/admin/products/${productId}`)
+  revalidatePath("/admin/products")
+
+  const imageUrl = ((formData.get("imageUrl") || formData.get("featuredImage")) as string | null)?.trim()
+  if (imageUrl) {
+    const existingImg = await db.productImage.findFirst({
+      where: { productId, isPrimary: true },
+    })
+    if (existingImg) {
+      await db.productImage.update({
+        where: { id: existingImg.id },
+        data: { url: imageUrl },
+      })
+    } else {
+      await db.productImage.create({
+        data: {
+          productId,
+          url: imageUrl,
+          isPrimary: true,
+          sortOrder: 0,
+        },
+      })
+    }
+  }
+
+  const channelUsername = (formData.get("channelUsername") as string | null)?.trim() || undefined
+  const customHashtagsRaw = (formData.get("customHashtags") as string | null)?.trim()
+  let customHashtags: string[] | undefined = undefined
+  if (customHashtagsRaw) {
+    try {
+      customHashtags = JSON.parse(customHashtagsRaw)
+    } catch {
+      customHashtags = customHashtagsRaw.split(",").map((s) => s.trim()).filter(Boolean)
+    }
+  }
+
+  if (data.isActive) {
+    void syncProductToTelegram(productId, { customHashtags, channelUsername })
+  }
+
+  return { ok: true }
+}
+
+export async function adminToggleProductStatusAction(
+  productId: string,
+  isActive: boolean
+): Promise<{ ok: true }> {
+  await requireAdmin()
+  if (!productId) throw new Error("Product ID missing")
+
+  await db.product.update({
+    where: { id: productId },
+    data: { isActive },
+  })
+
+  revalidatePath("/admin/products")
+
+  if (isActive) {
+    void syncProductToTelegram(productId)
+  }
+
+  return { ok: true }
+}
+
+export async function adminDeleteProductAction(
+  productId: string
+): Promise<{ ok: true }> {
+  await requireAdmin()
+  if (!productId) throw new Error("Product ID missing")
+
+  await db.product.delete({
+    where: { id: productId },
+  })
+
   revalidatePath("/admin/products")
   return { ok: true }
 }

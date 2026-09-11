@@ -1,0 +1,126 @@
+/* ConfirmDialog.module.css - prefix .cd- */
+
+.cdOverlay {
+  position: fixed;
+  inset: 0;
+  background-color: color-mix(in srgb, var(--color-neutral-900) 50%, transparent);
+  backdrop-filter: blur(2px);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  animation: cdFadeIn 0.15s ease-out forwards;
+}
+
+.cdModal {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  width: 100%;
+  max-width: 28rem;
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  animation: cdScaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.cdHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.cdIconWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-full);
+  background-color: var(--color-danger-subtle);
+  color: var(--color-danger);
+  flex-shrink: 0;
+}
+
+.cdContent {
+  flex: 1;
+}
+
+.cdTitle {
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  color: var(--color-text);
+  margin-block-end: var(--space-1);
+}
+
+.cdDescription {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.cdActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
+.cdCancelBtn {
+  padding-block: var(--space-2);
+  padding-inline: var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.cdCancelBtn:hover {
+  background-color: var(--color-border-subtle);
+}
+
+.cdConfirmBtn {
+  padding-block: var(--space-2);
+  padding-inline: var(--space-4);
+  border-radius: var(--radius-md);
+  border: none;
+  background-color: var(--color-danger);
+  color: var(--color-accent-foreground);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+}
+
+.cdConfirmBtn:hover {
+  opacity: 0.9;
+}
+
+.cdConfirmBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@keyframes cdFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes cdScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

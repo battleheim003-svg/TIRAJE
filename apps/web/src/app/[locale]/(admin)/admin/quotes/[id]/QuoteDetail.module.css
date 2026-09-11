@@ -1,0 +1,236 @@
+/* QuoteDetail.module.css - prefix web-adm-qt-d */
+
+.web-adm-qt-d__wrapper {
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  max-width: 56rem;
+  width: 100%;
+}
+
+.web-adm-qt-d__backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-weight: 600;
+  width: fit-content;
+  transition: color var(--transition-fast);
+}
+
+.web-adm-qt-d__backLink:hover {
+  color: var(--color-text);
+}
+
+.web-adm-qt-d__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.web-adm-qt-d__title {
+  font-size: var(--font-size-2xl);
+  font-weight: 800;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.web-adm-qt-d__meta {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  margin-block-start: var(--space-1);
+}
+
+.web-adm-qt-d__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: var(--space-5);
+}
+
+.web-adm-qt-d__card {
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-5) var(--space-6);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.web-adm-qt-d__noteCard {
+  background-color: var(--color-warning-subtle);
+  border-color: var(--color-warning-500);
+}
+
+.web-adm-qt-d__sectionTitle {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+  margin: 0;
+  padding-block-end: var(--space-3);
+  border-block-end: 1px solid var(--color-border-subtle);
+}
+
+.web-adm-qt-d__dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-2) var(--space-4);
+  font-size: var(--font-size-sm);
+  margin: 0;
+}
+
+.web-adm-qt-d__dl dt {
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.web-adm-qt-d__dl dd {
+  color: var(--color-text);
+  font-weight: 500;
+  margin: 0;
+}
+
+.web-adm-qt-d__message {
+  line-height: 1.6;
+  white-space: pre-wrap;
+  font-weight: 400 !important;
+}
+
+.web-adm-qt-d__price {
+  color: var(--color-accent-text);
+  font-weight: 700 !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.web-adm-qt-d__productLink {
+  color: var(--color-accent-text);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.web-adm-qt-d__productLink:hover {
+  text-decoration: underline;
+}
+
+.web-adm-qt-d__noteText {
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  margin: 0;
+}
+
+/* QuoteUpdateForm styles */
+.web-adm-qt-d__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.web-adm-qt-d__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  align-items: flex-end;
+}
+
+.web-adm-qt-d__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  flex: 1;
+  min-width: 12rem;
+}
+
+.web-adm-qt-d__fieldFull {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  width: 100%;
+}
+
+.web-adm-qt-d__label {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.web-adm-qt-d__select,
+.web-adm-qt-d__input,
+.web-adm-qt-d__textarea {
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding-block: var(--space-2);
+  padding-inline: var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.web-adm-qt-d__select:focus,
+.web-adm-qt-d__input:focus,
+.web-adm-qt-d__textarea:focus {
+  outline: none;
+  border-color: var(--color-accent-text);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 15%, transparent);
+}
+
+.web-adm-qt-d__textarea {
+  resize: vertical;
+  min-height: 5rem;
+}
+
+.web-adm-qt-d__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-accent);
+  color: var(--color-accent-foreground);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  padding-block: var(--space-2);
+  padding-inline: var(--space-5);
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: background-color var(--transition-fast);
+}
+
+.web-adm-qt-d__btn:hover:not(:disabled) {
+  background-color: var(--color-accent-hover);
+}
+
+.web-adm-qt-d__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.web-adm-qt-d__success {
+  font-size: var(--font-size-xs);
+  color: var(--color-success-500);
+  background-color: var(--color-success-subtle);
+  border-radius: var(--radius-md);
+  padding-block: var(--space-2);
+  padding-inline: var(--space-3);
+  margin: 0;
+}
+
+.web-adm-qt-d__error {
+  font-size: var(--font-size-xs);
+  color: var(--color-error-500);
+  background-color: var(--color-error-subtle);
+  border-radius: var(--radius-md);
+  padding-block: var(--space-2);
+  padding-inline: var(--space-3);
+  margin: 0;
+}

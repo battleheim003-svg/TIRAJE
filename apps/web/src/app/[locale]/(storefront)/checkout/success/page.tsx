@@ -1,6 +1,14 @@
 import Link from "next/link"
+import type { Metadata } from "next"
 import { getLocale } from "next-intl/server"
-import { CheckCircle } from "lucide-react"
+import { CheckCircle2 } from "lucide-react"
+import { Card, Button } from "@tirajeh/ui"
+import styles from "./Success.module.css"
+
+export const metadata: Metadata = {
+  title: "ثبت موفق سفارش | تیراژه",
+  description: "سفارش شما با موفقیت در سامانه تیراژه ثبت شد",
+}
 
 type Props = { searchParams: Promise<Record<string, string | undefined>> }
 
@@ -11,47 +19,46 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
   const orderNumber = sp.order ?? ""
 
   return (
-    <>
-      <div className="cs-root">
-        <CheckCircle className="cs-icon" aria-hidden="true" />
-        <h1 className="cs-title">{fa ? "سفارش شما ثبت شد!" : "Order Placed!"}</h1>
-        {orderNumber && (
-          <p className="cs-num">
-            {fa ? `شماره سفارش: ${orderNumber}` : `Order #${orderNumber}`}
-          </p>
-        )}
-        <p className="cs-msg">
-          {fa
-            ? "با شما تماس میگیریم تا جزئیات تحویل را هماهنگ کنیم."
-            : "We'll contact you to coordinate delivery details."}
-        </p>
-        <div className="cs-actions">
-          <Link href={`/${locale}/account/orders`} className="cs-btn cs-btn--primary">
-            {fa ? "مشاهده سفارشهایم" : "My Orders"}
-          </Link>
-          <Link href={`/${locale}/products`} className="cs-btn cs-btn--secondary">
-            {fa ? "ادامه خرید" : "Continue Shopping"}
-          </Link>
+    <div className={styles["web-chk-ok__root"]}>
+      <Card variant="outlined" className={styles["web-chk-ok__card"]}>
+        <div className={styles["web-chk-ok__icon-wrap"]}>
+          <CheckCircle2
+            style={{ width: "4rem", height: "4rem", color: "var(--color-success)" }}
+            aria-hidden="true"
+          />
         </div>
-      </div>
 
-      <style>{`
-        .cs-root {
-          min-height: 60vh; display: flex; flex-direction: column;
-          align-items: center; justify-content: center;
-          text-align: center; padding: 3rem 1rem; gap: 1rem;
-        }
-        .cs-icon { width: 4rem; height: 4rem; color: var(--color-success, #16a34a); }
-        .cs-title { font-size: 1.75rem; font-weight: 800; color: var(--color-text); letter-spacing: -0.02em; }
-        .cs-num { font-size: 1rem; font-weight: 700; color: var(--color-accent); font-variant-numeric: tabular-nums; }
-        .cs-msg { font-size: 0.9375rem; color: var(--color-text-muted); max-width: 28rem; line-height: 1.7; }
-        .cs-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center; margin-top: 0.5rem; }
-        .cs-btn { display: inline-block; font-size: 0.9375rem; font-weight: 700; padding: 0.625rem 1.5rem; border-radius: var(--radius-lg); text-decoration: none; transition: background-color var(--transition-fast); }
-        .cs-btn--primary { background-color: var(--color-accent); color: #fff; }
-        .cs-btn--primary:hover { background-color: var(--color-accent-hover); }
-        .cs-btn--secondary { background-color: var(--color-surface); color: var(--color-text-secondary); border: 1px solid var(--color-border); }
-        .cs-btn--secondary:hover { border-color: var(--color-accent); color: var(--color-accent); }
-      `}</style>
-    </>
+        <h1 className={styles["web-chk-ok__title"]}>
+          {fa ? "سفارش شما با موفقیت ثبت شد!" : "Your Order Has Been Placed!"}
+        </h1>
+
+        {orderNumber && (
+          <div className={styles["web-chk-ok__order-badge"]}>
+            <span>{fa ? "شماره پیگیری سفارش:" : "Order Number:"}</span>
+            <span>{orderNumber}</span>
+          </div>
+        )}
+
+        <p className={styles["web-chk-ok__msg"]}>
+          {fa
+            ? "از خرید شما سپاسگزاریم. همکاران ما در واحد لجستیک و فروش به زودی جهت هماهنگی بارگیری و ارسال با شما تماس خواهند گرفت."
+            : "Thank you for your order. Our logistics team will contact you shortly to coordinate shipment and delivery details."}
+        </p>
+
+        <div className={styles["web-chk-ok__actions"]}>
+          <Button asChild variant="primary" size="lg" className={styles["web-chk-ok__btn"]}>
+            <Link href={`/${locale}/account/orders`}>
+              {fa ? "مشاهده سفارش‌های من" : "View My Orders"}
+            </Link>
+          </Button>
+
+          <Button asChild variant="secondary" size="lg" className={styles["web-chk-ok__btn"]}>
+            <Link href={`/${locale}`}>
+              {fa ? "بازگشت به صفحه اصلی" : "Back to Home"}
+            </Link>
+          </Button>
+        </div>
+      </Card>
+    </div>
   )
 }

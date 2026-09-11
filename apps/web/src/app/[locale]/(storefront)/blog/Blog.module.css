@@ -1,0 +1,201 @@
+/* prefix: web-blog */
+
+/* Hero Banner */
+.web-blog__hero {
+  width: 100%;
+  min-height: 14rem;
+  background: linear-gradient(135deg, var(--color-primary-900), var(--color-primary-700));
+  padding-block: var(--space-12) var(--space-10);
+  padding-inline: var(--space-4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.web-blog__hero-inner {
+  max-width: 48rem;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.web-blog__hero-title {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-extrabold);
+  color: var(--color-bg-elevated);
+  letter-spacing: -0.02em;
+}
+
+.web-blog__hero-subtitle {
+  font-size: var(--font-size-base);
+  color: var(--color-primary-100);
+  line-height: 1.6;
+}
+
+/* Container */
+.web-blog__container {
+  max-width: 72rem;
+  margin-inline: auto;
+  padding-block: var(--space-10);
+  padding-inline: var(--space-4);
+}
+
+/* Empty State */
+.web-blog__empty {
+  text-align: center;
+  padding-block: var(--space-16);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-base);
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+}
+
+/* Post Grid */
+.web-blog__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  gap: var(--space-6);
+}
+
+/* Post Card */
+.web-blog__card-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  height: 100%;
+}
+
+.web-blog__card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: var(--color-bg-elevated);
+}
+
+.web-blog__thumb-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  background-color: var(--color-bg);
+}
+
+.web-blog__thumb {
+  object-fit: cover;
+  transition: transform var(--transition-normal);
+}
+
+.web-blog__card:hover .web-blog__thumb {
+  transform: scale(1.04);
+}
+
+.web-blog__thumb-placeholder {
+  width: 100%;
+  height: 100%;
+  background-color: var(--color-border-subtle);
+}
+
+.web-blog__body {
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex: 1;
+}
+
+.web-blog__meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-block-end: var(--space-1);
+}
+
+.web-blog__meta {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  display: flex;
+  gap: var(--space-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.web-blog__title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: color var(--transition-fast);
+}
+
+.web-blog__card:hover .web-blog__title {
+  color: var(--color-accent);
+}
+
+.web-blog__excerpt {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-block-start: var(--space-1);
+}
+
+.web-blog__read-more {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-block-start: auto;
+  padding-block-start: var(--space-3);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-accent);
+}
+
+/* Pagination */
+.web-blog__pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-2);
+  margin-block-start: var(--space-10);
+}
+
+.web-blog__page-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.web-blog__page-btn:hover:not(.web-blog__page-btn--active) {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.web-blog__page-btn--active {
+  background-color: var(--color-accent);
+  color: var(--color-accent-foreground, var(--color-bg-elevated));
+  border: none;
+  font-weight: var(--font-weight-bold);
+}

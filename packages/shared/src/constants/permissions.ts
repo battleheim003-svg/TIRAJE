@@ -22,6 +22,9 @@ export const PERMISSIONS = {
   // Quotes
   QUOTE_READ: "quote:read",
   QUOTE_RESPOND: "quote:respond",
+  // Contacts / Support Tickets
+  CONTACT_READ: "contact:read",
+  CONTACT_RESPOND: "contact:respond",
   // Shipments
   SHIPMENT_READ: "shipment:read",
   SHIPMENT_UPDATE: "shipment:update",

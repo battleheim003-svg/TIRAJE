@@ -74,6 +74,22 @@ export class EmailService {
       React.createElement(WelcomeEmail, { name: params.name })
     )
   }
+
+  async sendContactEmail(params: { to: string; subject: string; html: string; replyTo?: string }) {
+    try {
+      if (!process.env.RESEND_API_KEY) return
+      const resend = getResend()
+      await resend.emails.send({
+        from: FROM,
+        to: params.to,
+        reply_to: params.replyTo,
+        subject: params.subject,
+        html: params.html,
+      })
+    } catch (err) {
+      console.error("[email:sendContact]", err)
+    }
+  }
 }
 
 export const emailService = new EmailService()

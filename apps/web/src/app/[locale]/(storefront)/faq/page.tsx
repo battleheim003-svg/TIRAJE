@@ -1,6 +1,7 @@
 import { getLocale } from "next-intl/server"
 import type { Metadata } from "next"
 import { SITE_CONFIG } from "@/config/site"
+import styles from "./Faq.module.css"
 
 export const metadata: Metadata = {
   title: "سؤالات متداول | تیراژه",
@@ -84,170 +85,63 @@ export default async function FaqPage() {
 
   return (
     <>
-      <div className="faq-hero">
-        <div className="faq-container">
-          <p className="faq-eyebrow">{fa ? "راهنما" : "Help"}</p>
-          <h1 className="faq-title">{fa ? "سؤالات متداول" : "Frequently Asked Questions"}</h1>
-          <p className="faq-sub">
+      <div className={styles["web-faq__hero"]}>
+        <div className={styles["web-faq__container"]}>
+          <p className={styles["web-faq__eyebrow"]}>{fa ? "راهنما" : "Help"}</p>
+          <h1 className={styles["web-faq__title"]}>{fa ? "سؤالات متداول" : "Frequently Asked Questions"}</h1>
+          <p className={styles["web-faq__sub"]}>
             {fa
               ? "پاسخ سؤالات رایج را اینجا پیدا کنید. نیاز به کمک بیشتر دارید؟"
               : "Find answers to common questions. Need more help?"}
             {" "}
-            <a href={`tel:${SITE_CONFIG.phone.raw}`} className="faq-phone-link" dir="ltr">
+            <a href={`tel:${SITE_CONFIG.phone.raw}`} className={styles["web-faq__phoneLink"]} dir="ltr">
               {SITE_CONFIG.phone.fa}
             </a>
           </p>
         </div>
       </div>
 
-      <div className="faq-container faq-body">
-        <div className="faq-list" role="list">
+      <div className={`${styles["web-faq__container"]} ${styles["web-faq__body"]}`}>
+        <div className={styles["web-faq__list"]} role="list">
           {faqs.map((item, i) => (
-            <details key={i} className="faq-item" role="listitem">
-              <summary className="faq-question">
+            <details key={i} className={styles["web-faq__item"]} role="listitem">
+              <summary className={styles["web-faq__question"]}>
                 <span>{item.q}</span>
-                <span className="faq-chevron" aria-hidden="true">▾</span>
+                <span className={styles["web-faq__chevron"]} aria-hidden="true">▾</span>
               </summary>
-              <div className="faq-answer">
+              <div className={styles["web-faq__answer"]}>
                 <p>{item.a}</p>
               </div>
             </details>
           ))}
         </div>
 
-        <div className="faq-contact-box">
-          <p className="faq-contact-title">
+        <div className={styles["web-faq__contactBox"]}>
+          <p className={styles["web-faq__contactTitle"]}>
             {fa ? "پاسخ سؤال خود را نیافتید؟" : "Didn't find your answer?"}
           </p>
-          <p className="faq-contact-sub">
+          <p className={styles["web-faq__contactSub"]}>
             {fa
               ? "کارشناسان ما آماده پاسخگویی هستند"
               : "Our specialists are ready to help"}
           </p>
-          <div className="faq-contact-actions">
+          <div className={styles["web-faq__contactActions"]}>
             <a
               href={`tel:${SITE_CONFIG.phone.raw}`}
-              className="faq-cta faq-cta--primary"
+              className={`${styles["web-faq__cta"]} ${styles["web-faq__ctaPrimary"]}`}
               dir="ltr"
             >
               {SITE_CONFIG.phone.fa}
             </a>
-            <a href={`/${locale}/contact`} className="faq-cta faq-cta--outline">
+            <a
+              href={`/${locale}/contact`}
+              className={`${styles["web-faq__cta"]} ${styles["web-faq__ctaOutline"]}`}
+            >
               {fa ? "فرم تماس" : "Contact Form"}
             </a>
           </div>
         </div>
       </div>
-
-      <style>{`
-        .faq-container {
-          max-width: 52rem;
-          margin-inline: auto;
-          padding-inline: 1.5rem;
-        }
-        .faq-hero {
-          background-color: var(--color-surface);
-          border-bottom: 1px solid var(--color-border);
-          padding-block: 3rem 2.5rem;
-          text-align: center;
-        }
-        .faq-eyebrow {
-          font-size: 0.6875rem;
-          font-weight: 700;
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-          color: var(--color-accent);
-          margin-bottom: 0.75rem;
-        }
-        .faq-title {
-          font-size: clamp(1.625rem, 4vw, 2.25rem);
-          font-weight: 800;
-          color: var(--color-text);
-          letter-spacing: -0.025em;
-          margin-bottom: 0.875rem;
-        }
-        .faq-sub {
-          font-size: 0.9375rem;
-          color: var(--color-text-secondary);
-          line-height: 1.6;
-        }
-        .faq-phone-link {
-          color: var(--color-accent);
-          font-weight: 600;
-          text-decoration: none;
-          white-space: nowrap;
-        }
-        .faq-phone-link:hover { text-decoration: underline; }
-
-        .faq-body { padding-block: 3rem 4rem; }
-        .faq-list { display: flex; flex-direction: column; gap: 0; }
-
-        .faq-item {
-          border-bottom: 1px solid var(--color-border-subtle);
-        }
-        .faq-item:first-child {
-          border-top: 1px solid var(--color-border-subtle);
-        }
-
-        .faq-question {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 1rem;
-          padding-block: 1.25rem;
-          font-size: 0.9375rem;
-          font-weight: 600;
-          color: var(--color-text);
-          cursor: pointer;
-          list-style: none;
-          user-select: none;
-          transition: color var(--transition-fast);
-        }
-        .faq-question::-webkit-details-marker { display: none; }
-        .faq-question:hover { color: var(--color-accent); }
-        .faq-item[open] .faq-question { color: var(--color-accent); }
-
-        .faq-chevron {
-          font-size: 1rem;
-          flex-shrink: 0;
-          transition: transform 0.2s ease;
-          color: var(--color-text-muted);
-        }
-        .faq-item[open] .faq-chevron { transform: rotate(180deg); }
-
-        .faq-answer {
-          padding-bottom: 1.25rem;
-          padding-inline-end: 2rem;
-          font-size: 0.9375rem;
-          color: var(--color-text-secondary);
-          line-height: 1.75;
-        }
-
-        .faq-contact-box {
-          margin-top: 3rem;
-          padding: 2rem;
-          background-color: var(--color-accent-subtle);
-          border: 1px solid color-mix(in srgb, var(--color-accent) 20%, transparent);
-          border-radius: var(--radius-xl);
-          text-align: center;
-        }
-        .faq-contact-title { font-size: 1.0625rem; font-weight: 700; color: var(--color-text); margin-bottom: 0.375rem; }
-        .faq-contact-sub { font-size: 0.875rem; color: var(--color-text-secondary); margin-bottom: 1.25rem; }
-        .faq-contact-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; }
-        .faq-cta {
-          display: inline-flex; align-items: center;
-          padding: 0.5625rem 1.375rem;
-          border-radius: var(--radius-md);
-          font-size: 0.9375rem;
-          font-weight: 700;
-          text-decoration: none;
-          transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
-        }
-        .faq-cta--primary { background-color: var(--color-accent); color: #fff; border: 1.5px solid var(--color-accent); }
-        .faq-cta--primary:hover { background-color: var(--color-accent-hover); border-color: var(--color-accent-hover); }
-        .faq-cta--outline { background: none; border: 1.5px solid var(--color-accent); color: var(--color-accent); }
-        .faq-cta--outline:hover { background-color: var(--color-accent); color: #fff; }
-      `}</style>
     </>
   )
 }

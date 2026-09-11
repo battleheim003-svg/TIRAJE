@@ -1,0 +1,260 @@
+/* Dashboard.module.css - prefix .dash- */
+
+.dashRoot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-7, 1.75rem);
+}
+
+.dashHeader {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.dashTitle {
+  font-size: var(--font-size-2xl);
+  font-weight: 800;
+  color: var(--color-text);
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.dashSub {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+/* Stat Cards */
+.dashStatsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-4);
+}
+
+.dashStatCard {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+  text-decoration: none;
+  color: inherit;
+}
+
+.dashStatCard:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-accent-subtle);
+}
+
+.dashStatTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dashStatIconWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-md);
+  background-color: var(--color-accent-subtle);
+  color: var(--color-accent-text);
+}
+
+.dashStatIconWrapSuccess {
+  background-color: var(--color-success-subtle);
+  color: var(--color-success);
+}
+
+.dashStatIconWrapWarning {
+  background-color: var(--color-warning-subtle);
+  color: var(--color-warning);
+}
+
+.dashStatIconWrapInfo {
+  background-color: var(--color-info-subtle);
+  color: var(--color-info);
+}
+
+.dashStatBadge {
+  padding-block: var(--space-1);
+  padding-inline: var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  background-color: var(--color-danger);
+  color: var(--color-accent-foreground);
+}
+
+.dashStatLabel {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.dashStatValue {
+  font-size: var(--font-size-3xl);
+  font-weight: 800;
+  color: var(--color-text);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.dashStatDesc {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.dashTrendPositive {
+  color: var(--color-success);
+  font-weight: 600;
+}
+
+.dashTrendNegative {
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+/* Recent Orders Section */
+.dashSection {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.dashSectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-block: var(--space-4);
+  padding-inline: var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.dashSectionTitle {
+  font-size: var(--font-size-base);
+  font-weight: 800;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.dashViewAll {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-accent-text);
+  text-decoration: none;
+  transition: opacity var(--transition-fast);
+}
+
+.dashViewAll:hover {
+  opacity: 0.8;
+}
+
+/* Orders Table */
+.dashTableWrap {
+  overflow-x: auto;
+}
+
+.dashTable {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: start;
+  font-size: var(--font-size-sm);
+}
+
+.dashTable th {
+  padding-block: var(--space-3);
+  padding-inline: var(--space-5);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--color-text-muted);
+  background-color: var(--color-background);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.dashTable td {
+  padding-block: var(--space-3);
+  padding-inline: var(--space-5);
+  border-bottom: 1px solid var(--color-border-subtle);
+  color: var(--color-text);
+  white-space: nowrap;
+  transition: background-color var(--transition-fast);
+}
+
+.dashTableRow:hover td {
+  background-color: var(--color-border-subtle);
+}
+
+.dashTableLink {
+  color: var(--color-accent-text);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.dashTableLink:hover {
+  text-decoration: underline;
+}
+
+.dashTableMuted {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+
+.dashTableEmpty {
+  text-align: center;
+  color: var(--color-text-muted);
+  padding: var(--space-12) !important;
+}
+
+/* Status Badges */
+.dashBadge {
+  display: inline-flex;
+  align-items: center;
+  padding-block: var(--space-1);
+  padding-inline: var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+}
+
+.dashBadgeSuccess {
+  background-color: var(--color-success-subtle);
+  color: var(--color-success);
+}
+
+.dashBadgeWarning {
+  background-color: var(--color-warning-subtle);
+  color: var(--color-warning);
+}
+
+.dashBadgeDanger {
+  background-color: var(--color-danger-subtle);
+  color: var(--color-danger);
+}
+
+.dashBadgeInfo {
+  background-color: var(--color-info-subtle);
+  color: var(--color-info);
+}
+
+.dashTabular {
+  font-variant-numeric: tabular-nums;
+}

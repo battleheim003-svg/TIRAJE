@@ -1,0 +1,37 @@
+/* PriceDisplay.module.css - prefix ui-price */
+
+.ui-price__wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.ui-price__main {
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.ui-price--sm {
+  font-size: var(--font-size-sm);
+}
+
+.ui-price--md {
+  font-size: var(--font-size-base);
+}
+
+.ui-price--lg {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+}
+
+.ui-price--xl {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+}
+
+.ui-price__compare {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+  font-variant-numeric: tabular-nums;
+}

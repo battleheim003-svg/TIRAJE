@@ -1,0 +1,210 @@
+/* FreightCalculator.module.css - prefix web-freight-calc */
+
+.web-freight-calc__root {
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  padding: var(--space-5);
+}
+
+.web-freight-calc__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.web-freight-calc__headerIcon {
+  color: var(--color-accent-text);
+  flex-shrink: 0;
+}
+
+.web-freight-calc__headerTitle {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.web-freight-calc__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.web-freight-calc__row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+}
+
+@media (min-width: 640px) {
+  .web-freight-calc__row {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.web-freight-calc__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.web-freight-calc__label {
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.web-freight-calc__input,
+.web-freight-calc__select {
+  width: 100%;
+  padding-block: var(--space-2);
+  padding-inline: var(--space-3);
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-family: inherit;
+  color: var(--color-text);
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.web-freight-calc__input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.web-freight-calc__input:focus,
+.web-freight-calc__select:focus {
+  border-color: var(--color-accent-text);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent-text) 12%, transparent);
+}
+
+.web-freight-calc__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  align-self: flex-start;
+  background-color: var(--color-accent);
+  color: var(--color-accent-foreground);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  font-family: inherit;
+  padding-block: var(--space-2);
+  padding-inline: var(--space-4);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background-color var(--transition-fast), opacity var(--transition-fast);
+}
+
+.web-freight-calc__btn:hover:not(:disabled) {
+  background-color: var(--color-accent-hover);
+}
+
+.web-freight-calc__btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.web-freight-calc__spinner {
+  animation: web-freight-calc-spin 0.8s linear infinite;
+}
+
+@keyframes web-freight-calc-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.web-freight-calc__error {
+  margin-top: var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--color-error-500);
+}
+
+.web-freight-calc__noResults {
+  margin-top: var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.web-freight-calc__results {
+  margin-top: var(--space-4);
+}
+
+.web-freight-calc__resultsLabel {
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-2);
+}
+
+.web-freight-calc__tableWrap {
+  overflow-x: auto;
+}
+
+.web-freight-calc__table {
+  width: 100%;
+  min-width: max-content;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+.web-freight-calc__table th {
+  padding-block-end: var(--space-2);
+  padding-inline-end: var(--space-3);
+  text-align: start;
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.web-freight-calc__table td {
+  padding-block: var(--space-2);
+  padding-inline-end: var(--space-3);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.web-freight-calc__table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.web-freight-calc__table tbody tr:hover td {
+  background-color: var(--color-border-subtle);
+}
+
+.web-freight-calc__tdBold {
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.web-freight-calc__tdMuted {
+  color: var(--color-text-secondary);
+}
+
+.web-freight-calc__tdPrice {
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.web-freight-calc__selectBtn {
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  font-family: inherit;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding-block: var(--space-1);
+  padding-inline: var(--space-2);
+  color: var(--color-accent-text);
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+
+.web-freight-calc__selectBtn:hover {
+  border-color: var(--color-accent-text);
+}

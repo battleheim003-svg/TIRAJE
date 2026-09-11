@@ -1,0 +1,38 @@
+/* SkeletonRow.module.css - prefix .sk- */
+
+.skRow {
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.skCell {
+  padding-block: var(--space-4);
+  padding-inline: var(--space-5);
+}
+
+.skBox {
+  height: 1rem;
+  background-color: var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  animation: skPulse 1.5s ease-in-out infinite;
+}
+
+.skBoxShort {
+  width: 40%;
+}
+
+.skBoxMedium {
+  width: 70%;
+}
+
+.skBoxLong {
+  width: 90%;
+}
+
+@keyframes skPulse {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}

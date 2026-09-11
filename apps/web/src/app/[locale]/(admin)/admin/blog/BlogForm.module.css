@@ -1,0 +1,292 @@
+/* BlogForm.module.css - prefix web-adm-blg-form */
+
+.web-adm-blg-form__root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  width: 100%;
+}
+
+.web-adm-blg-form__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.web-adm-blg-form__headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.web-adm-blg-form__backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  text-decoration: none;
+  width: fit-content;
+  transition: color var(--transition-fast);
+}
+
+.web-adm-blg-form__backLink:hover {
+  color: var(--color-accent-text);
+}
+
+.web-adm-blg-form__title {
+  font-size: var(--font-size-2xl);
+  font-weight: 800;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.web-adm-blg-form__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  flex-wrap: wrap;
+}
+
+.web-adm-blg-form__viewSiteBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding-block: var(--space-1);
+  padding-inline: var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-bg-elevated);
+  color: var(--color-text);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-decoration: none;
+  transition: all var(--transition-fast);
+}
+
+.web-adm-blg-form__viewSiteBtn:hover {
+  background-color: var(--color-border-subtle);
+  border-color: var(--color-accent-text);
+}
+
+.web-adm-blg-form__container,
+.tflContainer {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-8);
+  align-items: flex-start;
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .web-adm-blg-form__container,
+  .tflContainer {
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+    gap: var(--space-10);
+  }
+}
+
+.web-adm-blg-form__formCol,
+.tflFormCol {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  min-width: 0;
+}
+
+.web-adm-blg-form__previewCol,
+.tflPreviewCol {
+  position: sticky;
+  top: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+@media (max-width: 1023px) {
+  .web-adm-blg-form__previewCol,
+  .tflPreviewCol {
+    position: static;
+    margin-block-start: var(--space-6);
+  }
+}
+
+.web-adm-blg-form__field,
+.tflField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  position: relative;
+}
+
+.web-adm-blg-form__label,
+.tflLabel {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.web-adm-blg-form__counter,
+.tflCounter {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.web-adm-blg-form__counterWarn,
+.tflCounterWarn {
+  color: var(--color-warning-500);
+}
+
+.web-adm-blg-form__counterDanger,
+.tflCounterDanger {
+  color: var(--color-error-500);
+}
+
+.web-adm-blg-form__input,
+.web-adm-blg-form__textarea,
+.web-adm-blg-form__select,
+.tflInput,
+.tflTextarea,
+.tflSelect {
+  width: 100%;
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding-block: var(--space-2);
+  padding-inline: var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  outline: none;
+}
+
+.web-adm-blg-form__input:focus,
+.web-adm-blg-form__textarea:focus,
+.web-adm-blg-form__select:focus,
+.tflInput:focus,
+.tflTextarea:focus,
+.tflSelect:focus {
+  border-color: var(--color-accent-text);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 15%, transparent);
+}
+
+.web-adm-blg-form__input[readonly],
+.tflInput[readonly] {
+  background-color: var(--color-bg);
+  color: var(--color-text-muted);
+  cursor: default;
+}
+
+.web-adm-blg-form__row,
+.tflRow {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+}
+
+@media (min-width: 640px) {
+  .web-adm-blg-form__rowTwo,
+  .tflRowTwo {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.web-adm-blg-form__divider,
+.tflDivider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-block: var(--space-4) var(--space-2);
+}
+
+.web-adm-blg-form__dividerLine,
+.tflDividerLine {
+  flex: 1;
+  height: 1px;
+  background-color: var(--color-border);
+}
+
+.web-adm-blg-form__dividerBadge,
+.tflDividerBadge {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--color-text-muted);
+  background-color: var(--color-border-subtle);
+  padding-block: var(--space-1);
+  padding-inline: var(--space-2);
+  border-radius: var(--radius-full);
+}
+
+.web-adm-blg-form__submitArea,
+.tflSubmitArea {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-block-start: var(--space-4);
+}
+
+.web-adm-blg-form__submitBtn,
+.tflSubmitBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding-block: var(--space-3);
+  padding-inline: var(--space-6);
+  border-radius: var(--radius-lg);
+  border: none;
+  background-color: var(--color-accent);
+  color: var(--color-accent-foreground);
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.web-adm-blg-form__submitBtn:hover:not(:disabled),
+.tflSubmitBtn:hover:not(:disabled) {
+  background-color: var(--color-accent-hover);
+}
+
+.web-adm-blg-form__submitBtn:disabled,
+.tflSubmitBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.web-adm-blg-form__submitBtnSuccess,
+.tflSubmitBtnSuccess {
+  background-color: var(--color-accent);
+}
+
+.web-adm-blg-form__cancelBtn,
+.tflCancelBtn {
+  display: inline-flex;
+  align-items: center;
+  padding-block: var(--space-3);
+  padding-inline: var(--space-5);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color var(--transition-fast);
+}
+
+.web-adm-blg-form__cancelBtn:hover,
+.tflCancelBtn:hover {
+  background-color: var(--color-border-subtle);
+  color: var(--color-text);
+}

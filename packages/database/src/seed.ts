@@ -28,7 +28,7 @@ async function main() {
     },
   })
 
-  await db.role.upsert({
+  const superAdminRole = await db.role.upsert({
     where: { name: "super_admin" },
     update: {
       displayName: "مدیر ارشد",
@@ -61,6 +61,8 @@ async function main() {
     { resource: "post", action: "publish" },
     { resource: "quote", action: "read" },
     { resource: "quote", action: "respond" },
+    { resource: "contact", action: "read" },
+    { resource: "contact", action: "respond" },
     { resource: "shipment", action: "read" },
     { resource: "shipment", action: "update" },
     { resource: "setting", action: "read" },
@@ -75,19 +77,21 @@ async function main() {
       update: {},
       create: p,
     })
-    await db.rolePermission.upsert({
-      where: {
-        roleId_permissionId: {
-          roleId: adminRole.id,
+    for (const role of [adminRole, superAdminRole]) {
+      await db.rolePermission.upsert({
+        where: {
+          roleId_permissionId: {
+            roleId: role.id,
+            permissionId: perm.id,
+          },
+        },
+        update: {},
+        create: {
+          roleId: role.id,
           permissionId: perm.id,
         },
-      },
-      update: {},
-      create: {
-        roleId: adminRole.id,
-        permissionId: perm.id,
-      },
-    })
+      })
+    }
   }
   console.log("✅ Roles and permissions seeded")
 

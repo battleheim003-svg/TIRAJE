@@ -4,10 +4,10 @@ import { getLocale } from "next-intl/server"
 import "./globals.css"
 
 const vazirmatn = Vazirmatn({
-  subsets: ["arabic", "latin"],
+  subsets: ["arabic"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-vazirmatn",
   display: "swap",
-  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
 })
 
 export const metadata: Metadata = {
@@ -17,10 +17,19 @@ export const metadata: Metadata = {
   },
   description: "خرید سیمان، مصالح ساختمانی و مواد اولیه از بهترین کارخانه‌ها با تحویل سراسری",
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://tirajeh.ir"),
+  icons: {
+    icon: [
+      { url: "/tirajeh-icon.svg", type: "image/svg+xml" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+    ],
+    apple: { url: "/apple-touch-icon.png", sizes: "180x180" },
+  },
   openGraph: {
-    siteName: "تیراژه",
+    siteName: "تیراژه صنعت خاک",
     locale: "fa_IR",
     type: "website",
+    images: [{ url: "/og-image.png", width: 2000, height: 1600, alt: "تیراژه صنعت خاک" }],
   },
 }
 

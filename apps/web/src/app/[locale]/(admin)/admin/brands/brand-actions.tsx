@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react"
 import { Trash2 } from "lucide-react"
 import { adminDeleteBrandAction } from "@/actions/admin-brands"
+import styles from "./Brands.module.css"
 
 interface Props {
   brandId: string
@@ -35,16 +36,16 @@ export default function BrandActions({ brandId, fa, productCount }: Props) {
 
   return (
     <>
-      <button onClick={handleDelete} disabled={isPending} className="ba-btn" title={fa ? "حذف" : "Delete"}>
-        <Trash2 size={14} />
+      <button
+        onClick={handleDelete}
+        disabled={isPending}
+        className={styles["web-adm-brand__deleteBtn"]}
+        title={fa ? "حذف" : "Delete"}
+        aria-label={fa ? "حذف" : "Delete"}
+      >
+        <Trash2 style={{ width: "0.875rem", height: "0.875rem" }} aria-hidden="true" />
       </button>
-      {error && <span className="ba-error" role="alert">{error}</span>}
-      <style>{`
-        .ba-btn { display: inline-flex; align-items: center; justify-content: center; background: none; border: 1px solid var(--color-danger); color: var(--color-danger); border-radius: var(--radius-sm, 4px); padding: 0.25rem; cursor: pointer; transition: background-color var(--transition-fast); }
-        .ba-btn:hover:not(:disabled) { background-color: var(--color-danger-subtle); }
-        .ba-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-        .ba-error { font-size: 0.75rem; color: var(--color-danger); max-width: 12rem; line-height: 1.3; }
-      `}</style>
+      {error && <span className={styles["web-adm-brand__error"]} role="alert">{error}</span>}
     </>
   )
 }

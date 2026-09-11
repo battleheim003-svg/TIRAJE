@@ -1,0 +1,195 @@
+﻿/* prefix: web-pcard */
+
+.web-pcard {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  transition: box-shadow var(--transition-fast),
+              border-color var(--transition-fast),
+              transform var(--transition-fast);
+  text-decoration: none;
+  color: inherit;
+  height: 100%;
+}
+
+.web-pcard:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-accent);
+  transform: translateY(-2px);
+}
+
+.web-pcard:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* ── Image ────────────────────────────────────── */
+
+.web-pcard__img-wrap {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background-color: var(--color-bg);
+  flex-shrink: 0;
+}
+
+.web-pcard__img {
+  object-fit: cover;
+  transition: transform var(--transition-slow);
+}
+
+.web-pcard:hover .web-pcard__img {
+  transform: scale(1.04);
+}
+
+.web-pcard__img-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+}
+
+.web-pcard__discount-badge {
+  position: absolute;
+  top: var(--space-2);
+  inset-inline-start: var(--space-2);
+  background-color: var(--color-danger);
+  color: var(--color-bg-elevated);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  padding-block: var(--space-1);
+  padding-inline: var(--space-2);
+  border-radius: var(--radius-sm);
+  line-height: var(--line-height-tight);
+  z-index: var(--z-index-base);
+}
+
+/* ── Body ─────────────────────────────────────── */
+
+.web-pcard__body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding-block: var(--space-4);
+  padding-inline: var(--space-4);
+  gap: var(--space-2);
+}
+
+.web-pcard__brand {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-accent);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+  margin: 0;
+}
+
+.web-pcard__name {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  line-height: var(--line-height-snug);
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.web-pcard__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-block-start: var(--space-1);
+}
+
+.web-pcard__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  margin-block-start: var(--space-1);
+}
+
+.web-pcard__weight {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.web-pcard__factory {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.web-pcard__divider {
+  height: 1px;
+  background-color: var(--color-border-subtle);
+  margin-block: var(--space-1);
+}
+
+/* ── Price Row ────────────────────────────────── */
+
+.web-pcard__price-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-block-start: auto;
+}
+
+.web-pcard__prices {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-1);
+}
+
+.web-pcard__compare {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+  font-variant-numeric: tabular-nums;
+}
+
+.web-pcard__price {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-accent);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.web-pcard__price--unavailable {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-normal);
+  font-style: italic;
+}
+
+.web-pcard__price-unit {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  text-align: end;
+  line-height: 1;
+}
+
+/* ── Update Info ──────────────────────────────── */
+
+.web-pcard__update {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  margin: 0;
+  margin-block-start: var(--space-1);
+}

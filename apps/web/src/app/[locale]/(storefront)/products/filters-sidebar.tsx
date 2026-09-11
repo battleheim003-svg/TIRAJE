@@ -1,10 +1,11 @@
-/**
+﻿/**
  * Server-rendered filter sidebar.
  * Uses native <details>/<summary> for mobile collapse — no client JS.
  * All filters submit via GET <form> — works without JS.
  */
 import { SlidersHorizontal, Search } from "lucide-react"
-import { CEMENT_TYPE_LABEL, PACKAGING_LABEL, STOCK_LABEL } from "@/lib/cement"
+import { CEMENT_TYPE_LABEL, PACKAGING_LABEL } from "@/lib/cement"
+import styles from "./FiltersSidebar.module.css"
 
 interface FilterCategory {
   id: string
@@ -94,18 +95,18 @@ export function FiltersSidebar({
     current.maxPrice
 
   return (
-    <aside className="filters-sidebar" aria-label={t.filters}>
+    <aside className={styles["web-fltr"]} aria-label={t.filters}>
       {/* ── Mobile toggle wrapper ── */}
-      <details className="filters-details" open>
-        <summary className="filters-summary">
-          <span className="filters-summary__label">
+      <details className={styles["web-fltr__details"]} open>
+        <summary className={styles["web-fltr__summary"]}>
+          <span className={styles["web-fltr__summary-label"]}>
             <SlidersHorizontal style={{ width: "1rem", height: "1rem" }} aria-hidden="true" />
             {t.filters}
           </span>
           {hasFilters && (
             <a
               href={basePath}
-              className="filters-clear"
+              className={styles["web-fltr__clear"]}
               aria-label={t.clearAll}
             >
               {t.clearAll}
@@ -116,14 +117,15 @@ export function FiltersSidebar({
         <form
           method="GET"
           action={basePath}
-          className="filters-form"
+          className={styles["web-fltr__form"]}
           aria-label={t.filters}
         >
           {/* ── Search ── */}
-          <div className="filter-group">
-            <div className="filter-search-wrap">
+          <div className={styles["web-fltr__group"]}>
+            <div className={styles["web-fltr__search-wrap"]}>
               <Search
-                className="filter-search__icon"
+                className={styles["web-fltr__search-icon"]}
+                style={{ width: "0.9rem", height: "0.9rem" }}
                 aria-hidden="true"
               />
               <input
@@ -131,7 +133,7 @@ export function FiltersSidebar({
                 name="q"
                 defaultValue={current.q}
                 placeholder={t.search}
-                className="filter-search"
+                className={styles["web-fltr__search-input"]}
                 aria-label={t.search}
               />
             </div>
@@ -139,20 +141,20 @@ export function FiltersSidebar({
 
           {/* ── Categories ── */}
           {categories.length > 0 && (
-            <fieldset className="filter-group">
-              <legend className="filter-legend">{t.categories}</legend>
-              <div className="filter-checks">
+            <fieldset className={styles["web-fltr__group"]}>
+              <legend className={styles["web-fltr__legend"]}>{t.categories}</legend>
+              <div className={styles["web-fltr__checks"]}>
                 {categories.map((cat) => {
                   const label = fa ? cat.nameFa : (cat.nameEn ?? cat.nameFa)
                   const checked = current.categories.includes(cat.slug)
                   return (
-                    <label key={cat.id} className="filter-check-label">
+                    <label key={cat.id} className={styles["web-fltr__check-label"]}>
                       <input
                         type="checkbox"
                         name="category"
                         value={cat.slug}
                         defaultChecked={checked}
-                        className="filter-checkbox"
+                        className={styles["web-fltr__checkbox"]}
                       />
                       <span>{label}</span>
                     </label>
@@ -164,20 +166,20 @@ export function FiltersSidebar({
 
           {/* ── Brands ── */}
           {brands.length > 0 && (
-            <fieldset className="filter-group">
-              <legend className="filter-legend">{t.brands}</legend>
-              <div className="filter-checks">
+            <fieldset className={styles["web-fltr__group"]}>
+              <legend className={styles["web-fltr__legend"]}>{t.brands}</legend>
+              <div className={styles["web-fltr__checks"]}>
                 {brands.map((brand) => {
                   const label = fa ? brand.nameFa : (brand.nameEn ?? brand.nameFa)
                   const checked = current.brands.includes(brand.slug)
                   return (
-                    <label key={brand.id} className="filter-check-label">
+                    <label key={brand.id} className={styles["web-fltr__check-label"]}>
                       <input
                         type="checkbox"
                         name="brand"
                         value={brand.slug}
                         defaultChecked={checked}
-                        className="filter-checkbox"
+                        className={styles["web-fltr__checkbox"]}
                       />
                       <span>{label}</span>
                     </label>
@@ -189,9 +191,9 @@ export function FiltersSidebar({
 
           {/* ── Factories ── */}
           {factories.length > 0 && (
-            <fieldset className="filter-group">
-              <legend className="filter-legend">{t.factories}</legend>
-              <div className="filter-checks">
+            <fieldset className={styles["web-fltr__group"]}>
+              <legend className={styles["web-fltr__legend"]}>{t.factories}</legend>
+              <div className={styles["web-fltr__checks"]}>
                 {factories.map((factory) => {
                   const label = fa ? factory.nameFa : (factory.nameEn ?? factory.nameFa)
                   const sub = fa
@@ -199,17 +201,17 @@ export function FiltersSidebar({
                     : `${factory.city}, ${factory.province}`
                   const checked = current.factories.includes(factory.id)
                   return (
-                    <label key={factory.id} className="filter-check-label">
+                    <label key={factory.id} className={styles["web-fltr__check-label"]}>
                       <input
                         type="checkbox"
                         name="factory"
                         value={factory.id}
                         defaultChecked={checked}
-                        className="filter-checkbox"
+                        className={styles["web-fltr__checkbox"]}
                       />
                       <span>
                         {label}
-                        <span className="filter-check-sub">{sub}</span>
+                        <span className={styles["web-fltr__check-sub"]}>{sub}</span>
                       </span>
                     </label>
                   )
@@ -219,21 +221,21 @@ export function FiltersSidebar({
           )}
 
           {/* ── Packaging Type ── */}
-          <fieldset className="filter-group">
-            <legend className="filter-legend">{t.packagingType}</legend>
-            <div className="filter-checks">
+          <fieldset className={styles["web-fltr__group"]}>
+            <legend className={styles["web-fltr__legend"]}>{t.packagingType}</legend>
+            <div className={styles["web-fltr__checks"]}>
               {PACKAGING_KEYS.map((key) => {
                 const label = fa
                   ? PACKAGING_LABEL[key]!.fa
                   : PACKAGING_LABEL[key]!.en
                 return (
-                  <label key={key} className="filter-check-label">
+                  <label key={key} className={styles["web-fltr__check-label"]}>
                     <input
                       type="checkbox"
                       name="packaging"
                       value={key}
                       defaultChecked={current.packagingTypes.includes(key)}
-                      className="filter-checkbox"
+                      className={styles["web-fltr__checkbox"]}
                     />
                     <span>{label}</span>
                   </label>
@@ -243,21 +245,21 @@ export function FiltersSidebar({
           </fieldset>
 
           {/* ── Cement Type ── */}
-          <fieldset className="filter-group">
-            <legend className="filter-legend">{t.cementType}</legend>
-            <div className="filter-checks">
+          <fieldset className={styles["web-fltr__group"]}>
+            <legend className={styles["web-fltr__legend"]}>{t.cementType}</legend>
+            <div className={styles["web-fltr__checks"]}>
               {CEMENT_TYPE_KEYS.map((key) => {
                 const label = fa
                   ? CEMENT_TYPE_LABEL[key]!.fa
                   : CEMENT_TYPE_LABEL[key]!.en
                 return (
-                  <label key={key} className="filter-check-label">
+                  <label key={key} className={styles["web-fltr__check-label"]}>
                     <input
                       type="checkbox"
                       name="cementType"
                       value={key}
                       defaultChecked={current.cementTypes.includes(key)}
-                      className="filter-checkbox"
+                      className={styles["web-fltr__checkbox"]}
                     />
                     <span>{label}</span>
                   </label>
@@ -267,9 +269,9 @@ export function FiltersSidebar({
           </fieldset>
 
           {/* ── Stock ── */}
-          <fieldset className="filter-group">
-            <legend className="filter-legend">{t.stock}</legend>
-            <div className="filter-checks">
+          <fieldset className={styles["web-fltr__group"]}>
+            <legend className={styles["web-fltr__legend"]}>{t.stock}</legend>
+            <div className={styles["web-fltr__checks"]}>
               {(
                 [
                   { value: "all", label: t.allStock },
@@ -277,13 +279,13 @@ export function FiltersSidebar({
                   { value: "available", label: t.available },
                 ] as const
               ).map(({ value, label }) => (
-                <label key={value} className="filter-check-label">
+                <label key={value} className={styles["web-fltr__check-label"]}>
                   <input
                     type="radio"
                     name="stock"
                     value={value}
                     defaultChecked={current.stock === value}
-                    className="filter-checkbox"
+                    className={styles["web-fltr__checkbox"]}
                   />
                   <span>{label}</span>
                 </label>
@@ -292,214 +294,37 @@ export function FiltersSidebar({
           </fieldset>
 
           {/* ── Price Range ── */}
-          <fieldset className="filter-group">
-            <legend className="filter-legend">{t.priceRange}</legend>
-            <div className="filter-price-row">
+          <fieldset className={styles["web-fltr__group"]}>
+            <legend className={styles["web-fltr__legend"]}>{t.priceRange}</legend>
+            <div className={styles["web-fltr__price-row"]}>
               <input
                 type="number"
                 name="minPrice"
                 defaultValue={current.minPrice}
                 placeholder={t.minPrice}
                 min={0}
-                className="filter-price-input"
+                className={styles["web-fltr__price-input"]}
                 aria-label={t.minPrice}
               />
-              <span className="filter-price-sep" aria-hidden="true">—</span>
+              <span className={styles["web-fltr__price-sep"]} aria-hidden="true">—</span>
               <input
                 type="number"
                 name="maxPrice"
                 defaultValue={current.maxPrice}
                 placeholder={t.maxPrice}
                 min={0}
-                className="filter-price-input"
+                className={styles["web-fltr__price-input"]}
                 aria-label={t.maxPrice}
               />
             </div>
           </fieldset>
 
           {/* ── Submit ── */}
-          <button type="submit" className="filters-apply">
+          <button type="submit" className={styles["web-fltr__apply"]}>
             {fa ? "اعمال فیلترها" : "Apply Filters"}
           </button>
         </form>
       </details>
-
-      <style>{`
-        .filters-sidebar {
-          width: 100%;
-        }
-        @media (min-width: 1024px) {
-          .filters-sidebar {
-            width: 17rem;
-            flex-shrink: 0;
-          }
-        }
-
-        /* details/summary — mobile collapsible, desktop always open */
-        .filters-details {
-          background-color: var(--color-surface);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-xl);
-          overflow: hidden;
-        }
-        .filters-summary {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 1rem 1.125rem;
-          cursor: pointer;
-          user-select: none;
-          list-style: none;
-          gap: 0.5rem;
-        }
-        .filters-summary::-webkit-details-marker { display: none; }
-        .filters-summary__label {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.5rem;
-          font-size: 0.9375rem;
-          font-weight: 700;
-          color: var(--color-text);
-        }
-        @media (min-width: 1024px) {
-          .filters-summary { cursor: default; pointer-events: none; }
-        }
-        .filters-clear {
-          font-size: 0.75rem;
-          font-weight: 600;
-          color: var(--color-danger);
-          text-decoration: none;
-          padding: 0.2rem 0.5rem;
-          border-radius: var(--radius-sm);
-          transition: background-color var(--transition-fast);
-        }
-        .filters-clear:hover { background-color: var(--color-danger-subtle); }
-        .filters-clear:focus-visible { outline: 2px solid var(--color-danger); outline-offset: 2px; }
-
-        .filters-form {
-          display: flex;
-          flex-direction: column;
-          gap: 0;
-          border-top: 1px solid var(--color-border);
-        }
-
-        .filter-group {
-          padding: 1rem 1.125rem;
-          border: 0;
-          margin: 0;
-        }
-        .filter-group + .filter-group {
-          border-top: 1px solid var(--color-border-subtle);
-        }
-        .filter-legend {
-          font-size: 0.75rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-          color: var(--color-text-muted);
-          margin-bottom: 0.75rem;
-          padding: 0;
-          width: 100%;
-        }
-
-        /* search */
-        .filter-search-wrap {
-          position: relative;
-          display: flex;
-          align-items: center;
-        }
-        .filter-search__icon {
-          position: absolute;
-          inset-inline-start: 0.75rem;
-          width: 0.9rem;
-          height: 0.9rem;
-          color: var(--color-text-muted);
-          pointer-events: none;
-        }
-        .filter-search {
-          width: 100%;
-          background-color: var(--color-background);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-md);
-          padding: 0.5rem 0.75rem;
-          padding-inline-start: 2.25rem;
-          font-size: 0.8125rem;
-          color: var(--color-text);
-          transition: border-color var(--transition-fast);
-        }
-        .filter-search::placeholder { color: var(--color-text-muted); }
-        .filter-search:focus { outline: none; border-color: var(--color-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 15%, transparent); }
-
-        /* checkboxes / radios */
-        .filter-checks {
-          display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
-        }
-        .filter-check-label {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.625rem;
-          font-size: 0.8125rem;
-          color: var(--color-text-secondary);
-          cursor: pointer;
-          transition: color var(--transition-fast);
-        }
-        .filter-check-label:hover { color: var(--color-text); }
-        .filter-checkbox {
-          width: 1rem;
-          height: 1rem;
-          accent-color: var(--color-accent);
-          cursor: pointer;
-          flex-shrink: 0;
-        }
-        .filter-check-sub {
-          display: block;
-          font-size: 0.5625rem;
-          color: var(--color-text-muted);
-          line-height: 1.3;
-        }
-
-        /* price range */
-        .filter-price-row {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-        }
-        .filter-price-input {
-          flex: 1;
-          min-width: 0;
-          background-color: var(--color-background);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-md);
-          padding: 0.4rem 0.625rem;
-          font-size: 0.8125rem;
-          color: var(--color-text);
-          text-align: center;
-          transition: border-color var(--transition-fast);
-          font-variant-numeric: tabular-nums;
-        }
-        .filter-price-input:focus { outline: none; border-color: var(--color-accent); }
-        .filter-price-sep { color: var(--color-text-muted); font-size: 0.875rem; flex-shrink: 0; }
-
-        /* apply button */
-        .filters-apply {
-          margin: 0.75rem 1.125rem 1.125rem;
-          width: calc(100% - 2.25rem);
-          background-color: var(--color-accent);
-          color: #fff;
-          font-size: 0.875rem;
-          font-weight: 700;
-          padding: 0.625rem 1rem;
-          border-radius: var(--radius-lg);
-          border: none;
-          cursor: pointer;
-          transition: background-color var(--transition-fast), transform var(--transition-fast);
-        }
-        .filters-apply:hover { background-color: var(--color-accent-hover); }
-        .filters-apply:active { transform: scale(0.98); }
-        .filters-apply:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
-      `}</style>
     </aside>
   )
 }

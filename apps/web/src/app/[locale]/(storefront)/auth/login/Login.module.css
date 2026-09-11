@@ -1,0 +1,143 @@
+﻿/* prefix: web-login */
+
+.web-login {
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-block: var(--space-12);
+  padding-inline: var(--space-4);
+  font-family: var(--font-family-sans);
+}
+
+.web-login__card {
+  width: 100%;
+  max-width: 28rem;
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.web-login__head {
+  text-align: center;
+}
+
+.web-login__title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  margin: 0;
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+.web-login__sub {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin: 0;
+  margin-block-start: var(--space-2);
+}
+
+.web-login__link {
+  color: var(--color-accent);
+  text-decoration: underline;
+  font-weight: var(--font-weight-medium);
+  transition: color var(--transition-fast);
+}
+
+.web-login__link:hover {
+  color: var(--color-accent-hover);
+}
+
+.web-login__success {
+  font-size: var(--font-size-sm);
+  color: var(--color-success);
+  background-color: color-mix(in srgb, var(--color-success) 12%, transparent);
+  border: 1px solid var(--color-success);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  text-align: center;
+  margin: 0;
+}
+
+.web-login__error {
+  font-size: var(--font-size-sm);
+  color: var(--color-error-500);
+  background-color: color-mix(in srgb, var(--color-error-500) 12%, transparent);
+  border: 1px solid var(--color-error-500);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  margin: 0;
+}
+
+.web-login__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.web-login__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.web-login__password-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.web-login__password-wrap input {
+  padding-inline-end: var(--space-10);
+}
+
+.web-login__pw-toggle {
+  position: absolute;
+  inset-inline-end: var(--space-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: var(--space-1);
+  border-radius: var(--radius-sm);
+  transition: color var(--transition-fast);
+}
+
+.web-login__pw-toggle:hover {
+  color: var(--color-text);
+}
+
+.web-login__options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--font-size-sm);
+}
+
+.web-login__remember {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.web-login__remember input[type="checkbox"] {
+  accent-color: var(--color-accent);
+  width: 1rem;
+  height: 1rem;
+  cursor: pointer;
+}
+
+.web-login__submit {
+  width: 100%;
+}

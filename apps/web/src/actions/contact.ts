@@ -2,36 +2,10 @@
 
 import { ContactSchema } from "@tirajeh/shared"
 import type { ActionResult } from "@tirajeh/shared"
-import { Resend } from "resend"
-
-const resend = new Resend(process.env.RESEND_API_KEY)
+import { db } from "@tirajeh/database"
+import { notifyNewContact, emailService } from "@tirajeh/integrations"
 
 const TO_EMAIL = "info@tirajeconcrete.com"
-const FROM_EMAIL = "onboarding@resend.dev" // پس از verify دامنه: noreply@tirajeconcrete.com
-
-const TG_TOKEN = process.env.TELEGRAM_BOT_TOKEN
-const TG_CHAT_ID = process.env.TELEGRAM_CHAT_ID
-
-async function notifyTelegram(name: string, email: string, phone: string | undefined, subject: string, message: string) {
-  if (!TG_TOKEN || !TG_CHAT_ID) return
-  const text = [
-    `📩 *پیام جدید از فرم تماس تیراژه*`,
-    ``,
-    `👤 *نام:* ${name}`,
-    `📧 *ایمیل:* ${email}`,
-    phone ? `📞 *تلفن:* ${phone}` : null,
-    `📌 *موضوع:* ${subject}`,
-    ``,
-    `💬 *پیام:*`,
-    message,
-  ].filter(Boolean).join("\n")
-
-  await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chat_id: TG_CHAT_ID, text, parse_mode: "Markdown" }),
-  }).catch((err) => console.error("[contact] telegram error:", err))
-}
 
 export async function contactAction(formData: FormData): Promise<ActionResult> {
   const raw = Object.fromEntries(formData)
@@ -47,6 +21,34 @@ export async function contactAction(formData: FormData): Promise<ActionResult> {
 
   const { name, email, phone, subject, message } = parsed.data
 
+  // Save to database
+  try {
+    await db.contact.create({
+      data: {
+        name,
+        email,
+        phone: phone || null,
+        subject,
+        message,
+        source: "WEBSITE",
+        status: "UNREAD",
+      },
+    })
+  } catch (dbErr) {
+    console.error("[contact] db insert error:", dbErr)
+  }
+
+  // Telegram notification to admin (fire-and-forget)
+  void notifyNewContact({
+    name,
+    email,
+    phone,
+    subject,
+    message,
+    source: "WEBSITE",
+  }).catch((err: unknown) => console.error("[contact] notifyNewContact error:", err))
+
+  // Email notification (fire-and-forget)
   const html = `
     <div dir="rtl" style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
       <h2 style="color: #1a1a1a; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.5rem;">پیام جدید از فرم تماس تیراژه</h2>
@@ -63,26 +65,12 @@ export async function contactAction(formData: FormData): Promise<ActionResult> {
     </div>
   `
 
-  // Telegram (fire-and-forget)
-  void notifyTelegram(name, email, phone, subject, message)
-
-  try {
-    const { error } = await resend.emails.send({
-      from: FROM_EMAIL,
-      to: TO_EMAIL,
-      reply_to: email,
-      subject: `[تماس] ${subject} — از ${name}`,
-      html,
-    })
-
-    if (error) {
-      console.error("[contact] resend error:", error)
-      return { success: false, error: "ارسال پیام ناموفق بود. لطفاً دوباره تلاش کنید." }
-    }
-  } catch (err) {
-    console.error("[contact] unexpected error:", err)
-    return { success: false, error: "خطای سرور. لطفاً دوباره تلاش کنید." }
-  }
+  void emailService.sendContactEmail({
+    to: TO_EMAIL,
+    subject: `[تماس] ${subject} — از ${name}`,
+    replyTo: email,
+    html,
+  })
 
   return { success: true, data: undefined }
 }

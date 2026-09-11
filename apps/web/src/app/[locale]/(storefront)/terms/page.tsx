@@ -144,7 +144,7 @@ export default async function TermsPage() {
         }
         .tc-eyebrow {
           font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.1em;
-          text-transform: uppercase; color: var(--color-accent); margin-bottom: 0.625rem;
+          text-transform: uppercase; color: var(--color-accent-text); margin-bottom: 0.625rem;
         }
         .tc-title {
           font-size: clamp(1.625rem, 4vw, 2.25rem); font-weight: 800;
@@ -171,7 +171,7 @@ export default async function TermsPage() {
           border-top: 1px solid var(--color-border-subtle);
           font-size: 0.9375rem; color: var(--color-text-secondary);
         }
-        .tc-link { color: var(--color-accent); font-weight: 600; text-decoration: none; }
+        .tc-link { color: var(--color-accent-text); font-weight: 600; text-decoration: none; }
         .tc-link:hover { text-decoration: underline; }
       `}</style>
     </>

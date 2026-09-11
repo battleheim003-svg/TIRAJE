@@ -51,10 +51,13 @@ const BUCKET = () => process.env.S3_BUCKET ?? "tirajeh"
 const PUBLIC_URL = () => process.env.S3_PUBLIC_URL ?? ""
 
 export class StorageService {
-  private readonly s3: S3Client
+  private _s3: S3Client | null = null
 
-  constructor() {
-    this.s3 = getS3Client()
+  private get s3(): S3Client {
+    if (!this._s3) {
+      this._s3 = getS3Client()
+    }
+    return this._s3
   }
 
   /**

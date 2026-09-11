@@ -1,0 +1,101 @@
+/* Users.module.css - prefix web-adm-usr */
+
+.web-adm-usr__wrapper {
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  width: 100%;
+}
+
+.web-adm-usr__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.web-adm-usr__title {
+  font-size: var(--font-size-2xl);
+  font-weight: 800;
+  color: var(--color-text);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.web-adm-usr__count {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-block-start: var(--space-1);
+  font-variant-numeric: tabular-nums;
+}
+
+.web-adm-usr__searchWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  max-width: 28rem;
+  width: 100%;
+}
+
+.web-adm-usr__searchIcon {
+  position: absolute;
+  inset-inline-start: var(--space-3);
+  pointer-events: none;
+  color: var(--color-text-muted);
+}
+
+.web-adm-usr__searchInput {
+  width: 100%;
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding-block: var(--space-2);
+  padding-inline-start: var(--space-8);
+  padding-inline-end: var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.web-adm-usr__searchInput::placeholder {
+  color: var(--color-text-muted);
+}
+
+.web-adm-usr__searchInput:focus {
+  outline: none;
+  border-color: var(--color-accent-text);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 15%, transparent);
+}
+
+.web-adm-usr__pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-block-start: var(--space-4);
+}
+
+.web-adm-usr__pageBtn {
+  padding-block: var(--space-1);
+  padding-inline: var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-bg-elevated);
+  color: var(--color-text);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color var(--transition-fast);
+}
+
+.web-adm-usr__pageBtn:hover {
+  background-color: var(--color-border-subtle);
+}
+
+.web-adm-usr__pageInfo {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}

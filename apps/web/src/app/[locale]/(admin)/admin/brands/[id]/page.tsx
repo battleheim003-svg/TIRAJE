@@ -3,8 +3,9 @@ import { getLocale } from "next-intl/server"
 import { db } from "@tirajeh/database"
 import type { Metadata } from "next"
 import Link from "next/link"
-import { ChevronLeft } from "lucide-react"
+import { ChevronRight } from "lucide-react"
 import BrandForm from "../brand-form"
+import styles from "../Brands.module.css"
 
 export const metadata: Metadata = { title: "ویرایش برند | پنل مدیریت تیراژه" }
 
@@ -23,28 +24,25 @@ export default async function AdminBrandEditPage({ params }: Props) {
   if (!brand) notFound()
 
   return (
-    <>
-      <div className="abe-root">
-        <Link href={`/${locale}/admin/brands`} className="abe-back">
-          <ChevronLeft size={16} />
-          {fa ? "بازگشت به برندها" : "Back to Brands"}
-        </Link>
-        <h1 className="abe-title">
-          {fa ? "ویرایش برند" : "Edit Brand"}
-          <span className="abe-slug">{brand.slug}</span>
-        </h1>
-        <div className="abe-card">
-          <BrandForm locale={locale} fa={fa} brand={brand} />
-        </div>
+    <div className={styles["web-adm-brand__formRoot"]}>
+      <Link href={`/${locale}/admin/brands`} className={styles["web-adm-brand__backLink"]}>
+        <ChevronRight
+          style={{
+            width: "1rem",
+            height: "1rem",
+            transform: fa ? "rotate(0deg)" : "rotate(180deg)",
+          }}
+          aria-hidden="true"
+        />
+        {fa ? "بازگشت به برندها" : "Back to Brands"}
+      </Link>
+      <h1 className={styles["web-adm-brand__title"]}>
+        <span>{fa ? "ویرایش برند" : "Edit Brand"}</span>
+        <span className={styles["web-adm-brand__slug"]} style={{ marginInlineStart: "var(--space-2)" }}>{brand.slug}</span>
+      </h1>
+      <div className={styles["web-adm-brand__formCard"]}>
+        <BrandForm locale={locale} fa={fa} brand={brand} />
       </div>
-      <style>{`
-        .abe-root { display: flex; flex-direction: column; gap: 1.25rem; max-width: 720px; }
-        .abe-back { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.8125rem; color: var(--color-text-muted); text-decoration: none; width: fit-content; }
-        .abe-back:hover { color: var(--color-text); }
-        .abe-title { font-size: 1.375rem; font-weight: 700; color: var(--color-text); display: flex; align-items: baseline; gap: 0.625rem; flex-wrap: wrap; }
-        .abe-slug { font-size: 0.8125rem; font-weight: 400; color: var(--color-text-muted); font-family: monospace; direction: ltr; }
-        .abe-card { background-color: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 1.75rem; }
-      `}</style>
-    </>
+    </div>
   )
 }

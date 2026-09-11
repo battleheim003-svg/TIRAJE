@@ -1,0 +1,200 @@
+/* prefix: web-adm-dash */
+
+.web-adm-dash__root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding: var(--space-6);
+}
+
+@media (max-width: 48rem) {
+  .web-adm-dash__root {
+    padding: var(--space-4);
+  }
+}
+
+.web-adm-dash__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-block-end: var(--space-6);
+}
+
+.web-adm-dash__title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+.web-adm-dash__subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+/* KPI Cards Grid */
+.web-adm-dash__kpi-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+}
+
+@media (min-width: 40rem) {
+  .web-adm-dash__kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 64rem) {
+  .web-adm-dash__kpi-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Recent Orders Section */
+.web-adm-dash__section-card {
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+}
+
+.web-adm-dash__section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-block-end: 1px solid var(--color-border);
+  padding-block-end: var(--space-3);
+  margin-block-end: var(--space-4);
+}
+
+.web-adm-dash__section-title {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+
+.web-adm-dash__view-all {
+  color: var(--color-accent);
+  text-decoration: underline;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  transition: opacity var(--transition-fast);
+}
+
+.web-adm-dash__view-all:hover {
+  opacity: 0.8;
+}
+
+/* Table */
+.web-adm-dash__table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.web-adm-dash__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+  text-align: start;
+}
+
+.web-adm-dash__table th {
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-medium);
+  padding-block: var(--space-3);
+  padding-inline: var(--space-4);
+  border-block-end: 2px solid var(--color-border);
+  text-align: start;
+  white-space: nowrap;
+}
+
+.web-adm-dash__table td {
+  padding-block: var(--space-3);
+  padding-inline: var(--space-4);
+  border-block-end: 1px solid var(--color-border-subtle);
+  color: var(--color-text);
+  vertical-align: middle;
+}
+
+.web-adm-dash__table tr:last-child td {
+  border-block-end: none;
+}
+
+.web-adm-dash__table tr:hover td {
+  background-color: var(--color-bg);
+}
+
+.web-adm-dash__order-link {
+  color: var(--color-accent);
+  text-decoration: none;
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.web-adm-dash__order-link:hover {
+  text-decoration: underline;
+}
+
+.web-adm-dash__tabular {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.web-adm-dash__empty-table {
+  text-align: center;
+  padding-block: var(--space-8);
+  color: var(--color-text-muted);
+}
+
+/* Quick Actions / Top Products Section */
+.web-adm-dash__quick-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+}
+
+@media (min-width: 48rem) {
+  .web-adm-dash__quick-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.web-adm-dash__action-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  text-decoration: none;
+  color: inherit;
+}
+
+.web-adm-dash__action-icon-wrap {
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--radius-lg);
+  background-color: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  color: var(--color-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.web-adm-dash__action-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.web-adm-dash__action-title {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+}
+
+.web-adm-dash__action-desc {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}

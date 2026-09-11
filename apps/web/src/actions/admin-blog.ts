@@ -3,6 +3,7 @@
 import { db } from "@tirajeh/database"
 import { auth } from "@tirajeh/auth"
 import { revalidatePath } from "next/cache"
+import { publishPostToChannel } from "@tirajeh/integrations"
 
 const ADMIN_ROLES = ["admin", "super_admin"]
 
@@ -42,6 +43,16 @@ export async function adminCreatePostAction(
   const seoDescription = strOrNull(formData, "seoDescription")
   const readingTimeMin = strOrNull(formData, "readingTimeMin")
   const scheduledAtRaw = strOrNull(formData, "scheduledAt")
+  const channelUsername = strOrNull(formData, "channelUsername") || undefined
+  const customHashtagsRaw = strOrNull(formData, "customHashtags")
+  let customHashtags: string[] | undefined = undefined
+  if (customHashtagsRaw) {
+    try {
+      customHashtags = JSON.parse(customHashtagsRaw)
+    } catch {
+      customHashtags = customHashtagsRaw.split(",").map((s) => s.trim()).filter(Boolean)
+    }
+  }
 
   if (!titleFa || !slug || !contentFa) {
     throw new Error("فیلدهای الزامی پر نشده‌اند")
@@ -78,6 +89,27 @@ export async function adminCreatePostAction(
       select: { id: true },
     })
     revalidatePath("/admin/blog")
+
+    if (status === "PUBLISHED") {
+      const full = await db.post.findUnique({
+        where: { id: post.id },
+        include: { category: true, postTags: { include: { tag: true } } },
+      })
+      if (full) {
+        void publishPostToChannel({
+          id: full.id,
+          titleFa: full.titleFa,
+          excerptFa: full.excerptFa,
+          featuredImage: full.featuredImage,
+          categoryFa: full.category?.nameFa ?? null,
+          tagsFa: full.postTags.map((pt) => pt.tag.nameFa),
+          slug: full.slug,
+          customHashtags,
+          channelUsername,
+        })
+      }
+    }
+
     return { postId: post.id }
   } catch (err: any) {
     if (err?.code === "P2002") throw new Error("این اسلاگ قبلاً استفاده شده است")
@@ -105,6 +137,16 @@ export async function adminUpdatePostAction(
   const seoDescription = strOrNull(formData, "seoDescription")
   const readingTimeMin = strOrNull(formData, "readingTimeMin")
   const scheduledAtRaw = strOrNull(formData, "scheduledAt")
+  const channelUsername = strOrNull(formData, "channelUsername") || undefined
+  const customHashtagsRaw = strOrNull(formData, "customHashtags")
+  let customHashtags: string[] | undefined = undefined
+  if (customHashtagsRaw) {
+    try {
+      customHashtags = JSON.parse(customHashtagsRaw)
+    } catch {
+      customHashtags = customHashtagsRaw.split(",").map((s) => s.trim()).filter(Boolean)
+    }
+  }
 
   if (!id || !titleFa || !slug || !contentFa) {
     throw new Error("فیلدهای الزامی پر نشده‌اند")
@@ -144,6 +186,27 @@ export async function adminUpdatePostAction(
     })
     revalidatePath("/admin/blog")
     revalidatePath(`/admin/blog/${id}`)
+
+    if (status === "PUBLISHED") {
+      const full = await db.post.findUnique({
+        where: { id },
+        include: { category: true, postTags: { include: { tag: true } } },
+      })
+      if (full) {
+        void publishPostToChannel({
+          id: full.id,
+          titleFa: full.titleFa,
+          excerptFa: full.excerptFa,
+          featuredImage: full.featuredImage,
+          categoryFa: full.category?.nameFa ?? null,
+          tagsFa: full.postTags.map((pt) => pt.tag.nameFa),
+          slug: full.slug,
+          customHashtags,
+          channelUsername,
+        })
+      }
+    }
+
     return { ok: true }
   } catch (err: any) {
     if (err?.code === "P2002") throw new Error("این اسلاگ قبلاً استفاده شده است")

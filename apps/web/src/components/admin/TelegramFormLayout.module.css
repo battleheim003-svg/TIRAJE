@@ -1,0 +1,245 @@
+/* TelegramFormLayout.module.css - prefix .tfl- */
+
+.tflContainer {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-8);
+  align-items: flex-start;
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .tflContainer {
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); /* ~60% / 40% */
+    gap: var(--space-10);
+  }
+}
+
+.tflFormCol {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  min-width: 0;
+}
+
+.tflPreviewCol {
+  position: sticky;
+  top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+@media (max-width: 1023px) {
+  .tflPreviewCol {
+    position: static;
+    margin-top: var(--space-6);
+  }
+}
+
+/* Field styling */
+.tflField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  position: relative;
+}
+
+.tflLabel {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tflCounter {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.tflCounterWarn {
+  color: var(--color-warning);
+}
+
+.tflCounterDanger {
+  color: var(--color-danger);
+}
+
+.tflInput,
+.tflTextarea,
+.tflSelect {
+  width: 100%;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding-block: var(--space-2);
+  padding-inline: var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  outline: none;
+}
+
+.tflInput:focus,
+.tflTextarea:focus,
+.tflSelect:focus {
+  border-color: var(--color-accent-text);
+  box-shadow: 0 0 0 3px var(--color-accent-subtle);
+}
+
+.tflInput[readonly] {
+  background-color: var(--color-background);
+  color: var(--color-text-secondary);
+  cursor: default;
+}
+
+.tflRow {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+}
+
+@media (min-width: 640px) {
+  .tflRowTwo {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Visual divider for site-only content */
+.tflDivider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-block: var(--space-4) var(--space-2);
+}
+
+.tflDividerLine {
+  flex: 1;
+  height: 1px;
+  background-color: var(--color-border);
+}
+
+.tflDividerBadge {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--color-text-muted);
+  background-color: var(--color-border-subtle);
+  padding-block: var(--space-1);
+  padding-inline: var(--space-2);
+  border-radius: var(--radius-full);
+}
+
+/* Fieldset for store info */
+.tflFieldset {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  background-color: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  margin: 0;
+}
+
+.tflLegend {
+  font-size: var(--font-size-sm);
+  font-weight: 800;
+  color: var(--color-text);
+  padding-inline: var(--space-2);
+}
+
+/* Switch container */
+.tflSwitchRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-block: var(--space-3);
+  padding-inline: var(--space-4);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.tflSwitchInfo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.tflSwitchLabel {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.tflSwitchDesc {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+/* Submit row */
+.tflSubmitArea {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+}
+
+.tflSubmitBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding-block: var(--space-3);
+  padding-inline: var(--space-6);
+  border-radius: var(--radius-lg);
+  border: none;
+  background-color: var(--color-accent);
+  color: var(--color-accent-foreground);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.tflSubmitBtn:hover:not(:disabled) {
+  background-color: var(--color-accent-hover);
+}
+
+.tflSubmitBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.tflSubmitBtnSuccess {
+  background-color: var(--color-info);
+}
+
+.tflSubmitBtnSuccess:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--color-info) 85%, black);
+}
+
+.tflCancelBtn {
+  display: inline-flex;
+  align-items: center;
+  padding-block: var(--space-3);
+  padding-inline: var(--space-5);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color var(--transition-fast);
+}
+
+.tflCancelBtn:hover {
+  background-color: var(--color-border-subtle);
+  color: var(--color-text);
+}

@@ -3,13 +3,15 @@ import { db } from "@tirajeh/database"
 import type { Metadata } from "next"
 import Link from "next/link"
 import { Search } from "lucide-react"
+import { Badge } from "@tirajeh/ui"
 import { formatPrice, formatRelativeTime } from "@/lib/cement"
+import styles from "./Orders.module.css"
 
 export const metadata: Metadata = { title: "سفارش‌ها | پنل مدیریت تیراژه" }
 
 const PAGE_SIZE = 20
 
-const ORDER_STATUS_LABEL: Record<string, { fa: string; en: string; variant: string }> = {
+const ORDER_STATUS_LABEL: Record<string, { fa: string; en: string; variant: "warning" | "info" | "success" | "danger" }> = {
   PENDING:          { fa: "در انتظار",       en: "Pending",          variant: "warning" },
   AWAITING_PAYMENT: { fa: "انتظار پرداخت",  en: "Awaiting Payment", variant: "warning" },
   CONFIRMED:        { fa: "تأیید شده",       en: "Confirmed",        variant: "info"    },
@@ -75,29 +77,26 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
   }
 
   return (
-    <>
-      <div className="ao-header">
+    <div className={styles["web-adm-ords__wrapper"]}>
+      <div className={styles["web-adm-ords__header"]}>
         <div>
-          <h1 className="ao-title">{fa ? "سفارش‌ها" : "Orders"}</h1>
-          <p className="ao-count">
+          <h1 className={styles["web-adm-ords__title"]}>{fa ? "سفارش‌ها" : "Orders"}</h1>
+          <p className={styles["web-adm-ords__count"]}>
             {fa ? `${total.toLocaleString("fa-IR")} سفارش` : `${total.toLocaleString()} orders`}
           </p>
         </div>
       </div>
 
       {/* Filters */}
-      <form method="GET" action={`/${locale}/admin/orders`} className="ao-filters">
+      <form method="GET" action={`/${locale}/admin/orders`} className={styles["web-adm-ords__filters"]}>
         {/* Search */}
-        <div className="ao-search-wrap">
+        <div className={styles["web-adm-ords__searchWrap"]}>
           <Search
             style={{
-              position: "absolute",
-              insetInlineStart: "0.75rem",
               width: "0.9rem",
               height: "0.9rem",
-              color: "var(--color-text-muted)",
-              pointerEvents: "none",
             }}
+            className={styles["web-adm-ords__searchIcon"]}
             aria-hidden="true"
           />
           <input
@@ -105,13 +104,13 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
             name="q"
             defaultValue={q}
             placeholder={fa ? "شماره سفارش یا نام مشتری..." : "Order # or customer name..."}
-            className="ao-search"
+            className={styles["web-adm-ords__searchInput"]}
             aria-label={fa ? "جستجو" : "Search"}
           />
         </div>
 
         {/* Status filter */}
-        <div className="ao-status-tabs" role="list">
+        <div className={styles["web-adm-ords__statusTabs"]} role="list">
           {STATUS_FILTER_OPTIONS.map((opt) => {
             const isActive = statusFilter === opt.value
             const href = (() => {
@@ -127,7 +126,7 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
                 href={href}
                 role="listitem"
                 aria-current={isActive ? "page" : undefined}
-                className={`ao-status-tab ${isActive ? "ao-status-tab--active" : ""}`}
+                className={`${styles["web-adm-ords__statusTab"]} ${isActive ? styles["web-adm-ords__statusTab--active"] : ""}`}
               >
                 {fa ? opt.fa : opt.en}
               </Link>
@@ -137,58 +136,60 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
       </form>
 
       {/* Table */}
-      <div className="ao-table-wrap">
-        <table className="ao-table" role="table">
+      <div className={styles["web-adm-ords__tableWrap"]}>
+        <table className={styles["web-adm-ords__table"]} role="table">
           <thead>
             <tr>
-              <th scope="col">{fa ? "شماره سفارش" : "Order #"}</th>
-              <th scope="col">{fa ? "مشتری" : "Customer"}</th>
-              <th scope="col">{fa ? "وضعیت" : "Status"}</th>
-              <th scope="col">{fa ? "مبلغ کل" : "Total"}</th>
-              <th scope="col">{fa ? "تاریخ ثبت" : "Date"}</th>
-              <th scope="col"><span className="ao-sr-only">{fa ? "عملیات" : "Actions"}</span></th>
+              <th scope="col" className={styles["web-adm-ords__th"]}>{fa ? "شماره سفارش" : "Order #"}</th>
+              <th scope="col" className={styles["web-adm-ords__th"]}>{fa ? "مشتری" : "Customer"}</th>
+              <th scope="col" className={styles["web-adm-ords__th"]}>{fa ? "وضعیت" : "Status"}</th>
+              <th scope="col" className={styles["web-adm-ords__th"]}>{fa ? "مبلغ کل" : "Total"}</th>
+              <th scope="col" className={styles["web-adm-ords__th"]}>{fa ? "تاریخ ثبت" : "Date"}</th>
+              <th scope="col" className={styles["web-adm-ords__th"]}><span>{fa ? "عملیات" : "Actions"}</span></th>
             </tr>
           </thead>
           <tbody>
-            {(orders as any[]).map((order) => {
-              const statusInfo = ORDER_STATUS_LABEL[order.status as string] ?? {
-                fa: order.status, en: order.status, variant: "info",
+            {orders.map((order) => {
+              const statusInfo = ORDER_STATUS_LABEL[order.status] ?? {
+                fa: order.status, en: order.status, variant: "info" as const,
               }
               return (
-                <tr key={order.id}>
-                  <td>
+                <tr key={order.id} className={styles["web-adm-ords__row"]}>
+                  <td className={styles["web-adm-ords__td"]}>
                     <Link
                       href={`/${locale}/admin/orders/${order.id}`}
-                      className="ao-table__link"
+                      className={styles["web-adm-ords__orderLink"]}
                     >
                       #{fa
                         ? order.orderNumber.toLocaleString("fa-IR")
                         : order.orderNumber}
                     </Link>
                   </td>
-                  <td className="ao-table__secondary">
-                    <span className="ao-table__user-name">
-                      {order.user?.name ?? "—"}
-                    </span>
-                    {order.user?.email && (
-                      <span className="ao-table__user-email">{order.user.email}</span>
-                    )}
+                  <td className={styles["web-adm-ords__td"]}>
+                    <div className={styles["web-adm-ords__userCell"]}>
+                      <span className={styles["web-adm-ords__userName"]}>
+                        {order.user?.name ?? "—"}
+                      </span>
+                      {order.user?.email && (
+                        <span className={styles["web-adm-ords__userEmail"]}>{order.user.email}</span>
+                      )}
+                    </div>
                   </td>
-                  <td>
-                    <span className={`ao-status-badge ao-status-badge--${statusInfo.variant}`}>
+                  <td className={styles["web-adm-ords__td"]}>
+                    <Badge variant={statusInfo.variant}>
                       {fa ? statusInfo.fa : statusInfo.en}
-                    </span>
+                    </Badge>
                   </td>
-                  <td className="ao-table__price">
-                    {formatPrice(order.totalAmount, locale)}
+                  <td className={`${styles["web-adm-ords__td"]} ${styles["web-adm-ords__price"]}`}>
+                    {formatPrice(Number(order.totalAmount), locale)}
                   </td>
-                  <td className="ao-table__secondary ao-table__date">
+                  <td className={`${styles["web-adm-ords__td"]} ${styles["web-adm-ords__date"]}`}>
                     {formatRelativeTime(order.createdAt, locale)}
                   </td>
-                  <td>
+                  <td className={styles["web-adm-ords__td"]}>
                     <Link
                       href={`/${locale}/admin/orders/${order.id}`}
-                      className="ao-table__action"
+                      className={styles["web-adm-ords__viewBtn"]}
                     >
                       {fa ? "جزئیات" : "View"}
                     </Link>
@@ -198,7 +199,7 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
             })}
             {orders.length === 0 && (
               <tr>
-                <td colSpan={6} className="ao-table__empty">
+                <td colSpan={6} className={styles["web-adm-ords__empty"]}>
                   {fa ? "سفارشی یافت نشد" : "No orders found"}
                 </td>
               </tr>
@@ -209,106 +210,24 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="ao-pagination">
+        <div className={styles["web-adm-ords__pagination"]}>
           {page > 1 && (
-            <Link href={buildUrl(page - 1)} className="ao-page-btn">
+            <Link href={buildUrl(page - 1)} className={styles["web-adm-ords__pageBtn"]}>
               {fa ? "قبلی" : "Prev"}
             </Link>
           )}
-          <span className="ao-page-info">
+          <span className={styles["web-adm-ords__pageInfo"]}>
             {fa
               ? `صفحه ${page.toLocaleString("fa-IR")} از ${totalPages.toLocaleString("fa-IR")}`
               : `Page ${page} of ${totalPages}`}
           </span>
           {page < totalPages && (
-            <Link href={buildUrl(page + 1)} className="ao-page-btn">
+            <Link href={buildUrl(page + 1)} className={styles["web-adm-ords__pageBtn"]}>
               {fa ? "بعدی" : "Next"}
             </Link>
           )}
         </div>
       )}
-
-      <style>{`
-        .ao-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
-        .ao-title { font-size: 1.5rem; font-weight: 800; color: var(--color-text); letter-spacing: -0.02em; }
-        .ao-count { font-size: 0.875rem; color: var(--color-text-muted); margin-top: 0.2rem; font-variant-numeric: tabular-nums; }
-
-        .ao-filters { display: flex; flex-direction: column; gap: 0.875rem; margin-bottom: 1.25rem; }
-
-        .ao-search-wrap { position: relative; display: flex; align-items: center; max-width: 28rem; }
-        .ao-search {
-          width: 100%;
-          background-color: var(--color-surface);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-lg);
-          padding: 0.5625rem 0.875rem;
-          padding-inline-start: 2.25rem;
-          font-size: 0.875rem;
-          color: var(--color-text);
-          transition: border-color var(--transition-fast);
-        }
-        .ao-search::placeholder { color: var(--color-text-muted); }
-        .ao-search:focus { outline: none; border-color: var(--color-accent); box-shadow: 0 0 0 3px var(--color-accent-subtle); }
-
-        .ao-status-tabs { display: flex; flex-wrap: wrap; gap: 0.25rem; }
-        .ao-status-tab {
-          padding: 0.3rem 0.75rem;
-          font-size: 0.8125rem;
-          font-weight: 500;
-          color: var(--color-text-secondary);
-          border-radius: var(--radius-md);
-          text-decoration: none;
-          transition: background-color var(--transition-fast), color var(--transition-fast);
-          white-space: nowrap;
-        }
-        .ao-status-tab:hover { background-color: var(--color-border-subtle); color: var(--color-text); }
-        .ao-status-tab--active { background-color: var(--color-accent-subtle); color: var(--color-accent); font-weight: 700; }
-
-        .ao-table-wrap {
-          background-color: var(--color-surface);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-xl);
-          overflow-x: auto;
-          margin-bottom: 1.25rem;
-        }
-        .ao-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
-        .ao-table thead th {
-          padding: 0.75rem 1rem;
-          text-align: start;
-          font-size: 0.6875rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          color: var(--color-text-muted);
-          border-bottom: 1px solid var(--color-border);
-          white-space: nowrap;
-        }
-        .ao-table tbody td { padding: 0.75rem 1rem; color: var(--color-text); border-top: 1px solid var(--color-border-subtle); white-space: nowrap; }
-        .ao-table tbody tr:first-child td { border-top: none; }
-        .ao-table tbody tr:hover td { background-color: var(--color-background); }
-        .ao-table__link { color: var(--color-accent); font-weight: 700; text-decoration: none; }
-        .ao-table__link:hover { text-decoration: underline; }
-        .ao-table__secondary { color: var(--color-text-secondary); }
-        .ao-table__user-name { display: block; font-weight: 500; color: var(--color-text); }
-        .ao-table__user-email { display: block; font-size: 0.75rem; color: var(--color-text-muted); margin-top: 0.1rem; }
-        .ao-table__price { color: var(--color-text); font-variant-numeric: tabular-nums; }
-        .ao-table__date { font-variant-numeric: tabular-nums; }
-        .ao-table__action { color: var(--color-accent); font-weight: 600; font-size: 0.8125rem; text-decoration: none; }
-        .ao-table__action:hover { text-decoration: underline; }
-        .ao-table__empty { text-align: center; color: var(--color-text-muted); padding: 3rem !important; }
-
-        .ao-status-badge { display: inline-flex; align-items: center; padding: 0.175rem 0.5rem; border-radius: 9999px; font-size: 0.6875rem; font-weight: 700; white-space: nowrap; }
-        .ao-status-badge--success { background-color: var(--color-success-subtle); color: var(--color-success); }
-        .ao-status-badge--warning { background-color: var(--color-warning-subtle); color: var(--color-warning); }
-        .ao-status-badge--danger  { background-color: var(--color-danger-subtle);  color: var(--color-danger);  }
-        .ao-status-badge--info    { background-color: var(--color-accent-subtle);  color: var(--color-accent);  }
-
-        .ao-pagination { display: flex; align-items: center; justify-content: center; gap: 1rem; }
-        .ao-page-btn { padding: 0.5rem 1rem; background-color: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 0.875rem; font-weight: 600; color: var(--color-text-secondary); text-decoration: none; transition: background-color var(--transition-fast), border-color var(--transition-fast); }
-        .ao-page-btn:hover { border-color: var(--color-accent); color: var(--color-accent); }
-        .ao-page-info { font-size: 0.875rem; color: var(--color-text-muted); font-variant-numeric: tabular-nums; }
-        .ao-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
-      `}</style>
-    </>
+    </div>
   )
 }

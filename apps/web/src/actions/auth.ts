@@ -112,8 +112,18 @@ export async function updateProfileAction(formData: FormData): Promise<ActionRes
     data: {
       name: parsed.data.name,
       phone: parsed.data.phone || null,
-      companyName: parsed.data.companyName || null,
-      nationalId: parsed.data.nationalId || null,
+      customerProfile: {
+        upsert: {
+          create: {
+            companyName: parsed.data.companyName || null,
+            nationalId: parsed.data.nationalId || null,
+          },
+          update: {
+            companyName: parsed.data.companyName || null,
+            nationalId: parsed.data.nationalId || null,
+          },
+        },
+      },
     },
   })
 

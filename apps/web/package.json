@@ -12,6 +12,7 @@
   "dependencies": {
     "@tirajeh/auth": "workspace:*",
     "@tirajeh/database": "workspace:*",
+    "@tirajeh/integrations": "workspace:*",
     "@tirajeh/shared": "workspace:*",
     "@tirajeh/ui": "workspace:*",
     "bcryptjs": "^2.4.3",

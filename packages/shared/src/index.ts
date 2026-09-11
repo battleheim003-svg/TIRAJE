@@ -1,6 +1,7 @@
 export * from "./schemas"
 export * from "./types"
 export * from "./constants/permissions"
+export * from "./constants/cement"
 export * from "./utils/pagination"
 export * from "./utils/currency"
 export * from "./utils/slug"

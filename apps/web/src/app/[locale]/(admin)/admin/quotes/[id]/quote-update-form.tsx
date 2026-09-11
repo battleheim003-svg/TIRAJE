@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react"
 import { adminUpdateQuoteAction } from "@/actions/admin-quotes"
+import styles from "./QuoteDetail.module.css"
 
 const QUOTE_STATUSES = [
   { value: "PENDING",  fa: "در انتظار",        en: "Pending"  },
@@ -44,95 +45,73 @@ export default function QuoteUpdateForm({ quoteId, currentStatus, currentQuotedP
   }
 
   return (
-    <>
-      <form onSubmit={handleSubmit} className="quf-form">
-        <div className="quf-row">
-          <div className="quf-field">
-            <label className="quf-label" htmlFor="quf-status">{fa ? "وضعیت" : "Status"}</label>
-            <select
-              id="quf-status"
-              value={status}
-              onChange={(e) => { setStatus(e.target.value); setSuccess(false) }}
-              className="quf-select"
-            >
-              {QUOTE_STATUSES.map((s) => (
-                <option key={s.value} value={s.value}>{fa ? s.fa : s.en}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="quf-field quf-field--price">
-            <label className="quf-label" htmlFor="quf-quotedPrice">{fa ? "قیمت پیشنهادی (تومان)" : "Quoted Price (Toman)"}</label>
-            <input
-              id="quf-quotedPrice"
-              name="quotedPrice"
-              type="number"
-              min={0}
-              step={1}
-              defaultValue={currentQuotedPrice ?? ""}
-              className="quf-input"
-              dir="ltr"
-              placeholder={fa ? "اختیاری" : "Optional"}
-            />
-          </div>
-
-          <div className="quf-field quf-field--expires">
-            <label className="quf-label" htmlFor="quf-expiresAt">{fa ? "تاریخ انقضا" : "Expires At"}</label>
-            <input
-              id="quf-expiresAt"
-              name="expiresAt"
-              type="date"
-              className="quf-input"
-              dir="ltr"
-            />
-          </div>
+    <form onSubmit={handleSubmit} className={styles["web-adm-qt-d__form"]}>
+      <div className={styles["web-adm-qt-d__row"]}>
+        <div className={styles["web-adm-qt-d__field"]}>
+          <label className={styles["web-adm-qt-d__label"]} htmlFor="quf-status">{fa ? "وضعیت" : "Status"}</label>
+          <select
+            id="quf-status"
+            value={status}
+            onChange={(e) => { setStatus(e.target.value); setSuccess(false) }}
+            className={styles["web-adm-qt-d__select"]}
+          >
+            {QUOTE_STATUSES.map((s) => (
+              <option key={s.value} value={s.value}>{fa ? s.fa : s.en}</option>
+            ))}
+          </select>
         </div>
 
-        <div className="quf-field">
-          <label className="quf-label" htmlFor="quf-adminNote">{fa ? "یادداشت مدیریت" : "Admin Note"}</label>
-          <textarea
-            id="quf-adminNote"
-            name="adminNote"
-            rows={3}
-            defaultValue={currentAdminNote ?? ""}
-            className="quf-textarea"
-            placeholder={fa ? "توضیحات برای پیگیری داخلی..." : "Internal notes..."}
+        <div className={styles["web-adm-qt-d__field"]}>
+          <label className={styles["web-adm-qt-d__label"]} htmlFor="quf-price">
+            {fa ? "قیمت پیشنهادی (تومان/تن)" : "Quoted Price (Toman/ton)"}
+          </label>
+          <input
+            id="quf-price"
+            name="quotedPrice"
+            type="number"
+            min={0}
+            defaultValue={currentQuotedPrice ?? ""}
+            placeholder={fa ? "مثلاً ۳۵۰۰۰۰۰" : "e.g. 3500000"}
+            className={styles["web-adm-qt-d__input"]}
+            dir="ltr"
           />
         </div>
 
-        {success && <p className="quf-success" role="status">{fa ? "با موفقیت ذخیره شد." : "Saved successfully."}</p>}
-        {error && <p className="quf-error" role="alert">{error}</p>}
-
-        <div className="quf-actions">
-          <button type="submit" disabled={isPending} className="quf-submit">
-            {isPending ? (fa ? "در حال ذخیره..." : "Saving...") : (fa ? "ذخیره تغییرات" : "Save Changes")}
-          </button>
+        <div className={styles["web-adm-qt-d__field"]}>
+          <label className={styles["web-adm-qt-d__label"]} htmlFor="quf-expires">
+            {fa ? "مهلت اعتبار پیشنهاد" : "Offer Expiration"}
+          </label>
+          <input
+            id="quf-expires"
+            name="expiresAt"
+            type="date"
+            className={styles["web-adm-qt-d__input"]}
+            dir="ltr"
+          />
         </div>
-      </form>
+      </div>
 
-      <style>{`
-        .quf-form { display: flex; flex-direction: column; gap: 1rem; }
-        .quf-row { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; }
-        .quf-field { display: flex; flex-direction: column; gap: 0.375rem; }
-        .quf-field--price { flex: 1; min-width: 10rem; }
-        .quf-field--expires { min-width: 9rem; }
-        .quf-label { font-size: 0.75rem; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
-        .quf-select, .quf-input, .quf-textarea {
-          background-color: var(--color-background); border: 1px solid var(--color-border);
-          border-radius: var(--radius-md); padding: 0.5625rem 0.75rem; font-size: 0.875rem;
-          color: var(--color-text); transition: border-color var(--transition-fast);
-          font-family: inherit; width: 100%; box-sizing: border-box;
-        }
-        .quf-select:focus, .quf-input:focus, .quf-textarea:focus { outline: none; border-color: var(--color-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 15%, transparent); }
-        .quf-select { min-width: 10rem; }
-        .quf-textarea { resize: vertical; }
-        .quf-success { font-size: 0.875rem; color: var(--color-success); background-color: var(--color-success-subtle); border-radius: var(--radius-md); padding: 0.625rem 0.875rem; }
-        .quf-error { font-size: 0.875rem; color: var(--color-danger); background-color: var(--color-danger-subtle); border-radius: var(--radius-md); padding: 0.625rem 0.875rem; }
-        .quf-actions { display: flex; justify-content: flex-end; }
-        .quf-submit { background-color: var(--color-accent); color: #fff; font-size: 0.9375rem; font-weight: 700; padding: 0.625rem 1.75rem; border-radius: var(--radius-lg); border: none; cursor: pointer; transition: background-color var(--transition-fast); }
-        .quf-submit:hover:not(:disabled) { background-color: var(--color-accent-hover); }
-        .quf-submit:disabled { opacity: 0.5; cursor: not-allowed; }
-      `}</style>
-    </>
+      <div className={styles["web-adm-qt-d__fieldFull"]}>
+        <label className={styles["web-adm-qt-d__label"]} htmlFor="quf-note">
+          {fa ? "یادداشت مدیریت (داخلی)" : "Admin Note (internal)"}
+        </label>
+        <textarea
+          id="quf-note"
+          name="adminNote"
+          defaultValue={currentAdminNote ?? ""}
+          rows={3}
+          placeholder={fa ? "یادداشت‌های داخلی در مورد این درخواست..." : "Internal notes about this request..."}
+          className={styles["web-adm-qt-d__textarea"]}
+        />
+      </div>
+
+      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-3)", flexWrap: "wrap" }}>
+        <button type="submit" disabled={isPending} className={styles["web-adm-qt-d__btn"]}>
+          {isPending ? (fa ? "در حال ذخیره..." : "Saving...") : (fa ? "ثبت تغییرات" : "Save Changes")}
+        </button>
+        {success && <span className={styles["web-adm-qt-d__success"]} role="status">{fa ? "تغییرات با موفقیت ذخیره شد." : "Changes saved."}</span>}
+        {error && <span className={styles["web-adm-qt-d__error"]} role="alert">{error}</span>}
+      </div>
+    </form>
   )
 }

@@ -1,0 +1,85 @@
+/* prefix: web-adm-kpi */
+
+.web-adm-kpi__card {
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  text-decoration: none;
+  color: inherit;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+}
+
+.web-adm-kpi__card--link:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-accent);
+}
+
+.web-adm-kpi__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.web-adm-kpi__icon-wrap {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: color-mix(in srgb, var(--color-accent) 14%, transparent);
+  color: var(--color-accent);
+}
+
+.web-adm-kpi__trend {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  border-radius: var(--radius-full);
+  padding: 0.15rem var(--space-2);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-variant-numeric: tabular-nums;
+}
+
+.web-adm-kpi__trend--up {
+  color: var(--color-success-500);
+  background-color: color-mix(in srgb, var(--color-success) 12%, transparent);
+}
+
+.web-adm-kpi__trend--down {
+  color: var(--color-error-500);
+  background-color: color-mix(in srgb, var(--color-error-500) 12%, transparent);
+}
+
+.web-adm-kpi__content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.web-adm-kpi__value {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-extrabold);
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+.web-adm-kpi__label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-medium);
+}
+
+.web-adm-kpi__desc {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  margin-block-start: var(--space-1);
+}

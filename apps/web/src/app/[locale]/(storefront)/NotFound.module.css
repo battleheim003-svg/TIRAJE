@@ -1,0 +1,83 @@
+/* NotFound.module.css - prefix web-notfound */
+
+.web-notfound__root {
+  min-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-block: var(--space-12);
+  padding-inline: var(--space-4);
+  text-align: center;
+}
+
+.web-notfound__code {
+  font-size: clamp(var(--font-size-display-min), 15vw, var(--font-size-display-max));
+  font-weight: 900;
+  color: var(--color-border);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  user-select: none;
+  margin-block-end: var(--space-2);
+}
+
+.web-notfound__title {
+  font-size: clamp(var(--font-size-xl), 3vw, var(--font-size-2xl));
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1.5;
+  margin-block-end: var(--space-3);
+}
+
+.web-notfound__titleEn {
+  font-size: var(--font-size-base);
+  font-weight: 400;
+  color: var(--color-text-secondary);
+}
+
+.web-notfound__desc {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  line-height: 1.7;
+  max-width: 30ch;
+  margin-block-end: var(--space-8);
+}
+
+.web-notfound__actions {
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.web-notfound__btn {
+  padding-block: var(--space-2);
+  padding-inline: var(--space-6);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.web-notfound__btnPrimary {
+  background-color: var(--color-accent);
+  color: var(--color-accent-foreground);
+  border: 1.5px solid var(--color-accent);
+}
+
+.web-notfound__btnPrimary:hover {
+  background-color: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+}
+
+.web-notfound__btnOutline {
+  background: none;
+  color: var(--color-text-secondary);
+  border: 1.5px solid var(--color-border);
+}
+
+.web-notfound__btnOutline:hover {
+  border-color: var(--color-accent-text);
+  color: var(--color-accent-text);
+}

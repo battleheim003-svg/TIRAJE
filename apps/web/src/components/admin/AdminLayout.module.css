@@ -1,0 +1,191 @@
+/* AdminLayout.module.css - prefix .al- */
+
+.alRoot {
+  display: flex;
+  min-height: 100vh;
+  height: 100vh;
+  background-color: var(--color-background);
+  overflow: hidden;
+}
+
+.alBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Top bar (48px) */
+.alTopbar {
+  height: 3rem; /* 48px */
+  min-height: 3rem;
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-inline: var(--space-4);
+  gap: var(--space-3);
+  z-index: 40;
+}
+
+.alTopbarStart {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.alMenuBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.alMenuBtn:hover {
+  background-color: var(--color-border-subtle);
+  color: var(--color-text);
+}
+
+/* Breadcrumb */
+.alBreadcrumb {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alBreadcrumbItem {
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color var(--transition-fast);
+}
+
+.alBreadcrumbItem:hover {
+  color: var(--color-accent-text);
+}
+
+.alBreadcrumbCurrent {
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.alBreadcrumbSep {
+  color: var(--color-text-disabled);
+  display: flex;
+  align-items: center;
+}
+
+/* Topbar end */
+.alTopbarEnd {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-inline-start: auto;
+  flex-shrink: 0;
+}
+
+.alStorefrontLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding-block: var(--space-1);
+  padding-inline: var(--space-2);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.alStorefrontLink:hover {
+  background-color: var(--color-border-subtle);
+  color: var(--color-text);
+}
+
+.alUser {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.alAvatar {
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-full);
+  background-color: var(--color-accent);
+  color: var(--color-accent-foreground);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.alUserName {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text);
+  max-width: 8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .alUserName {
+    display: none;
+  }
+}
+
+.alSignoutBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-md);
+  border: none;
+  background: none;
+  color: var(--color-danger);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.alSignoutBtn:hover {
+  background-color: var(--color-danger-subtle);
+}
+
+/* Main Content Area */
+.alMain {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-6);
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 640px) {
+  .alMain {
+    padding: var(--space-4);
+  }
+}

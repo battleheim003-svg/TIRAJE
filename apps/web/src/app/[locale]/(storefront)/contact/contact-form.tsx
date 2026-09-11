@@ -1,13 +1,17 @@
 "use client"
 
 import { useTransition, useState } from "react"
+import { CheckCircle2 } from "lucide-react"
+import { Card, Button, Input, Label, Textarea } from "@tirajeh/ui"
 import { contactAction } from "@/actions/contact"
+import styles from "./Contact.module.css"
 
-interface Props {
-  fa: boolean
+interface ContactFormProps {
+  locale: string
 }
 
-export function ContactForm({ fa }: Props) {
+export function ContactForm({ locale }: ContactFormProps) {
+  const fa = locale === "fa"
   const [pending, startTransition] = useTransition()
   const [result, setResult] = useState<{ success: boolean; error?: string } | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({})
@@ -19,7 +23,6 @@ export function ContactForm({ fa }: Props) {
       const res = await contactAction(formData)
       if (res.success) {
         setResult({ success: true })
-        ;(e.target as HTMLFormElement).reset()
         setFieldErrors({})
       } else {
         setResult({ success: false, error: res.error })
@@ -28,117 +31,146 @@ export function ContactForm({ fa }: Props) {
     })
   }
 
-  if (result?.success) {
-    return (
-      <div className="cf-success">
-        <p className="cf-success-title">{fa ? "پیام شما ارسال شد!" : "Message sent!"}</p>
-        <p className="cf-success-sub">
-          {fa
-            ? "در اسرع وقت با شما تماس خواهیم گرفت."
-            : "We'll get back to you as soon as possible."}
-        </p>
-        <button type="button" className="cf-reset-btn" onClick={() => setResult(null)}>
-          {fa ? "ارسال پیام جدید" : "Send another message"}
-        </button>
-      </div>
-    )
-  }
-
   return (
-    <form onSubmit={handleSubmit} className="cf-form" noValidate>
-      {result && !result.success && (
-        <div className="cf-error-banner" role="alert">
-          {result.error ?? (fa ? "خطایی رخ داد. لطفاً دوباره تلاش کنید." : "An error occurred. Please try again.")}
+    <Card variant="outlined" className={styles["web-con__form-card"]}>
+      <h2 className={styles["web-con__form-title"]}>
+        {fa ? "ارسال پیام و استعلام" : "Send a Message"}
+      </h2>
+
+      {result?.success ? (
+        <div className={styles["web-con__success"]}>
+          <CheckCircle2
+            className={styles["web-con__success-icon"]}
+            style={{ width: "3.5rem", height: "3.5rem" }}
+            aria-hidden="true"
+          />
+          <h3 className={styles["web-con__success-title"]}>
+            {fa ? "پیام شما با موفقیت ثبت شد!" : "Message Successfully Sent!"}
+          </h3>
+          <p className={styles["web-con__success-desc"]}>
+            {fa
+              ? "کارشناسان پشتیبانی و فروش تیراژه در اسرع وقت با شما تماس خواهند گرفت."
+              : "Our support and sales team will contact you as soon as possible."}
+          </p>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => setResult(null)}
+          >
+            {fa ? "ارسال پیام جدید" : "Send Another Message"}
+          </Button>
         </div>
+      ) : (
+        <form onSubmit={handleSubmit} className={styles["web-con__form"]} noValidate>
+          {result && !result.success && (
+            <div className={styles["web-con__error"]} role="alert">
+              {result.error ??
+                (fa
+                  ? "خطایی رخ داد. لطفاً دوباره تلاش کنید."
+                  : "An error occurred. Please try again.")}
+            </div>
+          )}
+
+          <div className={styles["web-con__form-row"]}>
+            <div className={styles["web-con__field"]}>
+              <Label htmlFor="name" required>
+                {fa ? "نام و نام خانوادگی" : "Full Name"}
+              </Label>
+              <Input
+                id="name"
+                name="name"
+                type="text"
+                required
+                autoComplete="name"
+                placeholder={fa ? "علی محمدی" : "John Doe"}
+                error={!!fieldErrors.name}
+                errorText={fieldErrors.name?.[0]}
+              />
+            </div>
+
+            <div className={styles["web-con__field"]}>
+              <Label htmlFor="email" required>
+                {fa ? "آدرس ایمیل" : "Email Address"}
+              </Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                required
+                autoComplete="email"
+                dir="ltr"
+                placeholder="you@example.com"
+                error={!!fieldErrors.email}
+                errorText={fieldErrors.email?.[0]}
+              />
+            </div>
+          </div>
+
+          <div className={styles["web-con__form-row"]}>
+            <div className={styles["web-con__field"]}>
+              <Label htmlFor="phone">
+                {fa ? "شماره تلفن همراه (اختیاری)" : "Mobile Phone (optional)"}
+              </Label>
+              <Input
+                id="phone"
+                name="phone"
+                type="tel"
+                autoComplete="tel"
+                dir="ltr"
+                placeholder="09123456789"
+                error={!!fieldErrors.phone}
+                errorText={fieldErrors.phone?.[0]}
+              />
+            </div>
+
+            <div className={styles["web-con__field"]}>
+              <Label htmlFor="subject" required>
+                {fa ? "موضوع پیام" : "Subject"}
+              </Label>
+              <Input
+                id="subject"
+                name="subject"
+                type="text"
+                required
+                placeholder={fa ? "استعلام قیمت سیمان تیپ ۲" : "Type 2 Cement Price Inquiry"}
+                error={!!fieldErrors.subject}
+                errorText={fieldErrors.subject?.[0]}
+              />
+            </div>
+          </div>
+
+          <div className={styles["web-con__field"]}>
+            <Label htmlFor="message" required>
+              {fa ? "متن پیام" : "Message"}
+            </Label>
+            <Textarea
+              id="message"
+              name="message"
+              required
+              rows={5}
+              placeholder={fa ? "پیام، سوال یا درخواست خود را شرح دهید..." : "Describe your inquiry or question..."}
+              error={!!fieldErrors.message}
+              errorText={fieldErrors.message?.[0]}
+            />
+          </div>
+
+          <Button
+            type="submit"
+            variant="primary"
+            size="lg"
+            disabled={pending}
+            className={styles["web-con__submit-btn"]}
+          >
+            {pending
+              ? fa
+                ? "در حال ارسال پیام..."
+                : "Sending..."
+              : fa
+              ? "ارسال پیام"
+              : "Send Message"}
+          </Button>
+        </form>
       )}
-
-      <div className="cf-row">
-        <div className="cf-field">
-          <label className="cf-label" htmlFor="name">
-            {fa ? "نام و نام خانوادگی" : "Full name"} <span className="cf-required" aria-hidden="true">*</span>
-          </label>
-          <input
-            id="name"
-            name="name"
-            type="text"
-            required
-            autoComplete="name"
-            className={`cf-input${fieldErrors.name ? " cf-input--error" : ""}`}
-            placeholder={fa ? "علی محمدی" : "Your name"}
-          />
-          {fieldErrors.name && <span className="cf-field-error">{fieldErrors.name[0]}</span>}
-        </div>
-
-        <div className="cf-field">
-          <label className="cf-label" htmlFor="email">
-            {fa ? "ایمیل" : "Email"} <span className="cf-required" aria-hidden="true">*</span>
-          </label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            required
-            autoComplete="email"
-            dir="ltr"
-            className={`cf-input${fieldErrors.email ? " cf-input--error" : ""}`}
-            placeholder="you@example.com"
-          />
-          {fieldErrors.email && <span className="cf-field-error">{fieldErrors.email[0]}</span>}
-        </div>
-      </div>
-
-      <div className="cf-field">
-        <label className="cf-label" htmlFor="phone">
-          {fa ? "شماره موبایل" : "Mobile"}{" "}
-          <span className="cf-optional">({fa ? "اختیاری" : "optional"})</span>
-        </label>
-        <input
-          id="phone"
-          name="phone"
-          type="tel"
-          autoComplete="tel"
-          dir="ltr"
-          className={`cf-input${fieldErrors.phone ? " cf-input--error" : ""}`}
-          placeholder="09123456789"
-        />
-        {fieldErrors.phone && <span className="cf-field-error">{fieldErrors.phone[0]}</span>}
-      </div>
-
-      <div className="cf-field">
-        <label className="cf-label" htmlFor="subject">
-          {fa ? "موضوع" : "Subject"} <span className="cf-required" aria-hidden="true">*</span>
-        </label>
-        <input
-          id="subject"
-          name="subject"
-          type="text"
-          required
-          className={`cf-input${fieldErrors.subject ? " cf-input--error" : ""}`}
-          placeholder={fa ? "استعلام قیمت سیمان پرتلند" : "Portland cement price inquiry"}
-        />
-        {fieldErrors.subject && <span className="cf-field-error">{fieldErrors.subject[0]}</span>}
-      </div>
-
-      <div className="cf-field">
-        <label className="cf-label" htmlFor="message">
-          {fa ? "پیام" : "Message"} <span className="cf-required" aria-hidden="true">*</span>
-        </label>
-        <textarea
-          id="message"
-          name="message"
-          required
-          rows={5}
-          className={`cf-textarea${fieldErrors.message ? " cf-input--error" : ""}`}
-          placeholder={fa ? "پیام خود را اینجا بنویسید…" : "Write your message here…"}
-        />
-        {fieldErrors.message && <span className="cf-field-error">{fieldErrors.message[0]}</span>}
-      </div>
-
-      <button type="submit" disabled={pending} className="cf-submit">
-        {pending
-          ? (fa ? "در حال ارسال…" : "Sending…")
-          : (fa ? "ارسال پیام" : "Send message")}
-      </button>
-    </form>
+    </Card>
   )
 }

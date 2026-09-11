@@ -1,6 +1,7 @@
 import { getLocale } from "next-intl/server"
 import type { Metadata } from "next"
 import { SITE_CONFIG } from "@/config/site"
+import styles from "./Privacy.module.css"
 
 export const metadata: Metadata = {
   title: "سیاست حریم خصوصی | تیراژه",
@@ -103,31 +104,31 @@ To exercise these rights, contact us at ${SITE_CONFIG.email}.`,
 
   return (
     <>
-      <div className="pp-hero">
-        <div className="pp-container">
-          <p className="pp-eyebrow">{fa ? "قوانین" : "Legal"}</p>
-          <h1 className="pp-title">{fa ? "سیاست حریم خصوصی" : "Privacy Policy"}</h1>
-          <p className="pp-meta">
+      <div className={styles["web-privacy__hero"]}>
+        <div className={styles["web-privacy__container"]}>
+          <p className={styles["web-privacy__eyebrow"]}>{fa ? "قوانین" : "Legal"}</p>
+          <h1 className={styles["web-privacy__title"]}>{fa ? "سیاست حریم خصوصی" : "Privacy Policy"}</h1>
+          <p className={styles["web-privacy__meta"]}>
             {fa ? "آخرین به‌روزرسانی: فروردین ۱۴۰۴" : "Last updated: April 2025"}
           </p>
         </div>
       </div>
 
-      <div className="pp-container pp-body">
-        <p className="pp-lead">
+      <div className={`${styles["web-privacy__container"]} ${styles["web-privacy__body"]}`}>
+        <p className={styles["web-privacy__lead"]}>
           {fa
             ? "تیراژه به حریم خصوصی کاربران خود اهمیت می‌دهد. این سیاست نحوه جمع‌آوری، استفاده و حفاظت از اطلاعات شما را توضیح می‌دهد."
             : "Tirajeh values the privacy of its users. This policy explains how we collect, use, and protect your information."}
         </p>
 
-        <div className="pp-sections">
+        <div className={styles["web-privacy__sections"]}>
           {sections.map((section, i) => (
-            <section key={i} className="pp-section">
-              <h2 className="pp-section-title">{section.title}</h2>
-              <div className="pp-section-body">
+            <section key={i}>
+              <h2 className={styles["web-privacy__sectionTitle"]}>{section.title}</h2>
+              <div className={styles["web-privacy__sectionBody"]}>
                 {section.body.split("\n").map((line, j) =>
                   line.startsWith("•") ? (
-                    <p key={j} className="pp-bullet">{line}</p>
+                    <p key={j} className={styles["web-privacy__bullet"]}>{line}</p>
                   ) : (
                     <p key={j}>{line}</p>
                   )
@@ -137,60 +138,17 @@ To exercise these rights, contact us at ${SITE_CONFIG.email}.`,
           ))}
         </div>
 
-        <div className="pp-contact">
+        <div className={styles["web-privacy__contact"]}>
           <p>
             {fa
               ? `برای سؤالات مربوط به حریم خصوصی با ما تماس بگیرید: `
               : `For privacy-related questions, contact us: `}
-            <a href={`mailto:${SITE_CONFIG.email}`} className="pp-link">
+            <a href={`mailto:${SITE_CONFIG.email}`} className={styles["web-privacy__link"]}>
               {SITE_CONFIG.email}
             </a>
           </p>
         </div>
       </div>
-
-      <style>{`
-        .pp-container { max-width: 52rem; margin-inline: auto; padding-inline: 1.5rem; }
-        .pp-hero {
-          background-color: var(--color-surface);
-          border-bottom: 1px solid var(--color-border);
-          padding-block: 3rem 2.5rem;
-        }
-        .pp-eyebrow {
-          font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.1em;
-          text-transform: uppercase; color: var(--color-accent); margin-bottom: 0.625rem;
-        }
-        .pp-title {
-          font-size: clamp(1.625rem, 4vw, 2.25rem); font-weight: 800;
-          color: var(--color-text); letter-spacing: -0.025em; margin-bottom: 0.5rem;
-        }
-        .pp-meta { font-size: 0.8125rem; color: var(--color-text-muted); }
-
-        .pp-body { padding-block: 2.5rem 4rem; }
-        .pp-lead {
-          font-size: 1rem; color: var(--color-text-secondary);
-          line-height: 1.75; margin-bottom: 2.5rem;
-          padding-bottom: 1.75rem; border-bottom: 1px solid var(--color-border-subtle);
-        }
-
-        .pp-sections { display: flex; flex-direction: column; gap: 2.25rem; }
-        .pp-section-title {
-          font-size: 1.0625rem; font-weight: 700; color: var(--color-text);
-          margin-bottom: 0.875rem; padding-inline-start: 0.875rem;
-          border-inline-start: 3px solid var(--color-accent);
-        }
-        .pp-section-body { font-size: 0.9375rem; color: var(--color-text-secondary); line-height: 1.8; }
-        .pp-section-body p + p { margin-top: 0.375rem; }
-        .pp-bullet { padding-inline-start: 0.25rem; }
-
-        .pp-contact {
-          margin-top: 2.5rem; padding-top: 1.75rem;
-          border-top: 1px solid var(--color-border-subtle);
-          font-size: 0.9375rem; color: var(--color-text-secondary);
-        }
-        .pp-link { color: var(--color-accent); font-weight: 600; text-decoration: none; }
-        .pp-link:hover { text-decoration: underline; }
-      `}</style>
     </>
   )
 }

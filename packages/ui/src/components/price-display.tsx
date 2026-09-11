@@ -1,4 +1,5 @@
 import { formatToman } from "../lib/utils"
+import styles from "./PriceDisplay.module.css"
 
 interface PriceDisplayProps {
   rial: number
@@ -8,11 +9,11 @@ interface PriceDisplayProps {
   className?: string
 }
 
-const sizeMap = {
-  sm: "text-sm",
-  md: "text-base",
-  lg: "text-lg font-semibold",
-  xl: "text-2xl font-bold",
+const sizeClassMap = {
+  sm: styles["ui-price--sm"],
+  md: styles["ui-price--md"],
+  lg: styles["ui-price--lg"],
+  xl: styles["ui-price--xl"],
 }
 
 export function PriceDisplay({
@@ -23,12 +24,12 @@ export function PriceDisplay({
   className,
 }: PriceDisplayProps) {
   return (
-    <span className={`inline-flex items-center gap-2 ${className ?? ""}`}>
-      <span className={`text-[var(--color-text)] ${sizeMap[size]} font-variant-numeric tabular-nums`}>
+    <span className={[styles["ui-price__wrap"], className].filter(Boolean).join(" ")}>
+      <span className={`${styles["ui-price__main"]} ${sizeClassMap[size]}`}>
         {formatToman(rial, locale)}
       </span>
       {compareRial != null && compareRial > rial && (
-        <span className="text-sm text-[var(--color-text-muted)] line-through font-variant-numeric tabular-nums">
+        <span className={styles["ui-price__compare"]}>
           {formatToman(compareRial, locale)}
         </span>
       )}

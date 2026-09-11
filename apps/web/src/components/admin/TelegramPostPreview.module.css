@@ -1,0 +1,163 @@
+/* TelegramPostPreview.module.css - prefix .tgp- */
+
+.tgpWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.tgpHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tgpHeaderTitle {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* Chat container simulation */
+.tgpChatContainer {
+  background-color: var(--color-tg-chat-bg);
+  background-image: radial-gradient(var(--color-tg-chat-pattern) 1px, transparent 1px);
+  background-size: 16px 16px;
+  border-radius: var(--radius-xl);
+  padding: var(--space-5);
+  border: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Chat bubble */
+.tgpBubble {
+  background-color: var(--color-tg-bubble-bg);
+  color: var(--color-bg-elevated);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  max-width: 24rem;
+  width: 100%;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Image preview */
+.tgpImageWrap {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background-color: var(--color-tg-img-bg);
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tgpImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tgpImagePlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  color: var(--color-tg-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+/* Caption body */
+.tgpCaption {
+  padding-block: var(--space-3);
+  padding-inline: var(--space-4);
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+  direction: rtl;
+  text-align: start;
+}
+
+.tgpTitle {
+  font-weight: 800;
+  font-size: var(--font-size-base);
+  color: var(--color-bg-elevated);
+  margin-bottom: var(--space-2);
+}
+
+.tgpExcerpt {
+  color: var(--color-tg-text-body);
+  margin-bottom: var(--space-2);
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.tgpHashtags {
+  color: var(--color-tg-link);
+  font-size: var(--font-size-xs);
+  margin-bottom: var(--space-2);
+  word-break: break-word;
+}
+
+.tgpChannel {
+  color: var(--color-tg-channel);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  direction: ltr;
+  text-align: end;
+}
+
+/* Inline Keyboard Button */
+.tgpKeyboardArea {
+  padding-block-start: 0;
+  padding-block-end: var(--space-2);
+  padding-inline: var(--space-2);
+}
+
+.tgpButton {
+  width: 100%;
+  padding-block: var(--space-2);
+  padding-inline: var(--space-3);
+  background-color: var(--color-tg-btn-bg);
+  color: var(--color-bg-elevated);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  text-align: center;
+  border: none;
+  cursor: default;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  transition: background-color var(--transition-fast);
+}
+
+/* Character Counter */
+.tgpCounter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-block: var(--space-1);
+  padding-inline: var(--space-2);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.tgpCounterLimit {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.tgpCounterOverLimit {
+  color: var(--color-danger);
+  font-weight: 700;
+}

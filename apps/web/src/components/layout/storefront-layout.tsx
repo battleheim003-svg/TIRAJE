@@ -1,3 +1,5 @@
+import { getLocale } from "next-intl/server"
+import { PriceTicker } from "./price-ticker"
 import { Navbar } from "./navbar"
 import { Footer } from "./footer"
 import { CartDrawer } from "@/components/cart/cart-drawer"
@@ -6,9 +8,16 @@ interface StorefrontLayoutProps {
   children: React.ReactNode
 }
 
-export function StorefrontLayout({ children }: StorefrontLayoutProps) {
+export async function StorefrontLayout({ children }: StorefrontLayoutProps) {
+  const locale = await getLocale()
+  const fa = locale === "fa"
+
   return (
     <>
+      <a href="#main-content" className="web-skip-link">
+        {fa ? "پرش به محتوای اصلی" : "Skip to main content"}
+      </a>
+      <PriceTicker locale={locale} />
       <Navbar />
       <main id="main-content" style={{ minHeight: "calc(100dvh - 4rem)" }}>
         {children}
@@ -18,3 +27,4 @@ export function StorefrontLayout({ children }: StorefrontLayoutProps) {
     </>
   )
 }
+
