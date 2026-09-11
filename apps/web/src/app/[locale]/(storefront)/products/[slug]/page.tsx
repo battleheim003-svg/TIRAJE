@@ -35,7 +35,7 @@ import {
   formatWeight,
 } from "@/lib/cement"
 import { ImageGallery } from "./image-gallery"
-import AddToCartButton from "./add-to-cart"
+import AddToCartButton, { type PackagingOption } from "./add-to-cart"
 import styles from "./ProductDetail.module.css"
 
 type Props = { params: Promise<{ locale: string; slug: string }> }
@@ -76,6 +76,7 @@ export default async function ProductDetailPage({ params }: Props) {
       factory: true,
       productCategories: { include: { category: true } },
       priceHistory: { orderBy: { createdAt: "desc" }, take: 1 },
+      packagingOptions: { where: { isActive: true }, orderBy: { sortOrder: "asc" } },
     },
   })
 
@@ -130,6 +131,15 @@ export default async function ProductDetailPage({ params }: Props) {
   const discountPct = hasDiscount ? Math.round((1 - priceNum / compareNum) * 100) : 0
 
   const specs = (product.technicalSpecs as Record<string, string> | null) ?? null
+
+  const packagingOptions: PackagingOption[] = product.packagingOptions.map((o) => ({
+    id: o.id,
+    tier: o.tier,
+    labelFa: o.labelFa,
+    labelEn: o.labelEn,
+    bagCount: o.bagCount,
+    price: Number(o.price),
+  }))
 
   const images = product.images as {
     id: string
@@ -372,6 +382,7 @@ export default async function ProductDetailPage({ params }: Props) {
             locale={locale}
             unitPrice={priceNum}
             unitWeightKg={Number(product.weightKg) || 50}
+            packagingOptions={packagingOptions}
           />
 
           {/* 6 Key Commerce Cards */}
@@ -388,7 +399,11 @@ export default async function ProductDetailPage({ params }: Props) {
               <Scale className={styles["web-pdtl__spec-icon"]} style={{ width: "1.25rem", height: "1.25rem" }} />
               <div className={styles["web-pdtl__spec-text"]}>
                 <span className={styles["web-pdtl__spec-label"]}>{fa ? "حداقل سفارش" : "Min Order"}</span>
-                <span className={styles["web-pdtl__spec-val"]}>{fa ? "۱۰ کیسه (۲۴۰ عمده)" : "10 bags (240 bulk)"}</span>
+                <span className={styles["web-pdtl__spec-val"]}>
+                  {fa
+                    ? `۵۰ کیسه (تک) تا ۵۰۰ کیسه (تریلی ۱۰ چرخ)`
+                    : "50 bags (single) up to 500 bags (10-wheel trailer)"}
+                </span>
               </div>
             </div>
 
@@ -535,10 +550,10 @@ export default async function ProductDetailPage({ params }: Props) {
             <div className={styles["web-pdtl__logistics-box"]}>
               <h3 className={styles["web-pdtl__logistics-subtitle"]}>{fa ? "ناوگان حمل و ظرفیت بارگیری" : "Fleet Capacities"}</h3>
               <ul className={styles["web-pdtl__logistics-list"]}>
-                <li><strong>{fa ? "تریلی کفی / لبه‌دار:" : "Semi-Trailer:"}</strong> {fa ? "۴۸۰ کیسه (۲۴ تن)" : "480 bags (24 Tons)"}</li>
-                <li><strong>{fa ? "کامیون جفت (۱۰ چرخ):" : "Double-axle Truck:"}</strong> {fa ? "۳۰۰ کیسه (۱۵ تن)" : "300 bags (15 Tons)"}</li>
-                <li><strong>{fa ? "کامیون تک (۶ چرخ):" : "Single-axle Truck:"}</strong> {fa ? "۲۰۰ کیسه (۱۰ تن)" : "200 bags (10 Tons)"}</li>
-                <li><strong>{fa ? "خاور و نیسان:" : "Light Truck / Pickup:"}</strong> {fa ? "۴۰ الی ۱۰۰ کیسه (۲ تا ۵ تن)" : "40 to 100 bags (2-5 Tons)"}</li>
+                <li><strong>{fa ? "تریلی ۱۰ چرخ:" : "10-Wheel Trailer:"}</strong> {fa ? "۵۰۰ کیسه (۲۵ تن)" : "500 bags (25 Tons)"}</li>
+                <li><strong>{fa ? "تریلی ۶ چرخ:" : "6-Wheel Trailer:"}</strong> {fa ? "۳۶۰ کیسه (۱۸ تن)" : "360 bags (18 Tons)"}</li>
+                <li><strong>{fa ? "جفت:" : "Pair:"}</strong> {fa ? "۲۴۰ کیسه (۱۲ تن)" : "240 bags (12 Tons)"}</li>
+                <li><strong>{fa ? "تک:" : "Single:"}</strong> {fa ? "۵۰ کیسه (۲.۵ تن)" : "50 bags (2.5 Tons)"}</li>
               </ul>
             </div>
 

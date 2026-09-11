@@ -6,6 +6,15 @@ import { Button } from "@tirajeh/ui"
 import { addToCartAction } from "@/actions/cart"
 import styles from "./AddToCart.module.css"
 
+export interface PackagingOption {
+  id: string
+  tier: string
+  labelFa: string
+  labelEn: string | null
+  bagCount: number
+  price: number
+}
+
 interface AddToCartButtonProps {
   productId: string
   minOrderQty: number
@@ -13,6 +22,7 @@ interface AddToCartButtonProps {
   locale: string
   unitPrice?: number
   unitWeightKg?: number
+  packagingOptions?: PackagingOption[]
 }
 
 export default function AddToCartButton({
@@ -22,16 +32,32 @@ export default function AddToCartButton({
   locale,
   unitPrice = 0,
   unitWeightKg = 50,
+  packagingOptions = [],
 }: AddToCartButtonProps) {
   const fa = locale === "fa"
   const isOutOfStock = stockStatus === "OUT_OF_STOCK" || stockStatus === "DISCONTINUED"
-  const [quantity, setQuantity] = useState(Math.max(1, minOrderQty))
+  const defaultOption =
+    packagingOptions.find((o) => o.tier === "SINGLE") ?? packagingOptions[0] ?? null
+  const [selectedTierId, setSelectedTierId] = useState<string | null>(defaultOption?.id ?? null)
+  const selectedOption = packagingOptions.find((o) => o.id === selectedTierId) ?? null
+  const [quantity, setQuantity] = useState(
+    Math.max(1, selectedOption?.bagCount ?? minOrderQty)
+  )
   const [isPending, startTransition] = useTransition()
   const [feedback, setFeedback] = useState<{ ok: boolean; msg: string } | null>(null)
 
+  function selectTier(option: PackagingOption) {
+    setSelectedTierId(option.id)
+    setQuantity(option.bagCount)
+  }
+
+  const effectiveUnitPrice = selectedOption
+    ? selectedOption.price / selectedOption.bagCount
+    : unitPrice
+
   const totalWeightKg = quantity * unitWeightKg
   const totalTonnage = (totalWeightKg / 1000).toFixed(2)
-  const totalPrice = quantity * unitPrice
+  const totalPrice = quantity * effectiveUnitPrice
 
   function handleAdd() {
     startTransition(async () => {
@@ -60,6 +86,31 @@ export default function AddToCartButton({
 
   return (
     <div className={styles["web-atc"]}>
+      {/* Bulk Packaging Tiers */}
+      {packagingOptions.length > 0 && (
+        <div className={styles["web-atc__tiers"]}>
+          {packagingOptions.map((option) => (
+            <button
+              key={option.id}
+              type="button"
+              onClick={() => selectTier(option)}
+              className={`${styles["web-atc__tier-btn"]} ${
+                selectedTierId === option.id ? styles["web-atc__tier-btn--active"] : ""
+              }`}
+            >
+              <span className={styles["web-atc__tier-label"]}>
+                {fa ? option.labelFa : (option.labelEn ?? option.labelFa)}
+              </span>
+              <span className={styles["web-atc__tier-count"]}>
+                {fa
+                  ? `${option.bagCount.toLocaleString("fa-IR")} کیسه`
+                  : `${option.bagCount} bags`}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Live Calculation Box */}
       <div className={styles["web-atc__calc-card"]}>
         <div className={styles["web-atc__calc-row"]}>
@@ -75,7 +126,7 @@ export default function AddToCartButton({
             </span>
           </div>
 
-          {unitPrice > 0 && (
+          {effectiveUnitPrice > 0 && (
             <div className={styles["web-atc__calc-item"]}>
               <span className={styles["web-atc__calc-label"]}>
                 <Calculator style={{ width: "0.875rem", height: "0.875rem" }} />
@@ -97,7 +148,10 @@ export default function AddToCartButton({
           <button
             type="button"
             disabled={isOutOfStock || quantity <= minOrderQty}
-            onClick={() => setQuantity((q) => Math.max(minOrderQty, q - (q > 50 ? 10 : 1)))}
+            onClick={() => {
+              setSelectedTierId(null)
+              setQuantity((q) => Math.max(minOrderQty, q - (q > 50 ? 10 : 1)))
+            }}
             className={styles["web-atc__qty-btn"]}
             aria-label={fa ? "کاهش تعداد" : "Decrease"}
           >
@@ -112,7 +166,10 @@ export default function AddToCartButton({
           <button
             type="button"
             disabled={isOutOfStock}
-            onClick={() => setQuantity((q) => q + (q >= 50 ? 10 : 1))}
+            onClick={() => {
+              setSelectedTierId(null)
+              setQuantity((q) => q + (q >= 50 ? 10 : 1))
+            }}
             className={styles["web-atc__qty-btn"]}
             aria-label={fa ? "افزایش تعداد" : "Increase"}
           >
