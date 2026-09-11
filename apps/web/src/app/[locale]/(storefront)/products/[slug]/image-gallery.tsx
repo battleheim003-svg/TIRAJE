@@ -40,6 +40,7 @@ export function ImageGallery({ images, productName, locale }: ImageGalleryProps)
             fill
             priority
             unoptimized={true}
+            draggable={false}
             onError={() => setImageError(true)}
             sizes="(max-width:768px) 100vw, 50vw"
             className={styles["web-pdtl-gal__main-img"]}
@@ -93,6 +94,7 @@ export function ImageGallery({ images, productName, locale }: ImageGalleryProps)
                 alt={altText(img)}
                 fill
                 unoptimized={true}
+                draggable={false}
                 sizes="5rem"
                 className={styles["web-pdtl-gal__thumb-img"]}
               />

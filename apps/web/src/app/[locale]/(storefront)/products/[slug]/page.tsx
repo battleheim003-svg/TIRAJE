@@ -626,6 +626,7 @@ export default async function ProductDetailPage({ params }: Props) {
                           alt={pName}
                           fill
                           unoptimized={true}
+                          draggable={false}
                           sizes="12rem"
                           className={styles["web-pdtl__related-img"]}
                         />

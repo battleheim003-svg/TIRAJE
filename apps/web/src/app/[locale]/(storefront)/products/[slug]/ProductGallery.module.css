@@ -37,6 +37,8 @@
   object-fit: contain;
   padding: var(--space-6);
   transition: transform var(--transition-slow);
+  -webkit-user-drag: none;
+  user-select: none;
 }
 
 .web-pdtl-gal__main:hover .web-pdtl-gal__main-img {
@@ -102,4 +104,6 @@
 .web-pdtl-gal__thumb-img {
   object-fit: contain;
   padding: var(--space-1);
+  -webkit-user-drag: none;
+  user-select: none;
 }

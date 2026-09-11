@@ -39,6 +39,8 @@
 .web-pcard__img {
   object-fit: cover;
   transition: transform var(--transition-slow);
+  -webkit-user-drag: none;
+  user-select: none;
 }
 
 .web-pcard:hover .web-pcard__img {

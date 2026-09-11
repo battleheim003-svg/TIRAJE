@@ -88,6 +88,7 @@ export function ProductCard({ product, locale }: ProductCardProps) {
             src={img.url}
             alt={fa ? (img.altFa ?? name) : (img.altEn ?? name)}
             fill
+            draggable={false}
             sizes="(max-width:640px) 50vw,(max-width:1024px) 33vw,25vw"
             className={styles["web-pcard__img"]}
           />
