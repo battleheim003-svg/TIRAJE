@@ -1,6 +1,7 @@
 ﻿import Link from "next/link"
 import { getLocale } from "next-intl/server"
 import { Package, Phone, Mail, MapPin } from "lucide-react"
+import { SITE_CONFIG } from "@/config/site"
 import styles from "./Footer.module.css"
 
 export async function Footer() {
@@ -41,7 +42,7 @@ export async function Footer() {
                 aria-hidden="true"
               />
               <span className={styles["web-ftr__logo-text"]}>
-                {fa ? "تیراژه" : "Tirajeh"}
+                {fa ? SITE_CONFIG.brandName.fa : SITE_CONFIG.brandName.en}
               </span>
             </Link>
             <p className={styles["web-ftr__tagline"]}>
@@ -50,19 +51,26 @@ export async function Footer() {
                 : "The premier platform for sourcing cement and building materials directly from top manufacturers across Iran."}
             </p>
             <div className={styles["web-ftr__contact"]}>
-              <a href="tel:+982100000000" className={styles["web-ftr__contact-item"]} dir="ltr">
+              <a href={`tel:${SITE_CONFIG.phone.raw}`} className={styles["web-ftr__contact-item"]} dir="ltr">
                 <Phone
                   style={{ width: "1rem", height: "1rem", flexShrink: 0 }}
                   aria-hidden="true"
                 />
-                <span>{fa ? "۰۲۱-۰۰۰۰۰۰۰۰" : "+98 21 0000 0000"}</span>
+                <span>{fa ? SITE_CONFIG.phone.fa : SITE_CONFIG.phone.raw}</span>
               </a>
-              <a href="mailto:info@tirajeh.ir" className={styles["web-ftr__contact-item"]} dir="ltr">
+              <a href={`tel:${SITE_CONFIG.mobile.raw}`} className={styles["web-ftr__contact-item"]} dir="ltr">
+                <Phone
+                  style={{ width: "1rem", height: "1rem", flexShrink: 0 }}
+                  aria-hidden="true"
+                />
+                <span>{fa ? SITE_CONFIG.mobile.fa : SITE_CONFIG.mobile.raw}</span>
+              </a>
+              <a href={`mailto:${SITE_CONFIG.email}`} className={styles["web-ftr__contact-item"]} dir="ltr">
                 <Mail
                   style={{ width: "1rem", height: "1rem", flexShrink: 0 }}
                   aria-hidden="true"
                 />
-                <span>info@tirajeh.ir</span>
+                <span>{SITE_CONFIG.email}</span>
               </a>
               <span className={styles["web-ftr__contact-item"]}>
                 <MapPin
@@ -70,7 +78,7 @@ export async function Footer() {
                   style={{ width: "1rem", height: "1rem", flexShrink: 0 }}
                   aria-hidden="true"
                 />
-                <span>{fa ? "تهران، ایران" : "Tehran, Iran"}</span>
+                <span>{fa ? SITE_CONFIG.address.fa : SITE_CONFIG.address.en}</span>
               </span>
             </div>
           </div>
@@ -128,8 +136,8 @@ export async function Footer() {
         <div className={styles["web-ftr__bottom"]}>
           <p className={styles["web-ftr__copy"]}>
             {fa
-              ? `© ${currentYear} تیراژه — تمامی حقوق محفوظ است`
-              : `© ${currentYear} Tirajeh — All rights reserved`}
+              ? `© ${currentYear} ${SITE_CONFIG.brandName.fa} — تمامی حقوق محفوظ است`
+              : `© ${currentYear} ${SITE_CONFIG.brandName.en} — All rights reserved`}
           </p>
           <p className={styles["web-ftr__copy"]}>
             {fa ? "ساخته‌شده با ❤️ در ایران" : "Crafted with ❤️ in Iran"}

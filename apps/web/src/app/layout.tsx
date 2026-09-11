@@ -12,11 +12,11 @@ const vazirmatn = Vazirmatn({
 
 export const metadata: Metadata = {
   title: {
-    default: "تیراژه | مرجع خرید سیمان و مصالح ساختمانی",
-    template: "%s | تیراژه",
+    default: "تیراژه صنعت خاک | مرجع خرید سیمان و مصالح ساختمانی",
+    template: "%s | تیراژه صنعت خاک",
   },
   description: "خرید سیمان، مصالح ساختمانی و مواد اولیه از بهترین کارخانه‌ها با تحویل سراسری",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://tirajeh.ir"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://tirajeconcrete.com"),
   icons: {
     icon: [
       { url: "/tirajeh-icon.svg", type: "image/svg+xml" },

@@ -1,12 +1,13 @@
 import { getLocale } from "next-intl/server"
 import type { Metadata } from "next"
 import { Phone, Mail, MapPin, Clock } from "lucide-react"
+import { SITE_CONFIG } from "@/config/site"
 import { ContactForm } from "./contact-form"
 import styles from "./Contact.module.css"
 
 export const metadata: Metadata = {
-  title: "تماس با ما | تیراژه",
-  description: "با تیم تیراژه در تماس باشید — مشاوره تخصصی، استعلام قیمت و پشتیبانی سفارش",
+  title: "تماس با ما | تیراژه صنعت خاک",
+  description: "با تیم تیراژه صنعت خاک در تماس باشید — مشاوره تخصصی، استعلام قیمت و پشتیبانی سفارش",
 }
 
 export default async function ContactPage() {
@@ -18,32 +19,40 @@ export default async function ContactPage() {
       icon: Phone,
       titleFa: "شماره تلفن تماس",
       titleEn: "Phone Number",
-      valueFa: "۰۲۱-۸۸۸۸۰۰۰۰",
-      valueEn: "021-88880000",
-      href: "tel:+982188880000",
+      valueFa: SITE_CONFIG.phone.fa,
+      valueEn: SITE_CONFIG.phone.raw,
+      href: `tel:${SITE_CONFIG.phone.raw}`,
+    },
+    {
+      icon: Phone,
+      titleFa: "تلفن همراه",
+      titleEn: "Mobile",
+      valueFa: SITE_CONFIG.mobile.fa,
+      valueEn: SITE_CONFIG.mobile.raw,
+      href: `tel:${SITE_CONFIG.mobile.raw}`,
     },
     {
       icon: Mail,
       titleFa: "پست الکترونیک",
       titleEn: "Email Address",
-      valueFa: "info@tirajeh.ir",
-      valueEn: "info@tirajeh.ir",
-      href: "mailto:info@tirajeh.ir",
+      valueFa: SITE_CONFIG.email,
+      valueEn: SITE_CONFIG.email,
+      href: `mailto:${SITE_CONFIG.email}`,
     },
     {
       icon: MapPin,
       titleFa: "دفتر مرکزی",
       titleEn: "Headquarters",
-      valueFa: "تهران، خیابان ولیعصر، برج تجاری تیراژه",
-      valueEn: "Tehran, Valiasr St, Tirajeh Tower",
+      valueFa: SITE_CONFIG.address.fa,
+      valueEn: SITE_CONFIG.address.en,
       href: null,
     },
     {
       icon: Clock,
       titleFa: "ساعات پاسخگویی",
       titleEn: "Working Hours",
-      valueFa: "شنبه تا چهارشنبه ۸:۰۰ الی ۱۷:۰۰ — پنج‌شنبه ۸:۰۰ الی ۱۳:۰۰",
-      valueEn: "Sat–Wed 08:00–17:00, Thu 08:00–13:00",
+      valueFa: SITE_CONFIG.supportHours.fa,
+      valueEn: SITE_CONFIG.supportHours.en,
       href: null,
     },
   ]
