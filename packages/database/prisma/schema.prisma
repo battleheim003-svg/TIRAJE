@@ -578,12 +578,15 @@ model Order {
 }
 
 model OrderItem {
-  id         String  @id @default(uuid()) @db.Uuid
-  orderId    String  @map("order_id") @db.Uuid
-  productId  String  @map("product_id") @db.Uuid
-  quantity   Int
-  unitPrice  Decimal @map("unit_price") @db.Decimal(15, 0)
-  totalPrice Decimal @map("total_price") @db.Decimal(15, 0)
+  id             String         @id @default(uuid()) @db.Uuid
+  orderId        String         @map("order_id") @db.Uuid
+  productId      String         @map("product_id") @db.Uuid
+  quantity       Int
+  unitPrice      Decimal        @map("unit_price") @db.Decimal(15, 0)
+  totalPrice     Decimal        @map("total_price") @db.Decimal(15, 0)
+  packagingTier  PackagingTier? @map("packaging_tier")
+  productNameFa  String         @map("product_name_fa") @default("")
+  weightKg       Decimal?       @map("weight_kg") @db.Decimal(10, 2)
 
   order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product Product @relation(fields: [productId], references: [id])
@@ -635,19 +638,20 @@ model Payment {
 // ============================================================
 
 model CartItem {
-  id        String   @id @default(uuid()) @db.Uuid
-  userId    String?  @map("user_id") @db.Uuid
-  sessionId String?  @map("session_id")
-  productId String   @map("product_id") @db.Uuid
-  quantity  Int      @default(1)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id            String         @id @default(uuid()) @db.Uuid
+  userId        String?        @map("user_id") @db.Uuid
+  sessionId     String?        @map("session_id")
+  productId     String         @map("product_id") @db.Uuid
+  quantity      Int            @default(1)
+  packagingTier PackagingTier? @map("packaging_tier")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
 
   user    User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, productId])
-  @@unique([sessionId, productId])
+  @@unique([userId, productId, packagingTier])
+  @@unique([sessionId, productId, packagingTier])
   @@index([sessionId])
   @@map("cart_items")
 }

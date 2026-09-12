@@ -13,6 +13,7 @@ const { mockAuth, mockCookieStore, mockDb } = vi.hoisted(() => {
         aggregate: vi.fn(),
         findMany: vi.fn(),
         findUnique: vi.fn(),
+        findFirst: vi.fn(),
         upsert: vi.fn(),
         create: vi.fn(),
         update: vi.fn(),
@@ -40,6 +41,12 @@ vi.mock("next/headers", () => ({
 
 vi.mock("@tirajeh/database", () => ({
   db: mockDb,
+  PackagingTier: {
+    SINGLE: "SINGLE",
+    PAIR: "PAIR",
+    TRUCK_6W: "TRUCK_6W",
+    TRUCK_10W: "TRUCK_10W"
+  }
 }))
 
 import {
@@ -134,7 +141,7 @@ describe("Cart Server Actions", () => {
       ])
 
       // Existing user cart item
-      mockDb.cartItem.findUnique.mockResolvedValue({
+      mockDb.cartItem.findFirst.mockResolvedValue({
         id: "existing-item-id",
         quantity: 10,
       })

@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useState, useTransition } from "react"
 import { ShoppingCart, Minus, Plus, PhoneCall, Scale, Calculator } from "lucide-react"
@@ -62,7 +62,11 @@ export default function AddToCartButton({
   function handleAdd() {
     startTransition(async () => {
       try {
-        const res = await addToCartAction(productId, quantity)
+        const res = await addToCartAction({
+          productId,
+          quantity,
+          packagingTier: selectedOption?.tier ?? null,
+        })
         if (res.success) {
           setFeedback({
             ok: true,

@@ -1,11 +1,13 @@
 "use server"
 
-import { db } from "@tirajeh/database"
+import { db, PackagingTier } from "@tirajeh/database"
 import { auth } from "@tirajeh/auth"
 import type { ActionResult } from "@tirajeh/shared"
 import { revalidatePath } from "next/cache"
 import { cookies } from "next/headers"
 import { randomUUID } from "crypto"
+import { z } from "zod"
+import { resolveUnitPriceToman, AppError } from "../lib/pricing"
 
 /** Returns session_id for guest cart — creates one if absent */
 async function getSessionId(): Promise<string> {
@@ -30,6 +32,7 @@ export interface CartLine {
   quantity: number
   stockQty: number
   minOrderQty: number
+  packagingTier: PackagingTier | null
 }
 
 export interface CartSummary {
@@ -82,6 +85,7 @@ export async function getCartAction(): Promise<CartSummary> {
             take: 1,
             select: { url: true },
           },
+          packagingOptions: true,
         },
       },
     },
@@ -92,7 +96,13 @@ export async function getCartAction(): Promise<CartSummary> {
   let subtotalToman = 0
 
   const lines: CartLine[] = items.map((item) => {
-    const priceToman = Number(item.product.price)
+    let priceToman = 0
+    try {
+      priceToman = resolveUnitPriceToman(item.product, item.packagingTier)
+    } catch (err) {
+      priceToman = Number(item.product.price) // fallback, though shouldn't happen normally
+    }
+    
     const comparePriceToman = item.product.comparePrice != null ? Number(item.product.comparePrice) : null
     totalCount += item.quantity
     subtotalToman += priceToman * item.quantity
@@ -109,6 +119,7 @@ export async function getCartAction(): Promise<CartSummary> {
       quantity: item.quantity,
       stockQty: item.product.stockQty,
       minOrderQty: item.product.minOrderQty,
+      packagingTier: item.packagingTier,
     }
   })
 
@@ -119,40 +130,73 @@ export async function getCartAction(): Promise<CartSummary> {
   }
 }
 
-export async function addToCartAction(
-  productId: string,
-  quantity: number
-): Promise<ActionResult> {
+const AddToCartSchema = z.object({
+  productId: z.string().uuid(),
+  quantity: z.coerce.number().int().positive().max(10_000),
+  packagingTier: z.nativeEnum(PackagingTier).nullish(),
+})
+
+export async function addToCartAction(input: unknown): Promise<ActionResult> {
+  const parsed = AddToCartSchema.safeParse(input)
+  if (!parsed.success) {
+    return { success: false, error: "ورودی نامعتبر" }
+  }
+  const { productId, quantity, packagingTier } = parsed.data
+  const tier = packagingTier ?? null
+
   const session = await auth()
   const userId = session?.user ? (session.user as any).id : undefined
   const sessionId = userId ? undefined : await getSessionId()
 
   const product = await db.product.findUnique({
     where: { id: productId },
-    select: { id: true, stockQty: true, minOrderQty: true, isActive: true, nameFa: true },
+    include: { packagingOptions: true },
   })
 
   if (!product || !product.isActive) return { success: false, error: "محصول یافت نشد" }
-  if (product.stockQty < quantity)
+  
+  try {
+    resolveUnitPriceToman(product, tier)
+  } catch (err) {
+    if (err instanceof AppError) {
+      return { success: false, error: err.message }
+    }
+    return { success: false, error: "خطای اعتبارسنجی قیمت" }
+  }
+
+  // Check stock based on existing cart item
+  const existingItem = await db.cartItem.findFirst({
+    where: userId 
+      ? { userId, productId, packagingTier: tier }
+      : { sessionId: sessionId!, productId, packagingTier: tier },
+  })
+  
+  const existingQty = existingItem ? existingItem.quantity : 0
+  if (existingQty + quantity > product.stockQty) {
     return { success: false, error: "موجودی کافی نیست" }
-  if (quantity < product.minOrderQty)
+  }
+  if (quantity < product.minOrderQty) {
     return {
       success: false,
       error: `حداقل سفارش ${product.minOrderQty} عدد است`,
     }
+  }
 
-  if (userId) {
-    await db.cartItem.upsert({
-      where: { userId_productId: { userId, productId } },
-      update: { quantity: { increment: quantity } },
-      create: { userId, productId, quantity },
+  if (existingItem) {
+    await db.cartItem.update({
+      where: { id: existingItem.id },
+      data: { quantity: existingQty + quantity },
     })
   } else {
-    await db.cartItem.upsert({
-      where: { sessionId_productId: { sessionId: sessionId!, productId } },
-      update: { quantity: { increment: quantity } },
-      create: { sessionId: sessionId!, productId, quantity },
-    })
+    if (userId) {
+      await db.cartItem.create({
+        data: { userId, productId, quantity, packagingTier: tier },
+      })
+    } else {
+      await db.cartItem.create({
+        data: { sessionId: sessionId!, productId, quantity, packagingTier: tier },
+      })
+    }
   }
 
   revalidatePath("/cart")
@@ -227,8 +271,8 @@ export async function mergeCartAction(): Promise<void> {
   }
 
   for (const item of guestItems) {
-    const existingUserItem = await db.cartItem.findUnique({
-      where: { userId_productId: { userId, productId: item.productId } },
+    const existingUserItem = await db.cartItem.findFirst({
+      where: { userId, productId: item.productId, packagingTier: item.packagingTier },
     })
 
     const newQty = existingUserItem
@@ -242,7 +286,7 @@ export async function mergeCartAction(): Promise<void> {
       })
     } else {
       await db.cartItem.create({
-        data: { userId, productId: item.productId, quantity: newQty },
+        data: { userId, productId: item.productId, quantity: newQty, packagingTier: item.packagingTier },
       })
     }
   }
@@ -252,4 +296,3 @@ export async function mergeCartAction(): Promise<void> {
   revalidatePath("/cart")
   revalidatePath("/")
 }
-

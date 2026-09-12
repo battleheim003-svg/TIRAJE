@@ -46,5 +46,6 @@ export {
   ContactStatus,
   ContactCategory,
   ContactSource,
+  PackagingTier,
   Prisma,
 } from "@prisma/client"
