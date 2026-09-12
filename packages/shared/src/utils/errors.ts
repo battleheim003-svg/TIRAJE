@@ -64,6 +64,13 @@ export class PaymentError extends AppError {
   }
 }
 
+export class OutOfStockError extends AppError {
+  constructor(productName: string) {
+    super(`موجودی ${productName} کافی نیست`, "OUT_OF_STOCK", 409)
+    this.name = "OutOfStockError"
+  }
+}
+
 // ─── User-safe message mapping ────────────────────────────────────────────────
 // Maps internal error codes / messages that must NOT be exposed to users.
 // Any error not matched here gets a generic "خطای داخلی" message.
@@ -75,6 +82,7 @@ const SAFE_CODES = new Set([
   "CONFLICT",
   "VALIDATION_ERROR",
   "PAYMENT_ERROR",
+  "OUT_OF_STOCK",
 ])
 
 function toUserMessage(err: unknown): string {

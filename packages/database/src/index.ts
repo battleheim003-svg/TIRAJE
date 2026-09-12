@@ -10,6 +10,7 @@ export type {
   Brand,
   Factory,
   Product,
+  ProductPackagingOption,
   ProductImage,
   ProductPriceHistory,
   ShippingZone,

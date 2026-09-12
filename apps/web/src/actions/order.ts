@@ -5,6 +5,8 @@ import { auth } from "@tirajeh/auth"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { getLocale } from "next-intl/server"
+import { OutOfStockError } from "@tirajeh/shared"
+import { releaseOrderStock } from "../lib/stock"
 
 export async function checkoutAction(
   formData: FormData
@@ -18,7 +20,7 @@ export async function checkoutAction(
     where: { userId },
     include: {
       product: {
-        select: { id: true, nameFa: true, price: true, stockQty: true, isActive: true },
+        select: { id: true, nameFa: true, price: true, stockQty: true, isActive: true, weightKg: true },
       },
     },
   })
@@ -49,13 +51,16 @@ export async function checkoutAction(
 
   try {
     const order = await db.$transaction(async (tx) => {
-      for (const item of cartItems) {
-        const p = await tx.product.findUnique({
-          where: { id: item.productId },
-          select: { stockQty: true },
+      for (const line of cartItems) {
+        const res = await tx.product.updateMany({
+          where: {
+            id: line.productId,
+            stockQty: { gte: line.quantity },
+            isActive: true,
+          },
+          data: { stockQty: { decrement: line.quantity } },
         })
-        if (!p || p.stockQty < item.quantity)
-          throw new Error(`موجودی ${item.product.nameFa} کافی نیست`)
+        if (res.count !== 1) throw new OutOfStockError(line.product.nameFa)
       }
 
       const o = await tx.order.create({
@@ -73,18 +78,18 @@ export async function checkoutAction(
               quantity: item.quantity,
               unitPrice: Number(item.product.price),
               totalPrice: Number(item.product.price) * item.quantity,
+              productNameFa: item.product.nameFa,
+              weightKg: item.product.weightKg ?? null,
+              packagingTier: item.packagingTier,
             })),
           },
         },
         select: { id: true, orderNumber: true },
       })
 
-      for (const item of cartItems) {
-        await tx.product.update({
-          where: { id: item.productId },
-          data: { stockQty: { decrement: item.quantity } },
-        })
-      }
+      await tx.orderEvent.create({
+        data: { orderId: o.id, status: "PENDING", note: "سفارش ثبت شد" }
+      })
 
       await tx.cartItem.deleteMany({ where: { userId } })
 
@@ -123,7 +128,13 @@ export async function cancelOrderAction(
   if (!["PENDING", "CONFIRMED"].includes(order.status))
     return { success: false, error: "این سفارش قابل لغو نیست" }
 
-  await db.order.update({ where: { id: orderId }, data: { status: "CANCELLED" } })
+  await db.$transaction(async (tx) => {
+    await tx.order.update({ where: { id: orderId }, data: { status: "CANCELLED" } })
+    await releaseOrderStock(tx, orderId)
+    await tx.orderEvent.create({
+      data: { orderId, status: "CANCELLED", note: "لغو توسط مشتری" }
+    })
+  })
 
   revalidatePath("/account/orders")
   return { success: true }

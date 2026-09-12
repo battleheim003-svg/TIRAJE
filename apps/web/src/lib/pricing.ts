@@ -1,24 +1,12 @@
-import type { PackagingTier } from "@tirajeh/database"
-import { toToman } from "@tirajeh/shared"
+import type { Product, ProductPackagingOption } from "@tirajeh/database"
+import { PackagingTier } from "@tirajeh/database"
+import { AppError, toToman } from "@tirajeh/shared"
 
-export type ProductWithOptions = {
-  price: unknown
-  packagingOptions?: Array<{
-    tier: PackagingTier
-    price: unknown
-    bagCount: number
-    isActive: boolean
-  }>
-}
-
-export class AppError extends Error {
-  constructor(
-    message: string,
-    public code: string,
-    public statusCode: number
-  ) {
-    super(message)
-  }
+export type ProductWithOptions = Pick<Product, "price"> & {
+  packagingOptions: Pick<
+    ProductPackagingOption,
+    "tier" | "price" | "bagCount" | "isActive"
+  >[]
 }
 
 /**

@@ -552,6 +552,7 @@ model Order {
   orderNumber     Int         @unique @default(autoincrement()) @map("order_number")
   userId          String      @map("user_id") @db.Uuid
   status          OrderStatus @default(PENDING)
+  stockReleasedAt DateTime?   @map("stock_released_at")
   subtotal        Decimal     @db.Decimal(15, 0)
   shippingCost    Decimal     @default(0) @map("shipping_cost") @db.Decimal(15, 0)
   totalAmount     Decimal     @map("total_amount") @db.Decimal(15, 0)

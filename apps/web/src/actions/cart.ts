@@ -7,7 +7,8 @@ import { revalidatePath } from "next/cache"
 import { cookies } from "next/headers"
 import { randomUUID } from "crypto"
 import { z } from "zod"
-import { resolveUnitPriceToman, AppError } from "../lib/pricing"
+import { resolveUnitPriceToman } from "../lib/pricing"
+import { AppError } from "@tirajeh/shared"
 
 /** Returns session_id for guest cart — creates one if absent */
 async function getSessionId(): Promise<string> {
