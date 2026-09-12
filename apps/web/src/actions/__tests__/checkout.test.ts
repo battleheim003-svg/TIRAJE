@@ -60,6 +60,12 @@ function buildDbMock(overrides: Record<string, unknown> = {}) {
     shippingRate: {
       findUnique: vi.fn(),
     },
+    shippingZone: {
+      findFirst: vi.fn().mockResolvedValue({
+        id: "zone-1",
+        shippingRates: [{ baseCost: 1000000, costPerTon: 100000 }]
+      })
+    },
     order: {
       create: vi.fn(),
     },
@@ -86,6 +92,7 @@ function makeFormData(overrides: Record<string, string> = {}): FormData {
     city: "تهران",
     street: "خیابان آزادی، پلاک ۱۲",
     postalCode: "1234567890",
+    truckType: "TRAILER_22T",
   }
   for (const [k, v] of Object.entries({ ...defaults, ...overrides })) {
     fd.append(k, v)

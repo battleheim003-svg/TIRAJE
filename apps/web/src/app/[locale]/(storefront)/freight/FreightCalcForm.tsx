@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react"
 import { Truck } from "lucide-react"
 import { Card, Button, Input, Label, Select } from "@tirajeh/ui"
-import { getFreightQuotesAction } from "@/actions/shipping"
+import { calculateShippingCostAction } from "@/actions/shipping"
 import { formatToman } from "@/lib/cement"
 import styles from "./Freight.module.css"
 
@@ -17,17 +17,17 @@ const PROVINCES = [
 ]
 
 const TRUCK_TYPES_FA = [
-  { value: "TRAILER", label: "تریلی کفی (ظرفیت تا ۲۶ تن)" },
-  { value: "TEN_WHEELER", label: "کامیون جفت / ۱۰ چرخ (ظرفیت تا ۱۵ تن)" },
-  { value: "SIX_WHEELER", label: "کامیون تک / ۶ چرخ (ظرفیت تا ۱۰ تن)" },
-  { value: "KHAVAR", label: "خاور / کامیونت (ظرفیت تا ۵ تن)" },
+  { value: "TRAILER_22T", label: "تریلی کفی (ظرفیت تا ۲۶ تن)" },
+  { value: "TRUCK_10T", label: "کامیون جفت / ۱۰ چرخ (ظرفیت تا ۱۵ تن)" },
+  { value: "TRUCK_6T", label: "کامیون تک / ۶ چرخ (ظرفیت تا ۱۰ تن)" },
+  { value: "PICKUP_3T", label: "خاور / کامیونت (ظرفیت تا ۵ تن)" },
 ]
 
 const TRUCK_TYPES_EN = [
-  { value: "TRAILER", label: "Flatbed Trailer (up to 26t)" },
-  { value: "TEN_WHEELER", label: "10-Wheeler Truck (up to 15t)" },
-  { value: "SIX_WHEELER", label: "6-Wheeler Truck (up to 10t)" },
-  { value: "KHAVAR", label: "Light Truck / Khavar (up to 5t)" },
+  { value: "TRAILER_22T", label: "Flatbed Trailer (up to 26t)" },
+  { value: "TRUCK_10T", label: "10-Wheeler Truck (up to 15t)" },
+  { value: "TRUCK_6T", label: "6-Wheeler Truck (up to 10t)" },
+  { value: "PICKUP_3T", label: "Light Truck / Khavar (up to 5t)" },
 ]
 
 interface FreightCalcFormProps {
@@ -47,17 +47,14 @@ export function FreightCalcForm({ locale }: FreightCalcFormProps) {
     e.preventDefault()
     setError(null)
     const formData = new FormData(e.currentTarget)
-    const weightVal = parseFloat(formData.get("totalWeightTon") as string) || 1
-
+    
     startTransition(async () => {
-      const result = await getFreightQuotesAction(formData)
-      if (result.success && result.data && result.data.length > 0) {
-        setEstimatedCost(result.data[0].freightCost)
-      } else {
-        // If no matching zone in DB, calculate realistic fallback rate
-        // base rate 2,000,000 + weight * 220,000 toman
-        const fallbackCost = 2000000 + weightVal * 220000
-        setEstimatedCost(fallbackCost)
+      const result = await calculateShippingCostAction(formData)
+      if (result.success && result.data) {
+        setEstimatedCost(result.data.freightCost)
+      } else if (!result.success) {
+        setError(result.error || "خطای ناشناخته در استعلام هزینه")
+        setEstimatedCost(null)
       }
     })
   }

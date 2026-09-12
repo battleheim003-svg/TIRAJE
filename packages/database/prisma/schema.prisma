@@ -555,6 +555,8 @@ model Order {
   stockReleasedAt DateTime?   @map("stock_released_at")
   subtotal        Decimal     @db.Decimal(15, 0)
   shippingCost    Decimal     @default(0) @map("shipping_cost") @db.Decimal(15, 0)
+  shippingTruckType TruckType?  @map("shipping_truck_type")
+  shippingProvince  String?     @map("shipping_province")
   totalAmount     Decimal     @map("total_amount") @db.Decimal(15, 0)
   shippingAddress Json        @map("shipping_address")
   billingInfo     Json?       @map("billing_info")

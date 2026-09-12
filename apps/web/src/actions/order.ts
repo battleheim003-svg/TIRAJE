@@ -1,12 +1,14 @@
 "use server"
 
 import { db } from "@tirajeh/database"
+import type { TruckType } from "@tirajeh/database"
 import { auth } from "@tirajeh/auth"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { getLocale } from "next-intl/server"
-import { OutOfStockError } from "@tirajeh/shared"
+import { AppError, OutOfStockError } from "@tirajeh/shared"
 import { releaseOrderStock } from "../lib/stock"
+import { calculateShippingCost } from "../lib/shipping"
 
 export async function checkoutAction(
   formData: FormData
@@ -34,10 +36,17 @@ export async function checkoutAction(
       return { success: false, error: `موجودی ${item.product.nameFa} کافی نیست` }
   }
 
+  const province = (formData.get("province") as string || "").trim()
+  const truckType = formData.get("truckType") as TruckType | null
+
+  if (!province || !truckType) {
+    return { success: false, error: "استان و نوع ماشین حمل الزامی است" }
+  }
+
   const shippingAddress = {
     recipientName: (formData.get("recipientName") as string).trim(),
     phone: (formData.get("phone") as string).trim(),
-    province: (formData.get("province") as string).trim(),
+    province,
     city: (formData.get("city") as string).trim(),
     street: (formData.get("street") as string).trim(),
     postalCode: ((formData.get("postalCode") as string) || "").trim() || null,
@@ -48,6 +57,24 @@ export async function checkoutAction(
     (sum, item) => sum + Number(item.product.price) * item.quantity,
     0
   )
+
+  const totalWeightKg = cartItems.reduce(
+    (sum, item) => sum + (Number(item.product.weightKg || 0) * item.quantity),
+    0
+  )
+
+  let shippingCostToman = 0
+  try {
+    const quote = await calculateShippingCost(province, truckType, totalWeightKg)
+    shippingCostToman = quote.totalCostToman
+  } catch (err: any) {
+    if (err instanceof AppError && err.code === "SHIPPING_NOT_FOUND") {
+       return { success: false, error: err.message }
+    }
+    return { success: false, error: "خطا در محاسبه هزینه حمل" }
+  }
+
+  const totalAmount = subtotal + shippingCostToman
 
   try {
     const order = await db.$transaction(async (tx) => {
@@ -68,8 +95,10 @@ export async function checkoutAction(
           userId,
           status: "PENDING",
           subtotal,
-          shippingCost: 0,
-          totalAmount: subtotal,
+          shippingCost: shippingCostToman,
+          shippingTruckType: truckType,
+          shippingProvince: province,
+          totalAmount,
           shippingAddress,
           notes: note,
           items: {
