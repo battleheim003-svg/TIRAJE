@@ -97,16 +97,21 @@ export async function adminCreateProductAction(
 
     revalidatePath("/admin/products")
 
-    const imageUrl = ((formData.get("imageUrl") || formData.get("featuredImage")) as string | null)?.trim()
-    if (imageUrl) {
-      await db.productImage.create({
-        data: {
-          productId: product.id,
-          url: imageUrl,
-          isPrimary: true,
-          sortOrder: 0,
-        },
-      })
+    const imagesRaw = (formData.get("images") as string | null)?.trim()
+    if (imagesRaw) {
+      try {
+        const parsedImages: Array<{ url: string; sortOrder: number; isPrimary: boolean }> = JSON.parse(imagesRaw)
+        if (parsedImages.length > 0) {
+          await db.productImage.createMany({
+            data: parsedImages.map(img => ({
+              productId: product.id,
+              url: img.url,
+              sortOrder: img.sortOrder,
+              isPrimary: img.isPrimary,
+            }))
+          })
+        }
+      } catch(e) { console.error("Failed to parse images JSON", e) }
     }
 
     const channelUsername = (formData.get("channelUsername") as string | null)?.trim() || undefined
@@ -214,26 +219,26 @@ export async function adminUpdateProductAction(
   revalidatePath(`/admin/products/${productId}`)
   revalidatePath("/admin/products")
 
-  const imageUrl = ((formData.get("imageUrl") || formData.get("featuredImage")) as string | null)?.trim()
-  if (imageUrl) {
-    const existingImg = await db.productImage.findFirst({
-      where: { productId, isPrimary: true },
-    })
-    if (existingImg) {
-      await db.productImage.update({
-        where: { id: existingImg.id },
-        data: { url: imageUrl },
-      })
-    } else {
-      await db.productImage.create({
-        data: {
-          productId,
-          url: imageUrl,
-          isPrimary: true,
-          sortOrder: 0,
-        },
-      })
-    }
+  const imagesRaw = (formData.get("images") as string | null)?.trim()
+  if (imagesRaw) {
+    try {
+      const parsedImages: Array<{ url: string; sortOrder: number; isPrimary: boolean }> = JSON.parse(imagesRaw)
+      if (parsedImages.length > 0) {
+        await db.$transaction(async (tx) => {
+          await tx.productImage.deleteMany({ where: { productId } })
+          await tx.productImage.createMany({
+            data: parsedImages.map(img => ({
+              productId,
+              url: img.url,
+              sortOrder: img.sortOrder,
+              isPrimary: img.isPrimary,
+            }))
+          })
+        })
+      } else {
+        await db.productImage.deleteMany({ where: { productId } })
+      }
+    } catch(e) { console.error("Failed to parse images JSON", e) }
   }
 
   const channelUsername = (formData.get("channelUsername") as string | null)?.trim() || undefined
