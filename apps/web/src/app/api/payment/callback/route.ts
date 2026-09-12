@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { paymentService } from "@tirajeh/integrations"
 import { db } from "@tirajeh/database"
-import { releaseOrderStock } from "../../../../lib/stock"
+import { releaseOrderStock, PrismaTx } from "../../../../lib/stock"
 import { getLocale } from "next-intl/server"
 
 export async function GET(req: NextRequest) {
@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
     // کاربر پرداخت را لغو کرد
     await db.$transaction(async (tx) => {
       await tx.order.update({ where: { id: orderId }, data: { status: "CANCELLED" } })
-      await releaseOrderStock(tx as any, orderId)
+      await releaseOrderStock(tx as PrismaTx, orderId)
       await tx.orderEvent.create({ data: { orderId, status: "CANCELLED", note: "لغو پرداخت توسط کاربر" } })
     })
     return NextResponse.redirect(new URL(`/${locale}/checkout/failed?order=${orderId}`, req.url))
@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
   if (!verifyResult.success) {
     await db.$transaction(async (tx) => {
       await tx.order.update({ where: { id: orderId }, data: { status: "CANCELLED" } })
-      await releaseOrderStock(tx as any, orderId)
+      await releaseOrderStock(tx as PrismaTx, orderId)
     })
     return NextResponse.redirect(new URL(`/${locale}/checkout/failed?order=${orderId}`, req.url))
   }

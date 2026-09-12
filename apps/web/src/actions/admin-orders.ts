@@ -15,7 +15,7 @@ async function requireAdmin() {
   return session.user as any
 }
 
-import { releaseOrderStock } from "../lib/stock"
+import { releaseOrderStock, PrismaTx } from "../lib/stock"
 
 export async function adminUpdateOrderStatusAction(
   formData: FormData
@@ -38,7 +38,7 @@ export async function adminUpdateOrderStatusAction(
     })
 
     if (status === "CANCELLED" || status === "REFUNDED") {
-      await releaseOrderStock(tx as any, orderId)
+      await releaseOrderStock(tx as PrismaTx, orderId)
     }
 
     await tx.orderEvent.create({

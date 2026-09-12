@@ -1,7 +1,7 @@
 import { db } from "@tirajeh/database"
 import type { Prisma } from "@tirajeh/database"
 
-type PrismaTx = Omit<typeof db, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">
+export type PrismaTx = Parameters<Parameters<typeof db.$transaction>[0]>[0]
 
 /**
  * موجودی همه OrderItemهای یک سفارش را برمیگرداند.

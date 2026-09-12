@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@tirajeh/database"
-import { releaseOrderStock } from "@/lib/stock"
+import { releaseOrderStock, PrismaTx } from "@/lib/stock"
 import crypto from "crypto"
 
 export const runtime = "nodejs"
@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
           where: { id: order.id },
           data: { status: "CANCELLED" },
         })
-        await releaseOrderStock(tx as any, order.id)
+        await releaseOrderStock(tx as PrismaTx, order.id)
         await tx.orderEvent.create({
           data: {
             orderId: order.id,
