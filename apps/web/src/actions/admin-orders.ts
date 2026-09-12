@@ -15,6 +15,8 @@ async function requireAdmin() {
   return session.user as any
 }
 
+import { releaseOrderStock } from "../lib/stock"
+
 export async function adminUpdateOrderStatusAction(
   formData: FormData
 ): Promise<{ ok: true }> {
@@ -34,11 +36,16 @@ export async function adminUpdateOrderStatusAction(
       where: { id: orderId },
       data: { status: status as any, adminNote: note ?? undefined },
     })
+
+    if (status === "CANCELLED" || status === "REFUNDED") {
+      await releaseOrderStock(tx as any, orderId)
+    }
+
     await tx.orderEvent.create({
       data: {
         orderId,
         status: status as any,
-        note,
+        note: note || "تغییر وضعیت توسط ادمین",
         createdBy: admin.id,
       },
     })
