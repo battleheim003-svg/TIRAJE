@@ -214,7 +214,7 @@ export function CartDrawer() {
                         {name}
                       </Link>
                       <PriceDisplay
-                        toman={item.priceToman}
+                        toman={item.unitPriceToman}
                         compareToman={item.comparePriceToman}
                         size="sm"
                         locale={locale}

@@ -27,7 +27,7 @@ export interface CartLine {
   productNameEn: string | null
   slug: string
   imageUrl: string | null
-  priceToman: number
+  unitPriceToman: number
   comparePriceToman: number | null
   quantity: number
   stockQty: number
@@ -80,12 +80,15 @@ export async function getCartAction(): Promise<CartSummary> {
           comparePrice: true,
           stockQty: true,
           minOrderQty: true,
+          weightKg: true,
           images: {
             where: { isPrimary: true },
             take: 1,
             select: { url: true },
           },
-          packagingOptions: true,
+          packagingOptions: {
+            select: { tier: true, price: true, bagCount: true, isActive: true }
+          },
         },
       },
     },
@@ -96,16 +99,19 @@ export async function getCartAction(): Promise<CartSummary> {
   let subtotalToman = 0
 
   const lines: CartLine[] = items.map((item) => {
-    let priceToman = 0
+    let unitPriceToman = 0
     try {
-      priceToman = resolveUnitPriceToman(item.product, item.packagingTier)
+      unitPriceToman = resolveUnitPriceToman(item.product, item.packagingTier)
     } catch (err) {
-      priceToman = Number(item.product.price) // fallback, though shouldn't happen normally
+      if (err instanceof AppError) {
+        console.error(`Pricing error for product ${item.productId}: ${err.message}`)
+      }
+      unitPriceToman = Number(item.product.price) // fallback, though shouldn't happen normally
     }
     
     const comparePriceToman = item.product.comparePrice != null ? Number(item.product.comparePrice) : null
     totalCount += item.quantity
-    subtotalToman += priceToman * item.quantity
+    subtotalToman += unitPriceToman * item.quantity
 
     return {
       id: item.id,
@@ -114,7 +120,7 @@ export async function getCartAction(): Promise<CartSummary> {
       productNameEn: item.product.nameEn,
       slug: item.product.slug,
       imageUrl: item.product.images[0]?.url ?? null,
-      priceToman,
+      unitPriceToman,
       comparePriceToman,
       quantity: item.quantity,
       stockQty: item.product.stockQty,

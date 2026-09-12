@@ -99,6 +99,7 @@ describe("Cart Server Actions", () => {
             stockQty: 50,
             minOrderQty: 1,
             images: [{ url: "/img/p1.jpg" }],
+            packagingOptions: [],
           },
         },
         {
@@ -114,6 +115,7 @@ describe("Cart Server Actions", () => {
             stockQty: 20,
             minOrderQty: 1,
             images: [],
+            packagingOptions: [],
           },
         }
       ])
@@ -123,6 +125,35 @@ describe("Cart Server Actions", () => {
       // 2 * 100000 + 3 * 50000 = 200000 + 150000 = 350000
       expect(res.subtotalToman).toBe(350000)
       expect(res.items).toHaveLength(2)
+    })
+
+    it("calculates unitPriceToman correctly when packagingTier is provided", async () => {
+      mockAuth.mockResolvedValue({ user: { id: "user-123" } })
+      mockDb.cartItem.findMany.mockResolvedValue([
+        {
+          id: "item-3",
+          quantity: 2,
+          packagingTier: "SINGLE",
+          product: {
+            id: "prod-3",
+            nameFa: "Product 3",
+            nameEn: null,
+            slug: "product-3",
+            price: 10000,
+            comparePrice: null,
+            stockQty: 50,
+            minOrderQty: 1,
+            images: [],
+            packagingOptions: [
+              { tier: "SINGLE", price: 60000, bagCount: 5, isActive: true }
+            ],
+          },
+        },
+      ])
+
+      const res = await getCartAction()
+      expect(res.items[0].unitPriceToman).toBe(12000) // 60000 / 5
+      expect(res.subtotalToman).toBe(24000) // 12000 * 2
     })
   })
 
