@@ -4,7 +4,7 @@ import { getLocale } from "next-intl/server"
 import { db } from "@tirajeh/database"
 import type { Metadata } from "next"
 import { Badge } from "@tirajeh/ui"
-import { formatPrice, formatRelativeTime } from "@/lib/cement"
+import { formatToman, formatRelativeTime } from "@/lib/cement"
 import OrderStatusForm from "./order-status-form"
 import styles from "./OrderDetail.module.css"
 
@@ -176,10 +176,10 @@ export default async function AdminOrderDetailPage({ params }: Props) {
                       {fa ? item.quantity.toLocaleString("fa-IR") : item.quantity}
                     </td>
                     <td className={styles["web-adm-ord__td"]} style={{ fontVariantNumeric: "tabular-nums" }}>
-                      {formatPrice(Number(item.unitPrice), locale)}
+                      {formatToman(Number(item.unitPrice), locale as "fa" | "en")}
                     </td>
                     <td className={styles["web-adm-ord__td"]} style={{ fontVariantNumeric: "tabular-nums", fontWeight: 700 }}>
-                      {formatPrice(Number(item.totalPrice), locale)}
+                      {formatToman(Number(item.totalPrice), locale as "fa" | "en")}
                     </td>
                   </tr>
                 )
@@ -192,15 +192,15 @@ export default async function AdminOrderDetailPage({ params }: Props) {
         <div className={styles["web-adm-ord__totals"]}>
           <div className={styles["web-adm-ord__totalsRow"]}>
             <span>{fa ? "جمع کالاها" : "Subtotal"}</span>
-            <span style={{ fontVariantNumeric: "tabular-nums" }}>{formatPrice(Number(order.subtotal), locale)}</span>
+            <span style={{ fontVariantNumeric: "tabular-nums" }}>{formatToman(Number(order.subtotal), locale as "fa" | "en")}</span>
           </div>
           <div className={styles["web-adm-ord__totalsRow"]}>
             <span>{fa ? "هزینه ارسال" : "Shipping"}</span>
-            <span style={{ fontVariantNumeric: "tabular-nums" }}>{formatPrice(Number(order.shippingCost), locale)}</span>
+            <span style={{ fontVariantNumeric: "tabular-nums" }}>{formatToman(Number(order.shippingCost), locale as "fa" | "en")}</span>
           </div>
           <div className={styles["web-adm-ord__totalsRowTotal"]}>
             <span>{fa ? "مجموع نهایی" : "Total"}</span>
-            <span style={{ fontVariantNumeric: "tabular-nums" }}>{formatPrice(Number(order.totalAmount), locale)}</span>
+            <span style={{ fontVariantNumeric: "tabular-nums" }}>{formatToman(Number(order.totalAmount), locale as "fa" | "en")}</span>
           </div>
         </div>
       </div>
@@ -227,7 +227,7 @@ export default async function AdminOrderDetailPage({ params }: Props) {
                     <tr key={pmt.id}>
                       <td className={styles["web-adm-ord__td"]}>{pmt.gateway}</td>
                       <td className={styles["web-adm-ord__td"]} style={{ fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>
-                        {formatPrice(Number(pmt.amount), locale)}
+                        {formatToman(Number(pmt.amount), locale as "fa" | "en")}
                       </td>
                       <td className={styles["web-adm-ord__td"]}>
                         <Badge variant={pStatus.variant}>

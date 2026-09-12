@@ -11,7 +11,7 @@ import {
   PACKAGING_LABEL,
   STOCK_LABEL,
   STOCK_VARIANT,
-  formatPrice,
+  formatToman,
 } from "@/lib/cement"
 import {
   adminToggleProductStatusAction,
@@ -146,7 +146,7 @@ export function ProductsTableClient({
       header: fa ? "قیمت" : "Price",
       render: (row) => (
         <span style={{ fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>
-          {formatPrice(row.price, locale)}
+          {formatToman(row.price, locale as "fa" | "en")}
         </span>
       ),
     },

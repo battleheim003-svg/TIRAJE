@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react"
 import { useTranslations } from "next-intl"
 import { Truck, Loader2 } from "lucide-react"
-import { formatToman } from "@/lib/ui"
+import { formatToman } from "@tirajeh/shared"
 import { getFreightQuotesAction } from "@/actions/shipping"
 import type { FreightQuote } from "@tirajeh/shared"
 import styles from "./FreightCalculator.module.css"

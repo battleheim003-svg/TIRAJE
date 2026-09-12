@@ -1,7 +1,8 @@
-﻿"use client"
+"use client"
 
 import Link from "next/link"
 import { TrendingUp, ArrowDownRight, ArrowUpRight } from "lucide-react"
+import { formatToman } from "@tirajeh/shared"
 import styles from "./PriceTicker.module.css"
 
 export interface TickerItem {
@@ -18,10 +19,6 @@ interface PriceTickerClientProps {
   items: TickerItem[]
   date: string
   locale: string
-}
-
-function formatToman(num: number): string {
-  return num.toLocaleString("fa-IR")
 }
 
 export function PriceTickerClient({ items, date, locale }: PriceTickerClientProps) {
@@ -68,7 +65,7 @@ export function PriceTickerClient({ items, date, locale }: PriceTickerClientProp
             <div className={styles["web-ticker__item"]}>
               <span className={styles["web-ticker__name"]}>{name}</span>
               <span className={styles["web-ticker__price"]}>
-                {formatToman(item.price)}{" "}
+                {formatToman(item.price, locale as "fa" | "en", { unit: false })}{" "}
                 <span className={styles["web-ticker__currency"]}>
                   {fa ? "تومان" : "Toman"}
                 </span>
@@ -83,8 +80,8 @@ export function PriceTickerClient({ items, date, locale }: PriceTickerClientProp
                   }`}
                   title={
                     fa
-                      ? `قیمت قبلی: ${formatToman(item.previousPrice!)} تومان`
-                      : `Previous: ${item.previousPrice!.toLocaleString()} Toman`
+                      ? `قیمت قبلی: ${formatToman(item.previousPrice!, "fa")}`
+                      : `Previous: ${formatToman(item.previousPrice!, "en")}`
                   }
                 >
                   {diff > 0 ? (
@@ -104,9 +101,7 @@ export function PriceTickerClient({ items, date, locale }: PriceTickerClientProp
                 <Link
                   href={`/${locale}/products/${item.slug}`}
                   className={styles["web-ticker__link"]}
-                  aria-label={`${name} — ${formatToman(item.price)} ${
-                    fa ? "تومان" : "Toman"
-                  }`}
+                  aria-label={`${name} — ${formatToman(item.price, locale as "fa" | "en")}`}
                 >
                   {ItemContent}
                 </Link>

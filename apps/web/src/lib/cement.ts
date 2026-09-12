@@ -13,13 +13,7 @@ export {
 
 // ─── Price formatting ──────────────────────────────────────────────────────
 
-export function formatPrice(price: unknown, locale: string): string {
-  const num = Number(price)
-  if (isNaN(num) || num === 0) return locale === "fa" ? "تماس بگیرید" : "Contact Us"
-  return locale === "fa"
-    ? `${num.toLocaleString("fa-IR")} تومان`
-    : `${num.toLocaleString("en-US")} T`
-}
+export { formatToman } from "@tirajeh/shared"
 
 // ─── Relative time (server-safe, no external deps) ─────────────────────────
 

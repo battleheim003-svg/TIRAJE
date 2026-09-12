@@ -1,4 +1,4 @@
-﻿import Link from "next/link"
+import Link from "next/link"
 import { redirect } from "next/navigation"
 import { getLocale } from "next-intl/server"
 import { auth } from "@tirajeh/auth"
@@ -6,7 +6,7 @@ import { db } from "@tirajeh/database"
 import type { Metadata } from "next"
 import { Package, User } from "lucide-react"
 import { Card, Badge, Button, type BadgeVariant } from "@tirajeh/ui"
-import { formatPrice } from "@/lib/cement"
+import { formatToman } from "@/lib/cement"
 import styles from "./Orders.module.css"
 
 export const metadata: Metadata = { title: "سفارش‌های من | تیراژه" }
@@ -120,7 +120,7 @@ export default async function OrdersPage() {
                           {fa ? statusInfo.fa : statusInfo.en}
                         </Badge>
                         <p className={styles["web-ords__price"]}>
-                          {formatPrice(order.totalAmount, locale)}
+                          {formatToman(order.totalAmount, locale as "fa" | "en")}
                         </p>
                       </div>
                     </Card>

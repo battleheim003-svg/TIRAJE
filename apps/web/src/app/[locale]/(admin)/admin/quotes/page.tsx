@@ -4,7 +4,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { MessageSquare } from "lucide-react"
 import { Badge } from "@tirajeh/ui"
-import { formatPrice, formatRelativeTime } from "@/lib/cement"
+import { formatToman, formatRelativeTime } from "@/lib/cement"
 import styles from "./QuotesList.module.css"
 
 export const metadata: Metadata = { title: "درخواست‌های قیمت | پنل مدیریت تیراژه" }
@@ -131,7 +131,7 @@ export default async function AdminQuotesPage({ searchParams }: Props) {
                       </Badge>
                     </td>
                     <td className={`${styles["web-adm-qt__td"]} ${styles["web-adm-qt__num"]}`}>
-                      {q.quotedPrice != null ? formatPrice(Number(q.quotedPrice), fa ? "fa" : "en") : <span className={styles["web-adm-qt__muted"]}>—</span>}
+                      {q.quotedPrice != null ? formatToman(Number(q.quotedPrice), fa ? "fa" : "en") : <span className={styles["web-adm-qt__muted"]}>—</span>}
                     </td>
                     <td className={`${styles["web-adm-qt__td"]} ${styles["web-adm-qt__date"]}`}>{formatRelativeTime(q.createdAt, fa ? "fa" : "en")}</td>
                     <td className={styles["web-adm-qt__td"]} style={{ textAlign: "end" }}>

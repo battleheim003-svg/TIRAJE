@@ -4,7 +4,7 @@ import { useState, useTransition } from "react"
 import { Truck } from "lucide-react"
 import { Card, Button, Input, Label, Select } from "@tirajeh/ui"
 import { getFreightQuotesAction } from "@/actions/shipping"
-import { formatPrice } from "@/lib/cement"
+import { formatToman } from "@/lib/cement"
 import styles from "./Freight.module.css"
 
 const PROVINCES = [
@@ -181,7 +181,7 @@ export function FreightCalcForm({ locale }: FreightCalcFormProps) {
             {fa ? "کرایه حمل برآوردی (یک سرویس):" : "Estimated Freight Cost:"}
           </span>
           <span className={styles["web-frgt__result-val"]}>
-            {formatPrice(estimatedCost, locale)}
+            {formatToman(estimatedCost, locale as "fa" | "en")}
           </span>
           <span className={styles["web-frgt__result-note"]}>
             {fa

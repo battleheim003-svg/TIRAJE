@@ -5,10 +5,17 @@ export function cn(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs))
 }
 
-/** Format Rial as Toman with fa-IR locale */
-export function formatToman(rial: number, locale: "fa" | "en" = "fa"): string {
-  const toman = Math.round(rial / 10)
-  return toman.toLocaleString(locale === "fa" ? "fa-IR" : "en-US") + (locale === "fa" ? " تومان" : " Toman")
+/** Format Toman with locale */
+export function formatToman(
+  amount: unknown,
+  locale: "fa" | "en" = "fa",
+  opts?: { unit?: boolean; zeroLabel?: string }
+): string {
+  const n = typeof amount === "number" ? amount : Number(amount)
+  if (!Number.isFinite(n) || n === 0) return opts?.zeroLabel ?? (locale === "fa" ? "تماس بگیرید" : "Contact us")
+  const digits = Math.round(n).toLocaleString(locale === "fa" ? "fa-IR" : "en-US")
+  if (opts?.unit === false) return digits
+  return locale === "fa" ? `${digits} تومان` : `${digits} Toman`
 }
 
 /** Convert Western digits to Eastern Arabic (Persian) */

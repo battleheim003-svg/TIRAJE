@@ -1,4 +1,4 @@
-﻿import Link from "next/link"
+import Link from "next/link"
 import Image from "next/image"
 import { notFound } from "next/navigation"
 import { getLocale } from "next-intl/server"
@@ -30,7 +30,7 @@ import {
   STOCK_LABEL,
   STOCK_VARIANT,
   PRICE_UNIT,
-  formatPrice,
+  formatToman,
   formatRelativeTime,
   formatWeight,
 } from "@/lib/cement"
@@ -344,20 +344,20 @@ export default async function ProductDetailPage({ params }: Props) {
                 <div className={styles["web-pdtl__discount-badge"]}>
                   <span>{discountPct}% {fa ? "تخفیف" : "OFF"}</span>
                   <span className={styles["web-pdtl__old-price"]}>
-                    {formatPrice(product.comparePrice, locale)}
+                    {formatToman(product.comparePrice, locale as "fa" | "en")}
                   </span>
                 </div>
               ) : (hasHistoryPriceDiff && isUpdatedToday) ? (
                 <div className={styles["web-pdtl__discount-badge"]}>
                   <span>{fa ? "قیمت قبل:" : "Prev:"}</span>
                   <span className={styles["web-pdtl__old-price"]}>
-                    {formatPrice(latestHistory.oldPrice, locale)}
+                    {formatToman(latestHistory.oldPrice, locale as "fa" | "en")}
                   </span>
                 </div>
               ) : null}
               <div className={styles["web-pdtl__price-numbers"]}>
                 <span className={styles["web-pdtl__current-price"]}>
-                  {formatPrice(product.price, locale)}
+                  {formatToman(product.price, locale as "fa" | "en")}
                 </span>
                 {priceUnit && priceNum > 0 && (
                   <span className={styles["web-pdtl__price-unit-label"]}>
@@ -370,7 +370,7 @@ export default async function ProductDetailPage({ params }: Props) {
             {/* Ton reference price */}
             <div className={styles["web-pdtl__ton-calc"]}>
               <span>{fa ? "برآورد هر تن (۲۰ کیسه):" : "Estimated per ton:"}</span>
-              <strong>{formatPrice(pricePerTon, locale)}</strong>
+              <strong>{formatToman(pricePerTon, locale as "fa" | "en")}</strong>
             </div>
           </div>
 
@@ -638,7 +638,7 @@ export default async function ProductDetailPage({ params }: Props) {
                       <span className={styles["web-pdtl__related-brand"]}>{pBrand}</span>
                       <h3 className={styles["web-pdtl__related-name"]}>{pName}</h3>
                       <div className={styles["web-pdtl__related-price"]}>
-                        {formatPrice(p.price, locale)}
+                        {formatToman(p.price, locale as "fa" | "en")}
                       </div>
                     </div>
                   </Link>

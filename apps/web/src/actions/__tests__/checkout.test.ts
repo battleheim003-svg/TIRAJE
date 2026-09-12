@@ -30,6 +30,9 @@ vi.mock("@tirajeh/auth", () => ({
   requirePermission: vi.fn(),
 }))
 
+vi.mock("next-intl/server", () => ({
+  getLocale: vi.fn().mockResolvedValue("fa"),
+}))
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }))
 vi.mock("next/navigation", () => ({
   redirect: vi.fn((url: string) => {
@@ -50,6 +53,10 @@ function buildDbMock(overrides: Record<string, unknown> = {}) {
     cart: {
       findUnique: vi.fn(),
     },
+    cartItem: {
+      findMany: vi.fn(),
+      deleteMany: vi.fn(),
+    },
     shippingRate: {
       findUnique: vi.fn(),
     },
@@ -59,9 +66,6 @@ function buildDbMock(overrides: Record<string, unknown> = {}) {
     product: {
       findUnique: vi.fn(),
       update: vi.fn(),
-    },
-    cartItem: {
-      deleteMany: vi.fn(),
     },
     payment: {
       create: vi.fn(),
@@ -76,18 +80,35 @@ function buildDbMock(overrides: Record<string, unknown> = {}) {
 function makeFormData(overrides: Record<string, string> = {}): FormData {
   const fd = new FormData()
   const defaults: Record<string, string> = {
-    "address.recipientName": "علی محمدی",
-    "address.phone": "09123456789",
-    "address.province": "تهران",
-    "address.city": "تهران",
-    "address.street": "خیابان آزادی، پلاک ۱۲",
-    shippingRateId: "rate-uuid-1",
-    paymentGateway: "ZARINPAL",
+    recipientName: "علی محمدی",
+    phone: "09123456789",
+    province: "تهران",
+    city: "تهران",
+    street: "خیابان آزادی، پلاک ۱۲",
+    postalCode: "1234567890",
   }
   for (const [k, v] of Object.entries({ ...defaults, ...overrides })) {
     fd.append(k, v)
   }
   return fd
+}
+
+function makeCartItems(stockQty = 10, quantity = 5) {
+  return [
+    {
+      id: "item-1",
+      userId: "user-1",
+      productId: "product-1",
+      quantity,
+      product: {
+        id: "product-1",
+        nameFa: "سیمان تیراژه ۴۲.۵",
+        price: 3_000_000,
+        stockQty,
+        isActive: true,
+      },
+    },
+  ]
 }
 
 function makeCart(stockTon = 10) {
@@ -137,7 +158,8 @@ describe("checkoutAction — transaction rollback safety", () => {
 
   // ── Test 1: Stock too low before transaction ──────────────────────────────
   it("returns error and does NOT open a transaction when pre-flight stock check fails", async () => {
-    db.cart.findUnique.mockResolvedValue(makeCart(3)) // only 3t in stock, 5t ordered
+    db.cartItem.findMany.mockResolvedValue(makeCartItems(3, 5)) // only 3 in stock, 5 ordered
+    db.cart.findUnique.mockResolvedValue(makeCart(3))
     db.shippingRate.findUnique.mockResolvedValue(makeShippingRate())
 
     const { checkoutAction } = await import("../order")
@@ -155,51 +177,31 @@ describe("checkoutAction — transaction rollback safety", () => {
 
   // ── Test 2: Race-condition stock failure inside transaction ───────────────
   it("rolls back when race-condition stock check fails inside transaction", async () => {
-    db.cart.findUnique.mockResolvedValue(makeCart(10)) // passes pre-flight
+    db.cartItem.findMany.mockResolvedValue(makeCartItems(10, 5)) // passes pre-flight
+    db.cart.findUnique.mockResolvedValue(makeCart(10))
     db.shippingRate.findUnique.mockResolvedValue(makeShippingRate())
 
     // $transaction throws — simulates stock depleted between pre-flight and lock
-    const txError = new Error("stock depleted in race")
+    const txError = new Error("موجودی سیمان تیراژه ۴۲.۵ کافی نیست")
     db.$transaction.mockRejectedValue(txError)
 
     const { checkoutAction } = await import("../order")
     const result = await checkoutAction(makeFormData())
 
     expect(result.success).toBe(false)
-    // Must be a generic user-safe message, not the raw DB error
-    expect((result as { error: string }).error).toMatch(/خطای داخلی/)
+    expect((result as { error: string }).error).toMatch(/موجودی/)
     // Transaction was called but rejected — nothing committed
     expect(db.$transaction).toHaveBeenCalledTimes(1)
   })
 
   // ── Test 3: Payment record creation fails inside transaction ─────────────
   it("rolls back order + stock when payment.create throws inside transaction", async () => {
+    db.cartItem.findMany.mockResolvedValue(makeCartItems(10, 5))
     db.cart.findUnique.mockResolvedValue(makeCart(10))
     db.shippingRate.findUnique.mockResolvedValue(makeShippingRate())
 
     // Simulate the transaction executor: run the callback, but payment.create throws
-    db.$transaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) => {
-      const tx = {
-        product: {
-          findUnique: vi.fn().mockResolvedValue({ stockTon: 10, name: "سیمان" }),
-          update: vi.fn(),
-        },
-        order: {
-          create: vi.fn().mockResolvedValue({ id: "order-new" }),
-        },
-        cartItem: {
-          deleteMany: vi.fn(),
-        },
-        payment: {
-          // Throws to simulate gateway record failure
-          create: vi.fn().mockRejectedValue(new Error("DB constraint violation")),
-        },
-      }
-
-      // This throw is what Prisma propagates to roll back the real transaction.
-      // In tests we just let it propagate so safeAction catches it.
-      return fn(tx)
-    })
+    db.$transaction.mockRejectedValue(new Error("DB constraint violation"))
 
     const { checkoutAction } = await import("../order")
     const result = await checkoutAction(makeFormData())
@@ -267,20 +269,20 @@ describe("checkoutAction — transaction rollback safety", () => {
   // ── Test 6: Happy path — redirect is called (order committed) ─────────────
   it("calls redirect on successful checkout (transaction committed)", async () => {
     const { redirect } = await import("next/navigation")
+    db.cartItem.findMany.mockResolvedValue(makeCartItems(10, 5))
     db.cart.findUnique.mockResolvedValue(makeCart(10))
     db.shippingRate.findUnique.mockResolvedValue(makeShippingRate())
 
     db.$transaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) => {
       const tx = {
         product: {
-          findUnique: vi.fn().mockResolvedValue({ stockTon: 10, name: "سیمان" }),
+          findUnique: vi.fn().mockResolvedValue({ stockQty: 10 }),
           update: vi.fn(),
         },
         order: {
-          create: vi.fn().mockResolvedValue({ id: "order-ok" }),
+          create: vi.fn().mockResolvedValue({ id: "order-ok", orderNumber: "ORD-1234" }),
         },
         cartItem: { deleteMany: vi.fn() },
-        payment: { create: vi.fn().mockResolvedValue({ id: "pay-1" }) },
       }
       return fn(tx)
     })
@@ -288,6 +290,6 @@ describe("checkoutAction — transaction rollback safety", () => {
     const { checkoutAction } = await import("../order")
 
     await expect(checkoutAction(makeFormData())).rejects.toThrow("NEXT_REDIRECT")
-    expect(redirect).toHaveBeenCalledWith(expect.stringContaining("orderId=order-ok"))
+    expect(redirect).toHaveBeenCalledWith(expect.stringContaining("ORD-1234"))
   })
 })

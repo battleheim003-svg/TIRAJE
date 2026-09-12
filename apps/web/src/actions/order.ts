@@ -47,52 +47,62 @@ export async function checkoutAction(
     0
   )
 
-  const order = await db.$transaction(async (tx) => {
-    for (const item of cartItems) {
-      const p = await tx.product.findUnique({
-        where: { id: item.productId },
-        select: { stockQty: true },
-      })
-      if (!p || p.stockQty < item.quantity)
-        throw new Error(`موجودی ${item.product.nameFa} کافی نیست`)
-    }
+  try {
+    const order = await db.$transaction(async (tx) => {
+      for (const item of cartItems) {
+        const p = await tx.product.findUnique({
+          where: { id: item.productId },
+          select: { stockQty: true },
+        })
+        if (!p || p.stockQty < item.quantity)
+          throw new Error(`موجودی ${item.product.nameFa} کافی نیست`)
+      }
 
-    const o = await tx.order.create({
-      data: {
-        userId,
-        status: "PENDING",
-        subtotal,
-        shippingCost: 0,
-        totalAmount: subtotal,
-        shippingAddress,
-        notes: note,
-        items: {
-          create: cartItems.map((item) => ({
-            productId: item.productId,
-            quantity: item.quantity,
-            unitPrice: Number(item.product.price),
-            totalPrice: Number(item.product.price) * item.quantity,
-          })),
+      const o = await tx.order.create({
+        data: {
+          userId,
+          status: "PENDING",
+          subtotal,
+          shippingCost: 0,
+          totalAmount: subtotal,
+          shippingAddress,
+          notes: note,
+          items: {
+            create: cartItems.map((item) => ({
+              productId: item.productId,
+              quantity: item.quantity,
+              unitPrice: Number(item.product.price),
+              totalPrice: Number(item.product.price) * item.quantity,
+            })),
+          },
         },
-      },
-      select: { id: true, orderNumber: true },
+        select: { id: true, orderNumber: true },
+      })
+
+      for (const item of cartItems) {
+        await tx.product.update({
+          where: { id: item.productId },
+          data: { stockQty: { decrement: item.quantity } },
+        })
+      }
+
+      await tx.cartItem.deleteMany({ where: { userId } })
+
+      return o
     })
 
-    for (const item of cartItems) {
-      await tx.product.update({
-        where: { id: item.productId },
-        data: { stockQty: { decrement: item.quantity } },
-      })
+    revalidatePath("/cart")
+    revalidatePath("/account/orders")
+    redirect(`/${locale}/checkout/success?order=${order.orderNumber}`)
+  } catch (err: any) {
+    if (err?.digest?.startsWith?.("NEXT_REDIRECT") || err?.message?.includes("NEXT_REDIRECT")) {
+      throw err
     }
-
-    await tx.cartItem.deleteMany({ where: { userId } })
-
-    return o
-  })
-
-  revalidatePath("/cart")
-  revalidatePath("/account/orders")
-  redirect(`/${locale}/checkout/success?order=${order.orderNumber}`)
+    if (err?.message?.includes?.("موجودی")) {
+      return { success: false, error: err.message }
+    }
+    return { success: false, error: "خطای داخلی سرور هنگام ثبت سفارش" }
+  }
 }
 
 export async function cancelOrderAction(

@@ -7,7 +7,7 @@ import { db } from "@tirajeh/database"
 import type { Metadata } from "next"
 import { ShoppingCart } from "lucide-react"
 import { Button } from "@tirajeh/ui"
-import { formatPrice } from "@/lib/cement"
+import { formatToman } from "@/lib/cement"
 import CartItemRow from "./cart-item-row"
 import styles from "./Cart.module.css"
 
@@ -94,7 +94,7 @@ export default async function CartPage() {
                       {name}
                     </Link>
                     <p className={styles["web-cart__item-price"]}>
-                      {formatPrice(product.price, locale)}
+                      {formatToman(product.price, locale as "fa" | "en")}
                     </p>
                     <CartItemRow
                       itemId={item.id}
@@ -117,7 +117,7 @@ export default async function CartPage() {
             <div className={styles["web-cart__summary-row"]}>
               <span>{fa ? "جمع کالاها" : "Subtotal"}</span>
               <span className={styles["web-cart__summary-val"]}>
-                {formatPrice(subtotal, locale)}
+                {formatToman(subtotal, locale as "fa" | "en")}
               </span>
             </div>
 
@@ -138,7 +138,7 @@ export default async function CartPage() {
             <div className={styles["web-cart__summary-total"]}>
               <span>{fa ? "مبلغ قابل پرداخت" : "Total Amount"}</span>
               <span className={styles["web-cart__summary-total-val"]}>
-                {formatPrice(subtotal, locale)}
+                {formatToman(subtotal, locale as "fa" | "en")}
               </span>
             </div>
 

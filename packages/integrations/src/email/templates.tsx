@@ -4,6 +4,7 @@
  * Used by EmailService via Resend's render() function.
  */
 import * as React from "react"
+import { formatToman } from "@tirajeh/shared"
 
 // ─── Order Confirmation ───────────────────────────────────────────────────────
 
@@ -17,7 +18,7 @@ interface OrderConfirmProps {
 }
 
 export function OrderConfirmEmail(props: OrderConfirmProps) {
-  const toman = Math.round(props.totalAmount / 10).toLocaleString("fa-IR")
+  const toman = formatToman(props.totalAmount, "fa")
   return (
     <html dir="rtl" lang="fa">
       <head>
@@ -48,7 +49,7 @@ export function OrderConfirmEmail(props: OrderConfirmProps) {
                 </tr>
                 <tr>
                   <td style={{ padding: "10px 0", borderBottom: "1px solid #E4E2DC", color: "#5A6170", fontSize: 13 }}>مبلغ کل</td>
-                  <td style={{ padding: "10px 0", borderBottom: "1px solid #E4E2DC", color: "#1A1C20", fontSize: 13, textAlign: "left", fontWeight: 600 }}>{toman} تومان</td>
+                  <td style={{ padding: "10px 0", borderBottom: "1px solid #E4E2DC", color: "#1A1C20", fontSize: 13, textAlign: "left", fontWeight: 600 }}>{toman}</td>
                 </tr>
                 <tr>
                   <td style={{ padding: "10px 0", color: "#5A6170", fontSize: 13 }}>زمان تحویل تقریبی</td>
@@ -97,7 +98,7 @@ interface QuoteResponseProps {
 
 export function QuoteResponseEmail(props: QuoteResponseProps) {
   const toman = props.quotedPrice
-    ? Math.round(props.quotedPrice / 10).toLocaleString("fa-IR")
+    ? formatToman(props.quotedPrice, "fa")
     : null
 
   return (
@@ -108,21 +109,22 @@ export function QuoteResponseEmail(props: QuoteResponseProps) {
           <tr>
             <td style={{ background: "#2D6A4F", padding: "24px 32px", borderRadius: "10px 10px 0 0" }}>
               <p style={{ color: "#fff", margin: 0, fontSize: 20, fontWeight: 700 }}>پاسخ استعلام قیمت</p>
+              <p style={{ color: "#B7E4C7", margin: "4px 0 0", fontSize: 13 }}>شرکت سیمان و مصالح تیراژه</p>
             </td>
           </tr>
           <tr>
-            <td style={{ background: "#fff", padding: "32px", borderRadius: "0 0 10px 10px" }}>
-              <p style={{ color: "#5A6170", fontSize: 14, lineHeight: 1.8 }}>
-                {props.recipientName} عزیز،
+            <td style={{ background: "#fff", padding: "32px", borderRadius: "0 0 10px 10px", border: "1px solid #E4E2DC", borderTop: "none" }}>
+              <p style={{ color: "#1A1C20", fontSize: 15, margin: "0 0 16px" }}>
+                سلام {props.recipientName} عزیز،
               </p>
 
-              {props.status === "QUOTED" && toman ? (
+              {props.quotedPrice ? (
                 <>
                   <p style={{ color: "#1A1C20", fontSize: 14 }}>
                     استعلام شما برای <strong>{props.productName}</strong> ({props.quantityTon} تن) بررسی شد.
                   </p>
                   <div style={{ background: "#EAF3EE", border: "1px solid #2D6A4F", borderRadius: 8, padding: "16px 20px", margin: "20px 0" }}>
-                    <p style={{ margin: 0, color: "#1A5C38", fontWeight: 700, fontSize: 18 }}>{toman} تومان</p>
+                    <p style={{ margin: 0, color: "#1A5C38", fontWeight: 700, fontSize: 18 }}>{toman}</p>
                     <p style={{ margin: "4px 0 0", color: "#5A6170", fontSize: 12 }}>قیمت پیشنهادی (هر تن)</p>
                   </div>
                   {props.expiresAt && (

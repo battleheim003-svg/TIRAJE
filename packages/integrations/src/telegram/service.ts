@@ -11,6 +11,7 @@
 import { Bot, InlineKeyboard } from "grammy"
 import { createClient } from "redis"
 import { db } from "@tirajeh/database"
+import { formatToman } from "@tirajeh/shared"
 import { buildPostHashtags, buildProductHashtags } from "./hashtags"
 
 const QUEUE_KEY = "tg:send_queue"
@@ -101,12 +102,12 @@ export async function notifyNewOrder(params: {
   itemCount: number
   city: string
 }) {
-  const toman = Math.round(params.totalAmount / 10).toLocaleString("fa-IR")
+  const toman = formatToman(params.totalAmount, "fa")
   const text = [
     "🛒 <b>سفارش جدید</b>",
     `شماره: <code>${params.orderNumber}</code>`,
     `مشتری: ${params.customerName}`,
-    `مبلغ: ${toman} تومان`,
+    `مبلغ: ${toman}`,
     `اقلام: ${params.itemCount} قلم`,
     `شهر: ${params.city}`,
   ].join("\n")
@@ -137,11 +138,11 @@ export async function notifyPaymentReceived(params: {
   amount: number
   refId: string
 }) {
-  const toman = Math.round(params.amount / 10).toLocaleString("fa-IR")
+  const toman = formatToman(params.amount, "fa")
   const text = [
     "✅ <b>پرداخت موفق</b>",
     `سفارش: <code>${params.orderNumber}</code>`,
-    `مبلغ: ${toman} تومان`,
+    `مبلغ: ${toman}`,
     `کد پیگیری: <code>${params.refId}</code>`,
   ].join("\n")
 

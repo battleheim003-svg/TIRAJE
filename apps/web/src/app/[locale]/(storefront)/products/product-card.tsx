@@ -1,4 +1,4 @@
-﻿import Link from "next/link"
+import Link from "next/link"
 import Image from "next/image"
 import { MapPin, Package, Clock } from "lucide-react"
 import { Badge } from "@tirajeh/ui"
@@ -8,7 +8,7 @@ import {
   PRICE_UNIT,
   STOCK_LABEL,
   STOCK_VARIANT,
-  formatPrice,
+  formatToman,
   formatRelativeTime,
   formatWeight,
 } from "@/lib/cement"
@@ -159,7 +159,7 @@ export function ProductCard({ product, locale }: ProductCardProps) {
           <div className={styles["web-pcard__prices"]}>
             {hasDiscount && (
               <span className={styles["web-pcard__compare"]} aria-label={fa ? "قیمت قبل" : "Was"}>
-                {formatPrice(product.comparePrice, locale)}
+                {formatToman(product.comparePrice, locale as "fa" | "en")}
               </span>
             )}
             <span
@@ -168,7 +168,7 @@ export function ProductCard({ product, locale }: ProductCardProps) {
               }`}
               aria-label={fa ? "قیمت" : "Price"}
             >
-              {formatPrice(product.price, locale)}
+              {formatToman(product.price, locale as "fa" | "en")}
             </span>
             {priceUnit && Number(product.price) > 0 && (
               <span className={styles["web-pcard__price-unit"]} aria-hidden="true">

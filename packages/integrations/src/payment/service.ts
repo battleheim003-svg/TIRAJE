@@ -4,7 +4,7 @@
  */
 import { db } from "@tirajeh/database"
 import type { PaymentGatewayAdapter } from "./types"
-import { AppError } from "@tirajeh/shared"
+import { AppError, tomanToRial } from "@tirajeh/shared"
 
 export class PaymentService {
   constructor(private readonly gateway: PaymentGatewayAdapter) {}
@@ -25,8 +25,9 @@ export class PaymentService {
     if (latestPayment.status === "COMPLETED")
       throw new AppError("این سفارش قبلاً پرداخت شده", "CONFLICT", 409)
 
+    // مرز تبدیل تومان → ریال؛ تنها نقطه مجاز
     const result = await this.gateway.init({
-      amount: Number(order.totalAmount),
+      amount: tomanToRial(Number(order.totalAmount)),
       description: `پرداخت سفارش ${order.orderNumber} — تیراژه`,
       callbackUrl,
       mobile: order.user?.phone ?? undefined,
@@ -67,9 +68,10 @@ export class PaymentService {
       return { success: true, orderId: payment.orderId, refId: payment.gatewayTrackId }
     }
 
+    // مرز تبدیل تومان → ریال؛ تنها نقطه مجاز
     const result = await this.gateway.verify({
       authority,
-      amount: Number(payment.order.totalAmount),
+      amount: tomanToRial(Number(payment.order.totalAmount)),
     })
 
     if (result.success) {

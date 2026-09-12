@@ -4,7 +4,7 @@ import { useState, useTransition } from "react"
 import Link from "next/link"
 import { Card, Button, Input, Label, Textarea, Select } from "@tirajeh/ui"
 import { checkoutAction } from "@/actions/order"
-import { formatPrice } from "@/lib/cement"
+import { formatToman } from "@/lib/cement"
 import styles from "./Checkout.module.css"
 
 const PROVINCES = [
@@ -232,7 +232,7 @@ export default function CheckoutForm({ subtotal, items, locale }: CheckoutFormPr
                     {fa ? "ارسال اختصاصی / پیشتاز" : "Express Freight"}
                   </span>
                   <span className={styles["web-chk__radio-cost"]}>
-                    {formatPrice(250000, locale)}
+                    {formatToman(250000, locale as "fa" | "en")}
                   </span>
                 </div>
                 <p className={styles["web-chk__radio-desc"]}>
@@ -368,7 +368,7 @@ export default function CheckoutForm({ subtotal, items, locale }: CheckoutFormPr
                   </span>
                 </span>
                 <span className={styles["web-chk__summary-val"]}>
-                  {formatPrice(Number(item.product.price) * item.quantity, locale)}
+                  {formatToman(Number(item.product.price) * item.quantity, locale as "fa" | "en")}
                 </span>
               </div>
             )
@@ -378,21 +378,21 @@ export default function CheckoutForm({ subtotal, items, locale }: CheckoutFormPr
         <div className={styles["web-chk__summary-row"]}>
           <span>{fa ? "جمع اقلام" : "Subtotal"}</span>
           <span className={styles["web-chk__summary-val"]}>
-            {formatPrice(subtotal, locale)}
+            {formatToman(subtotal, locale as "fa" | "en")}
           </span>
         </div>
 
         <div className={styles["web-chk__summary-row"]}>
           <span>{fa ? "هزینه ارسال" : "Shipping"}</span>
           <span className={styles["web-chk__summary-val"]}>
-            {shippingCost === 0 ? (fa ? "رایگان" : "Free") : formatPrice(shippingCost, locale)}
+            {shippingCost === 0 ? (fa ? "رایگان" : "Free") : formatToman(shippingCost, locale as "fa" | "en")}
           </span>
         </div>
 
         <div className={styles["web-chk__summary-total"]}>
           <span>{fa ? "مبلغ نهایی سفارش" : "Total Amount"}</span>
           <span className={styles["web-chk__summary-total-val"]}>
-            {formatPrice(totalAmount, locale)}
+            {formatToman(totalAmount, locale as "fa" | "en")}
           </span>
         </div>
 

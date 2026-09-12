@@ -14,7 +14,7 @@ import {
 } from "lucide-react"
 import { Card, Badge } from "@tirajeh/ui"
 import { StatCard } from "@/components/admin/StatCard"
-import { formatPrice, formatRelativeTime } from "@/lib/cement"
+import { formatToman, formatRelativeTime } from "@/lib/cement"
 import styles from "./Dashboard.module.css"
 
 export const metadata: Metadata = { title: "داشبورد | پنل مدیریت تیراژه" }
@@ -186,7 +186,7 @@ export default async function DashboardPage() {
                       </Badge>
                     </td>
                     <td className={styles["web-adm-dash__tabular"]}>
-                      {formatPrice(order.totalAmount, locale)}
+                      {formatToman(order.totalAmount, locale as "fa" | "en")}
                     </td>
                     <td className={styles["web-adm-dash__tabular"]}>
                       {formatRelativeTime(order.createdAt, locale)}

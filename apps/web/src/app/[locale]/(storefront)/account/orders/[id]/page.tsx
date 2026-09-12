@@ -1,4 +1,4 @@
-﻿import Image from "next/image"
+import Image from "next/image"
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import { getLocale } from "next-intl/server"
@@ -7,7 +7,7 @@ import { db } from "@tirajeh/database"
 import type { Metadata } from "next"
 import { ArrowLeft, ArrowRight, RotateCcw } from "lucide-react"
 import { Card, Badge, Button, type BadgeVariant } from "@tirajeh/ui"
-import { formatPrice } from "@/lib/cement"
+import { formatToman } from "@/lib/cement"
 import styles from "./OrderDetail.module.css"
 
 type Props = { params: Promise<{ locale: string; id: string }> }
@@ -89,7 +89,7 @@ export default async function OrderDetailPage({ params }: Props) {
               {fa ? statusInfo.fa : statusInfo.en}
             </Badge>
             <p className={styles["web-ord__total-amount"]}>
-              {formatPrice(order.totalAmount, locale)}
+              {formatToman(order.totalAmount, locale as "fa" | "en")}
             </p>
           </div>
         </div>
@@ -188,10 +188,10 @@ export default async function OrderDetailPage({ params }: Props) {
                       {fa ? item.quantity.toLocaleString("fa-IR") : item.quantity}
                     </td>
                     <td className={styles["web-ord__table-num"]}>
-                      {formatPrice(item.unitPrice, locale)}
+                      {formatToman(item.unitPrice, locale as "fa" | "en")}
                     </td>
                     <td className={styles["web-ord__table-num"]}>
-                      {formatPrice(item.totalPrice, locale)}
+                      {formatToman(item.totalPrice, locale as "fa" | "en")}
                     </td>
                   </tr>
                 )
@@ -204,18 +204,18 @@ export default async function OrderDetailPage({ params }: Props) {
         <div className={styles["web-ord__totals"]}>
           <div className={styles["web-ord__total-row"]}>
             <span>{fa ? "جمع کالاها" : "Subtotal"}</span>
-            <span>{formatPrice(order.subtotal, locale)}</span>
+            <span>{formatToman(order.subtotal, locale as "fa" | "en")}</span>
           </div>
           <div className={styles["web-ord__total-row"]}>
             <span>{fa ? "هزینه ارسال" : "Shipping"}</span>
-            <span>{formatPrice(order.shippingCost, locale)}</span>
+            <span>{formatToman(order.shippingCost, locale as "fa" | "en")}</span>
           </div>
           <div
             className={`${styles["web-ord__total-row"]} ${styles["web-ord__total-row--final"]}`}
           >
             <span>{fa ? "مجموع نهایی" : "Total"}</span>
             <span className={styles["web-ord__total-final-val"]}>
-              {formatPrice(order.totalAmount, locale)}
+              {formatToman(order.totalAmount, locale as "fa" | "en")}
             </span>
           </div>
         </div>
