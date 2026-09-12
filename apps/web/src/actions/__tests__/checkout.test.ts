@@ -1,3 +1,6 @@
+import { NextRequest } from "next/server"
+import { paymentService } from "@tirajeh/integrations"
+import { GET } from "../../app/api/payment/callback/route"
 /**
  * Checkout transaction rollback tests.
  *
@@ -9,6 +12,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest"
+import { db } from "@tirajeh/database"
 
 // ─── Shared mocks ─────────────────────────────────────────────────────────────
 
@@ -363,3 +367,6 @@ describe("checkoutAction — transaction rollback safety", () => {
     expect(tx.product.update).toHaveBeenCalledTimes(1) // Still 1
   })
 })
+
+
+

@@ -1,7 +1,14 @@
 import Link from "next/link"
 import { Button } from "@tirajeh/ui"
+import { retryPaymentAction } from "@/actions/order"
 
-export default function CancelledPage() {
+export default function FailedPage({
+  searchParams,
+}: {
+  searchParams: { order?: string }
+}) {
+  const orderId = searchParams.order
+
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] py-12 px-4 sm:px-6 lg:px-8 text-center space-y-6">
       <div className="rounded-full bg-red-100 p-3">
@@ -16,11 +23,16 @@ export default function CancelledPage() {
       </div>
       <h1 className="text-3xl font-extrabold text-gray-900">پرداخت ناموفق بود</h1>
       <p className="mt-2 text-lg text-gray-600 max-w-sm">
-        متأسفانه پرداخت شما انجام نشد و سفارش لغو گردید. در صورت کسر وجه، مبلغ طی ۷۲ ساعت آینده به حساب شما بازخواهد گشت.
+        متأسفانه پرداخت شما انجام نشد. در صورت کسر وجه، مبلغ طی ۷۲ ساعت آینده به حساب شما بازخواهد گشت.
       </p>
-      <div className="mt-6">
+      <div className="mt-6 flex flex-col sm:flex-row gap-4 justify-center">
+        {orderId && (
+          <form action={retryPaymentAction.bind(null, orderId)}>
+            <Button variant="primary" type="submit">تلاش مجدد پرداخت</Button>
+          </form>
+        )}
         <Link href="/cart">
-          <Button variant="primary">بازگشت به سبد خرید</Button>
+          <Button variant="outline">بازگشت به سبد خرید</Button>
         </Link>
       </div>
     </div>

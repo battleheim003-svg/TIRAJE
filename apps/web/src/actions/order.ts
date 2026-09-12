@@ -10,6 +10,7 @@ import { AppError, OutOfStockError } from "@tirajeh/shared"
 import { releaseOrderStock } from "../lib/stock"
 import { calculateShippingCost } from "../lib/shipping"
 import { paymentService } from "@tirajeh/integrations"
+import { z } from "zod"
 
 export async function checkoutAction(
   formData: FormData
@@ -44,15 +45,40 @@ export async function checkoutAction(
     return { success: false, error: "استان و نوع ماشین حمل الزامی است" }
   }
 
-  const shippingAddress = {
-    recipientName: (formData.get("recipientName") as string).trim(),
-    phone: (formData.get("phone") as string).trim(),
+  const CreateOrderSchema = z.object({
+    recipientName: z.string().min(2, "نام گیرنده حداقل باید ۲ کاراکتر باشد"),
+    phone: z.string().regex(/^09\d{9}$/, "شماره موبایل نامعتبر است"),
+    province: z.string().min(2, "استان الزامی است"),
+    city: z.string().min(2, "شهر الزامی است"),
+    street: z.string().min(5, "آدرس پستی نامعتبر است"),
+    postalCode: z.string().regex(/^\d{10}$/, "کد پستی باید ۱۰ رقم باشد").optional().nullable().or(z.literal("")),
+    note: z.string().optional().nullable(),
+  })
+
+  const formValues = {
+    recipientName: (formData.get("recipientName") as string || "").trim(),
+    phone: (formData.get("phone") as string || "").trim(),
     province,
-    city: (formData.get("city") as string).trim(),
-    street: (formData.get("street") as string).trim(),
-    postalCode: ((formData.get("postalCode") as string) || "").trim() || null,
+    city: (formData.get("city") as string || "").trim(),
+    street: (formData.get("street") as string || "").trim(),
+    postalCode: (formData.get("postalCode") as string || "").trim(),
+    note: (formData.get("note") as string || "").trim(),
   }
-  const note = ((formData.get("note") as string) || "").trim() || null
+
+  const parsed = CreateOrderSchema.safeParse(formValues)
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.errors[0].message }
+  }
+
+  const shippingAddress = {
+    recipientName: parsed.data.recipientName,
+    phone: parsed.data.phone,
+    province: parsed.data.province,
+    city: parsed.data.city,
+    street: parsed.data.street,
+    postalCode: parsed.data.postalCode || null,
+  }
+  const note = parsed.data.note || null
 
   const subtotal = cartItems.reduce(
     (sum, item) => sum + Number(item.product.price) * item.quantity,
@@ -188,4 +214,46 @@ export async function cancelOrderAction(
 
   revalidatePath("/account/orders")
   return { success: true }
+}
+
+export async function retryPaymentAction(
+  orderId: string
+): Promise<{ success: boolean; error?: string }> {
+  const session = await auth()
+  if (!session?.user) return { success: false, error: "لطفاً ابتدا وارد شوید" }
+  const userId = (session.user as any).id
+  const locale = await getLocale()
+
+  const order = await db.order.findUnique({
+    where: { id: orderId },
+    select: { id: true, userId: true, status: true, totalAmount: true },
+  })
+
+  if (!order || order.userId !== userId) {
+    return { success: false, error: "سفارش یافت نشد" }
+  }
+  if (order.status !== "AWAITING_PAYMENT") {
+    return { success: false, error: "سفارش در وضعیت انتظار پرداخت نیست" }
+  }
+
+  await db.payment.create({
+    data: {
+      orderId: order.id,
+      gateway: "ZARINPAL",
+      amount: order.totalAmount,
+      status: "PENDING",
+    },
+  })
+
+  const domain = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+  const callbackUrl = `${domain}/api/payment/callback?orderId=${order.id}`
+
+  let gatewayUrl = ""
+  try {
+    gatewayUrl = await paymentService.initiatePayment(order.id, callbackUrl)
+  } catch (err: any) {
+    return { success: false, error: "خطا در اتصال مجدد به درگاه پرداخت" }
+  }
+
+  redirect(`/${locale}/checkout/payment?url=${encodeURIComponent(gatewayUrl)}`)
 }
