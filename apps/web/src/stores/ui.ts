@@ -7,17 +7,22 @@ interface UIState {
   sidebarOpen: boolean
   mobileMenuOpen: boolean
 
+  cartDrawerOpen: boolean
+
   setTheme: (theme: Theme) => void
   toggleSidebar: () => void
   setSidebarOpen: (open: boolean) => void
   toggleMobileMenu: () => void
   setMobileMenuOpen: (open: boolean) => void
+  toggleCartDrawer: () => void
+  setCartDrawerOpen: (open: boolean) => void
 }
 
 export const useUIStore = create<UIState>()((set) => ({
   theme: "system",
   sidebarOpen: false,
   mobileMenuOpen: false,
+  cartDrawerOpen: false,
 
   setTheme: (theme) => {
     set({ theme })
@@ -40,4 +45,10 @@ export const useUIStore = create<UIState>()((set) => ({
     set((state) => ({ mobileMenuOpen: !state.mobileMenuOpen })),
 
   setMobileMenuOpen: (open) => set({ mobileMenuOpen: open }),
+
+  toggleCartDrawer: () =>
+    set((state) => ({ cartDrawerOpen: !state.cartDrawerOpen })),
+
+  setCartDrawerOpen: (open) => set({ cartDrawerOpen: open }),
 }))
+

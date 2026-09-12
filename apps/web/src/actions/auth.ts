@@ -8,6 +8,7 @@ import { auth } from "@tirajeh/auth"
 import bcrypt from "bcryptjs"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
+import { mergeCartAction } from "./cart"
 
 export async function loginAction(formData: FormData): Promise<ActionResult> {
   const raw = {
@@ -30,6 +31,7 @@ export async function loginAction(formData: FormData): Promise<ActionResult> {
       password: parsed.data.password,
       redirect: false,
     })
+    await mergeCartAction()
     return { success: true, data: undefined }
   } catch {
     return { success: false, error: "ایمیل یا رمز عبور اشتباه است" }

@@ -8,18 +8,25 @@ import { useTranslations, useLocale } from "next-intl"
 import { useSession } from "next-auth/react"
 import { ShoppingCart, User, Menu, X } from "lucide-react"
 import { Button, Badge } from "@tirajeh/ui"
-import { useCartStore } from "@/stores/cart"
 import { useUIStore } from "@/stores/ui"
 import styles from "./Navbar.module.css"
 
-export function Navbar() {
+interface NavbarProps {
+  cartCount?: number
+}
+
+export function Navbar({ cartCount = 0 }: NavbarProps) {
   const t = useTranslations("nav")
   const locale = useLocale()
   const fa = locale === "fa"
   const pathname = usePathname()
   const { data: session } = useSession()
-  const { toggleCart, totalItems, _hydrated } = useCartStore()
-  const { mobileMenuOpen, toggleMobileMenu, setMobileMenuOpen } = useUIStore()
+  const {
+    mobileMenuOpen,
+    toggleMobileMenu,
+    setMobileMenuOpen,
+    toggleCartDrawer,
+  } = useUIStore()
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
@@ -39,8 +46,6 @@ export function Navbar() {
     { href: `/${locale}/about`, label: t("about") },
     { href: `/${locale}/contact`, label: t("contact") },
   ]
-
-  const cartCount = _hydrated ? totalItems() : 0
 
   const isActive = (href: string) =>
     href === `/${locale}` ? pathname === href : pathname.startsWith(href)
@@ -100,7 +105,7 @@ export function Navbar() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={toggleCart}
+              onClick={toggleCartDrawer}
               aria-label={`${t("cart")}${cartCount > 0 ? ` — ${cartCount} ${fa ? "قلم" : "items"}` : ""}`}
             >
               <ShoppingCart
