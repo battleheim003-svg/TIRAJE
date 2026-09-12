@@ -25,6 +25,13 @@ const mockSession = {
   },
 }
 
+vi.mock("@tirajeh/integrations", () => ({
+  paymentService: {
+    initiatePayment: vi.fn().mockResolvedValue("https://sandbox.zarinpal.com/pg/StartPay/test-authority"),
+    verifyPayment: vi.fn(),
+  }
+}))
+
 vi.mock("@tirajeh/auth", () => ({
   auth: vi.fn().mockResolvedValue(mockSession),
   requirePermission: vi.fn(),
@@ -299,7 +306,7 @@ describe("checkoutAction — transaction rollback safety", () => {
     const { checkoutAction } = await import("../order")
 
     await expect(checkoutAction(makeFormData())).rejects.toThrow("NEXT_REDIRECT")
-    expect(redirect).toHaveBeenCalledWith(expect.stringContaining("ORD-1234"))
+    expect(redirect).toHaveBeenCalledWith(expect.stringContaining("checkout/payment?url="))
   })
 
   // ── Test 7: Prevents overselling ──────────────────────────────────────────

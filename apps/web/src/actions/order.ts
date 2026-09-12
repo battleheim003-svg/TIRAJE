@@ -9,6 +9,7 @@ import { getLocale } from "next-intl/server"
 import { AppError, OutOfStockError } from "@tirajeh/shared"
 import { releaseOrderStock } from "../lib/stock"
 import { calculateShippingCost } from "../lib/shipping"
+import { paymentService } from "@tirajeh/integrations"
 
 export async function checkoutAction(
   formData: FormData
@@ -93,7 +94,7 @@ export async function checkoutAction(
       const o = await tx.order.create({
         data: {
           userId,
-          status: "PENDING",
+          status: "AWAITING_PAYMENT",
           subtotal,
           shippingCost: shippingCostToman,
           shippingTruckType: truckType,
@@ -112,12 +113,18 @@ export async function checkoutAction(
               packagingTier: item.packagingTier,
             })),
           },
+          payments: {
+            create: {
+              gateway: "ZARINPAL",
+              amount: totalAmount,
+            }
+          }
         },
         select: { id: true, orderNumber: true },
       })
 
       await tx.orderEvent.create({
-        data: { orderId: o.id, status: "PENDING", note: "سفارش ثبت شد" }
+        data: { orderId: o.id, status: "AWAITING_PAYMENT", note: "سفارش ثبت شد و در انتظار پرداخت است" }
       })
 
       await tx.cartItem.deleteMany({ where: { userId } })
@@ -125,9 +132,23 @@ export async function checkoutAction(
       return o
     })
 
+    const domain = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+    const callbackUrl = `${domain}/api/payment/callback?orderId=${order.id}`
+    
+    let gatewayUrl = ""
+    try {
+      gatewayUrl = await paymentService.initiatePayment(order.id, callbackUrl)
+    } catch (err: any) {
+      await db.$transaction(async (tx) => {
+        await tx.order.update({ where: { id: order.id }, data: { status: "CANCELLED" } })
+        await releaseOrderStock(tx as any, order.id)
+      })
+      return { success: false, error: "خطا در اتصال به درگاه پرداخت" }
+    }
+
     revalidatePath("/cart")
     revalidatePath("/account/orders")
-    redirect(`/${locale}/checkout/success?order=${order.orderNumber}`)
+    redirect(`/${locale}/checkout/payment?url=${encodeURIComponent(gatewayUrl)}`)
   } catch (err: any) {
     if (err?.digest?.startsWith?.("NEXT_REDIRECT") || err?.message?.includes("NEXT_REDIRECT")) {
       throw err
