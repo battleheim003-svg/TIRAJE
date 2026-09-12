@@ -27,12 +27,15 @@ export default function FailedPage({
       </p>
       <div className="mt-6 flex flex-col sm:flex-row gap-4 justify-center">
         {orderId && (
-          <form action={retryPaymentAction.bind(null, orderId)}>
+          <form action={async () => {
+            "use server"
+            await retryPaymentAction(orderId)
+          }}>
             <Button variant="primary" type="submit">تلاش مجدد پرداخت</Button>
           </form>
         )}
         <Link href="/cart">
-          <Button variant="outline">بازگشت به سبد خرید</Button>
+          <Button variant="secondary">بازگشت به سبد خرید</Button>
         </Link>
       </div>
     </div>
