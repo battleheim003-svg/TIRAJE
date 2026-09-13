@@ -34,7 +34,7 @@ export default async function BlogPostPage({ params }: Props) {
     },
   })
 
-  if (!post) notFound()
+  if (!post || post.archivedAt) notFound()
 
   const title = fa ? post.titleFa : post.titleEn ?? post.titleFa
   const categoryName = post.category

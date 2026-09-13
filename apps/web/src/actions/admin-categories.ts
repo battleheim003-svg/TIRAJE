@@ -111,11 +111,38 @@ export async function adminDeleteCategoryAction(
   const productCount = await db.productCategory.count({ where: { categoryId } })
   if (productCount > 0) throw new Error(`این دسته‌بندی در ${productCount} محصول استفاده شده است`)
 
-  await db.category.delete({ where: { id: categoryId } })
+  await db.category.update({
+    where: { id: categoryId },
+    data: { archivedAt: new Date() },
+  })
 
   await audit({
     userId: user.id,
     action: "category.delete",
+    resource: "Category",
+    resourceId: categoryId,
+  })
+
+  revalidatePath("/admin/categories")
+  return { ok: true }
+}
+
+export async function adminRestoreCategoryAction(
+  formData: FormData
+): Promise<{ ok: true }> {
+  const user = await requireAdminPerm(PERMISSIONS.CATEGORIES_ALL)
+
+  const categoryId = (formData.get("categoryId") as string | null)?.trim()
+  if (!categoryId) throw new Error("Category ID missing")
+
+  await db.category.update({
+    where: { id: categoryId },
+    data: { archivedAt: null },
+  })
+
+  await audit({
+    userId: user.id,
+    action: "category.restore",
     resource: "Category",
     resourceId: categoryId,
   })

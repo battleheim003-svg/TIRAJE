@@ -80,12 +80,13 @@ export default async function ProductDetailPage({ params }: Props) {
     },
   })
 
-  if (!product || !product.isActive) notFound()
+  if (!product || !product.isActive || product.archivedAt) notFound()
 
   // Query related products from same brand or category
   const relatedProducts = await db.product.findMany({
     where: {
       isActive: true,
+      archivedAt: null,
       id: { not: product.id },
       OR: [
         { brandId: product.brandId },

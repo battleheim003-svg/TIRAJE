@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 async function getProducts() {
   return db.product.findMany({
-    where: { isActive: true },
+    where: { isActive: true, archivedAt: null },
     select: { id: true, nameFa: true, nameEn: true },
     orderBy: { nameFa: "asc" },
   })

@@ -2,38 +2,28 @@
 
 import { useState, useTransition } from "react"
 import { Trash2, RotateCcw } from "lucide-react"
-import { adminDeleteCategoryAction, adminRestoreCategoryAction } from "@/actions/admin-categories"
-import styles from "./Categories.module.css"
+import { adminDeletePostAction, adminRestorePostAction } from "@/actions/admin-blog"
+import styles from "./BlogList.module.css"
 
 interface Props {
-  categoryId: string
+  postId: string
   fa: boolean
-  productCount: number
-  childCount: number
   isArchived?: boolean
 }
 
-export default function CategoryActions({ categoryId, fa, productCount, childCount, isArchived }: Props) {
+export default function PostActions({ postId, fa, isArchived }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
   function handleDelete() {
-    if (productCount > 0) {
-      setError(fa ? `این دسته در ${productCount} محصول استفاده شده است` : `Used in ${productCount} products`)
-      return
-    }
-    if (childCount > 0) {
-      setError(fa ? `این دسته دارای ${childCount} زیردسته است` : `Has ${childCount} subcategories`)
-      return
-    }
-    if (!confirm(fa ? "این دسته‌بندی حذف شود؟" : "Delete this category?")) return
+    if (!confirm(fa ? "این مقاله حذف شود؟" : "Delete this post?")) return
 
     setError(null)
     const fd = new FormData()
-    fd.set("categoryId", categoryId)
+    fd.set("id", postId)
     startTransition(async () => {
       try {
-        await adminDeleteCategoryAction(fd)
+        await adminDeletePostAction(fd)
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : (fa ? "خطا در حذف" : "Delete failed"))
       }
@@ -41,14 +31,14 @@ export default function CategoryActions({ categoryId, fa, productCount, childCou
   }
 
   function handleRestore() {
-    if (!confirm(fa ? "این دسته‌بندی بازگردانی شود؟" : "Restore this category?")) return
+    if (!confirm(fa ? "این مقاله بازگردانی شود؟" : "Restore this post?")) return
 
     setError(null)
     const fd = new FormData()
-    fd.set("categoryId", categoryId)
+    fd.set("id", postId)
     startTransition(async () => {
       try {
-        await adminRestoreCategoryAction(fd)
+        await adminRestorePostAction(fd)
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : (fa ? "خطا در بازگردانی" : "Restore failed"))
       }
@@ -56,33 +46,39 @@ export default function CategoryActions({ categoryId, fa, productCount, childCou
   }
 
   return (
-    <>
+    <div style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
       {isArchived ? (
         <button
           onClick={handleRestore}
           disabled={isPending}
-          className={styles["web-adm-cat__editBtn"]}
+          className={styles["web-adm-blg__editBtn"]}
           title={fa ? "بازگردانی" : "Restore"}
           aria-label={fa ? "بازگردانی" : "Restore"}
           style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", cursor: "pointer" }}
         >
-          <RotateCcw style={{ width: "0.875rem", height: "0.875rem" }} />
+          <RotateCcw style={{ width: "0.875rem", height: "0.875rem" }} aria-hidden="true" />
           {fa ? "بازگردانی" : "Restore"}
         </button>
       ) : (
         <button
           onClick={handleDelete}
           disabled={isPending}
-          className={styles["web-adm-cat__deleteBtn"]}
+          style={{
+            background: "none",
+            border: "none",
+            padding: "0.25rem",
+            color: "var(--color-danger, #ef4444)",
+            cursor: "pointer",
+            display: "inline-flex",
+            alignItems: "center",
+          }}
           title={fa ? "حذف" : "Delete"}
           aria-label={fa ? "حذف" : "Delete"}
         >
-          <Trash2 style={{ width: "0.875rem", height: "0.875rem" }} />
+          <Trash2 style={{ width: "0.875rem", height: "0.875rem" }} aria-hidden="true" />
         </button>
       )}
-      {error && (
-        <span className={styles["web-adm-cat__error"]} role="alert">{error}</span>
-      )}
-    </>
+      {error && <span style={{ color: "var(--color-danger, #ef4444)", fontSize: "0.75rem" }} role="alert">{error}</span>}
+    </div>
   )
 }

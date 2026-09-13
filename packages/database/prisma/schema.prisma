@@ -161,6 +161,7 @@ model User {
   roleId        String       @map("role_id") @db.Uuid
   isActive      Boolean      @default(true) @map("is_active")
   tokenVersion  Int          @default(0) @map("token_version")
+  archivedAt    DateTime?    @map("archived_at")
   lastLoginAt   DateTime?    @map("last_login_at")
   createdAt     DateTime     @default(now()) @map("created_at")
   updatedAt     DateTime     @updatedAt @map("updated_at")
@@ -298,8 +299,9 @@ model Brand {
   slug        String  @unique
   logoUrl     String? @map("logo_url")
   description String?
-  isActive    Boolean @default(true) @map("is_active")
-  sortOrder   Int     @default(0) @map("sort_order")
+  isActive    Boolean   @default(true) @map("is_active")
+  sortOrder   Int       @default(0) @map("sort_order")
+  archivedAt  DateTime? @map("archived_at")
 
   products Product[]
 
@@ -315,6 +317,7 @@ model Category {
   imageUrl  String? @map("image_url")
   sortOrder Int     @default(0) @map("sort_order")
   isActive  Boolean @default(true) @map("is_active")
+  archivedAt DateTime? @map("archived_at")
 
   parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id])
   children Category[] @relation("CategoryTree")
@@ -348,6 +351,7 @@ model Product {
   seoDescription  String?       @map("seo_description")
   isActive        Boolean       @default(true) @map("is_active")
   isFeatured      Boolean       @default(false) @map("is_featured")
+  archivedAt      DateTime?     @map("archived_at")
   lastPriceUpdate DateTime      @default(now()) @map("last_price_update")
   viewCount       Int           @default(0) @map("view_count")
   factoryId       String?       @map("factory_id") @db.Uuid
@@ -749,6 +753,7 @@ model Post {
   categoryId     String?    @map("category_id") @db.Uuid
   status         PostStatus @default(DRAFT)
   publishedAt    DateTime?  @map("published_at")
+  archivedAt     DateTime?  @map("archived_at")
   seoTitle       String?    @map("seo_title")
   seoDescription String?    @map("seo_description")
   readingTimeMin Int?       @map("reading_time_min")

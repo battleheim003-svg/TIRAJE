@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Plus, FileText } from "lucide-react"
 import { Badge } from "@tirajeh/ui"
 import { formatRelativeTime } from "@/lib/cement"
+import PostActions from "./post-actions"
 import styles from "./BlogList.module.css"
 
 export const metadata: Metadata = { title: "مقالات | پنل مدیریت تیراژه" }
@@ -26,8 +27,14 @@ export default async function AdminBlogPage({ searchParams }: Props) {
   const sp = await searchParams
   const page = Math.max(1, parseInt((Array.isArray(sp.page) ? sp.page[0] : sp.page) ?? "1", 10))
   const statusFilter = (Array.isArray(sp.status) ? sp.status[0] : sp.status) ?? ""
+  const isArchived = (Array.isArray(sp.archived) ? sp.archived[0] : sp.archived) === "true"
 
   const where: Record<string, unknown> = {}
+  if (isArchived) {
+    where.archivedAt = { not: null }
+  } else {
+    where.archivedAt = null
+  }
   if (statusFilter) where.status = statusFilter
 
   const [posts, total] = await Promise.all([
@@ -56,31 +63,82 @@ export default async function AdminBlogPage({ searchParams }: Props) {
   const totalPages = Math.ceil(total / PAGE_SIZE)
   type PostRow = (typeof posts)[number]
 
+  function buildPageUrl(p: number) {
+    const params = new URLSearchParams()
+    if (isArchived) params.set("archived", "true")
+    if (statusFilter) params.set("status", statusFilter)
+    if (p > 1) params.set("page", String(p))
+    const qs = params.toString()
+    return `/${locale}/admin/blog${qs ? `?${qs}` : ""}`
+  }
+
   return (
     <div className={styles["web-adm-blg__wrapper"]}>
       {/* Header */}
       <div className={styles["web-adm-blg__header"]}>
         <div>
-          <h1 className={styles["web-adm-blg__title"]}>{fa ? "مقالات" : "Blog Posts"}</h1>
+          <h1 className={styles["web-adm-blg__title"]}>
+            {fa ? (isArchived ? "مقالات آرشیو شده" : "مقالات") : (isArchived ? "Archived Blog Posts" : "Blog Posts")}
+          </h1>
           <p className={styles["web-adm-blg__count"]}>{fa ? `${total} مقاله` : `${total} posts`}</p>
         </div>
-        <Link href={`/${locale}/admin/blog/new`} className={styles["web-adm-blg__addBtn"]}>
-          <Plus style={{ width: "1rem", height: "1rem" }} aria-hidden="true" />
-          {fa ? "مقاله جدید" : "New Post"}
+        {!isArchived && (
+          <Link href={`/${locale}/admin/blog/new`} className={styles["web-adm-blg__addBtn"]}>
+            <Plus style={{ width: "1rem", height: "1rem" }} aria-hidden="true" />
+            {fa ? "مقاله جدید" : "New Post"}
+          </Link>
+        )}
+      </div>
+
+      {/* Archive Tabs */}
+      <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem" }}>
+        <Link
+          href={`/${locale}/admin/blog${statusFilter ? `?status=${statusFilter}` : ""}`}
+          style={{
+            padding: "0.4rem 0.85rem",
+            borderRadius: "0.375rem",
+            fontWeight: !isArchived ? 600 : 400,
+            fontSize: "0.85rem",
+            textDecoration: "none",
+            backgroundColor: !isArchived ? "var(--color-primary-subtle, rgba(0,0,0,0.06))" : "transparent",
+            color: !isArchived ? "var(--color-primary, #0284c7)" : "var(--color-text-secondary, #64748b)",
+          }}
+        >
+          {fa ? "مقالات فعال" : "Active Posts"}
+        </Link>
+        <Link
+          href={`/${locale}/admin/blog?archived=true${statusFilter ? `&status=${statusFilter}` : ""}`}
+          style={{
+            padding: "0.4rem 0.85rem",
+            borderRadius: "0.375rem",
+            fontWeight: isArchived ? 600 : 400,
+            fontSize: "0.85rem",
+            textDecoration: "none",
+            backgroundColor: isArchived ? "var(--color-primary-subtle, rgba(0,0,0,0.06))" : "transparent",
+            color: isArchived ? "var(--color-primary, #0284c7)" : "var(--color-text-secondary, #64748b)",
+          }}
+        >
+          {fa ? "آرشیو شده" : "Archived"}
         </Link>
       </div>
 
       {/* Status filter */}
       <div className={styles["web-adm-blg__filters"]}>
-        {[["", fa ? "همه" : "All"], ["DRAFT", fa ? "پیش‌نویس" : "Draft"], ["PUBLISHED", fa ? "منتشر" : "Published"], ["SCHEDULED", fa ? "زمان‌بندی" : "Scheduled"], ["ARCHIVED", fa ? "بایگانی" : "Archived"]].map(([val, label]) => (
-          <Link
-            key={val}
-            href={`/${locale}/admin/blog${val ? `?status=${val}` : ""}`}
-            className={`${styles["web-adm-blg__filterTab"]}${statusFilter === val ? ` ${styles["web-adm-blg__filterTab--active"]}` : ""}`}
-          >
-            {label}
-          </Link>
-        ))}
+        {[["", fa ? "همه" : "All"], ["DRAFT", fa ? "پیش‌نویس" : "Draft"], ["PUBLISHED", fa ? "منتشر" : "Published"], ["SCHEDULED", fa ? "زمان‌بندی" : "Scheduled"], ["ARCHIVED", fa ? "بایگانی" : "Archived"]].map(([val, label]) => {
+          const params = new URLSearchParams()
+          if (isArchived) params.set("archived", "true")
+          if (val) params.set("status", val)
+          const qs = params.toString()
+          return (
+            <Link
+              key={val}
+              href={`/${locale}/admin/blog${qs ? `?${qs}` : ""}`}
+              className={`${styles["web-adm-blg__filterTab"]}${statusFilter === val ? ` ${styles["web-adm-blg__filterTab--active"]}` : ""}`}
+            >
+              {label}
+            </Link>
+          )
+        })}
       </div>
 
       {/* Table */}
@@ -128,9 +186,14 @@ export default async function AdminBlogPage({ searchParams }: Props) {
                       {formatRelativeTime(post.publishedAt ?? post.createdAt, fa ? "fa" : "en")}
                     </td>
                     <td className={styles["web-adm-blg__td"]} style={{ textAlign: "end" }}>
-                      <Link href={`/${locale}/admin/blog/${post.id}`} className={styles["web-adm-blg__editBtn"]}>
-                        {fa ? "ویرایش" : "Edit"}
-                      </Link>
+                      <div style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
+                        {!isArchived && (
+                          <Link href={`/${locale}/admin/blog/${post.id}`} className={styles["web-adm-blg__editBtn"]}>
+                            {fa ? "ویرایش" : "Edit"}
+                          </Link>
+                        )}
+                        <PostActions postId={post.id} fa={fa} isArchived={isArchived} />
+                      </div>
                     </td>
                   </tr>
                 )
@@ -144,13 +207,13 @@ export default async function AdminBlogPage({ searchParams }: Props) {
       {totalPages > 1 && (
         <div className={styles["web-adm-blg__pagination"]}>
           {page > 1 && (
-            <Link href={`/${locale}/admin/blog?page=${page - 1}${statusFilter ? `&status=${statusFilter}` : ""}`} className={styles["web-adm-blg__pageBtn"]}>
+            <Link href={buildPageUrl(page - 1)} className={styles["web-adm-blg__pageBtn"]}>
               {fa ? "قبلی" : "Previous"}
             </Link>
           )}
           <span className={styles["web-adm-blg__pageInfo"]}>{fa ? `صفحه ${page} از ${totalPages}` : `Page ${page} of ${totalPages}`}</span>
           {page < totalPages && (
-            <Link href={`/${locale}/admin/blog?page=${page + 1}${statusFilter ? `&status=${statusFilter}` : ""}`} className={styles["web-adm-blg__pageBtn"]}>
+            <Link href={buildPageUrl(page + 1)} className={styles["web-adm-blg__pageBtn"]}>
               {fa ? "بعدی" : "Next"}
             </Link>
           )}

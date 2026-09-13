@@ -2,7 +2,7 @@
 
 import React, { useState } from "react"
 import Link from "next/link"
-import { Package } from "lucide-react"
+import { Package, RotateCcw } from "lucide-react"
 import { DataTable, Column, StatusBadge, InlineToggle } from "./DataTable"
 import { ConfirmDialog } from "./ConfirmDialog"
 import { useToast } from "./Toast"
@@ -16,6 +16,7 @@ import {
 import {
   adminToggleProductStatusAction,
   adminDeleteProductAction,
+  adminRestoreProductAction,
 } from "@/actions/admin-products"
 
 export interface ProductRow {
@@ -29,18 +30,21 @@ export interface ProductRow {
   price: number
   stockStatus: string
   isActive: boolean
+  archivedAt?: Date | string | null
 }
 
 interface ProductsTableClientProps {
   products: ProductRow[]
   locale: string
   fa: boolean
+  isArchived?: boolean
 }
 
 export function ProductsTableClient({
   products: initialProducts,
   locale,
   fa,
+  isArchived = false,
 }: ProductsTableClientProps) {
   const [products, setProducts] = useState(initialProducts)
   const [deleteTarget, setDeleteTarget] = useState<ProductRow | null>(null)
@@ -85,6 +89,16 @@ export function ProductsTableClient({
       toast.error(fa ? "خطا در حذف محصول" : "Failed to delete product")
     } finally {
       setDeleting(false)
+    }
+  }
+
+  const handleRestore = async (product: ProductRow) => {
+    try {
+      await adminRestoreProductAction(product.id)
+      setProducts((prev) => prev.filter((p) => p.id !== product.id))
+      toast.success(fa ? "محصول با موفقیت بازگردانی شد" : "Product restored successfully")
+    } catch {
+      toast.error(fa ? "خطا در بازگردانی محصول" : "Failed to restore product")
     }
   }
 
@@ -179,14 +193,43 @@ export function ProductsTableClient({
     },
   ]
 
+  if (isArchived) {
+    columns.push({
+      key: "actions",
+      header: fa ? "عملیات" : "Actions",
+      align: "end",
+      render: (row) => (
+        <button
+          type="button"
+          onClick={() => handleRestore(row)}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "0.25rem",
+            padding: "0.375rem 0.75rem",
+            borderRadius: "0.375rem",
+            border: "1px solid var(--color-border)",
+            backgroundColor: "var(--color-surface)",
+            cursor: "pointer",
+            fontSize: "0.8rem",
+            fontWeight: 500,
+          }}
+        >
+          <RotateCcw style={{ width: "0.875rem", height: "0.875rem" }} />
+          {fa ? "بازگردانی" : "Restore"}
+        </button>
+      ),
+    })
+  }
+
   return (
     <>
       <DataTable
         columns={columns}
         data={products}
         keyExtractor={(p) => p.id}
-        editHref={(p) => `/${locale}/admin/products/${p.id}`}
-        onRowAction={(action, row) => {
+        editHref={isArchived ? undefined : (p) => `/${locale}/admin/products/${p.id}`}
+        onRowAction={isArchived ? undefined : (action, row) => {
           if (action === "delete") {
             setDeleteTarget(row)
           }

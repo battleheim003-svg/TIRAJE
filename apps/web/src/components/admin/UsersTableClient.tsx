@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
-import { Users as UsersIcon } from "lucide-react"
+import { Users as UsersIcon, RotateCcw } from "lucide-react"
 import { DataTable, Column, InlineToggle } from "./DataTable"
 import { ConfirmDialog } from "./ConfirmDialog"
 import { useToast } from "./Toast"
@@ -9,6 +9,7 @@ import { formatRelativeTime } from "@/lib/cement"
 import {
   adminToggleUserStatusAction,
   adminDeleteUserAction,
+  adminRestoreUserAction,
 } from "@/actions/admin-users"
 
 export interface UserRow {
@@ -19,6 +20,7 @@ export interface UserRow {
   customerType: string
   isActive: boolean
   createdAt: Date | string
+  archivedAt?: Date | string | null
   role: { name: string; displayName: string } | null
 }
 
@@ -26,6 +28,7 @@ interface UsersTableClientProps {
   users: UserRow[]
   locale: string
   fa: boolean
+  isArchived?: boolean
 }
 
 const CUSTOMER_TYPE_LABEL: Record<string, { fa: string; en: string }> = {
@@ -38,6 +41,7 @@ export function UsersTableClient({
   users: initialUsers,
   locale,
   fa,
+  isArchived = false,
 }: UsersTableClientProps) {
   const [users, setUsers] = useState(initialUsers)
   const [deleteTarget, setDeleteTarget] = useState<UserRow | null>(null)
@@ -174,13 +178,56 @@ export function UsersTableClient({
     },
   ]
 
+  const handleRestoreUser = async (user: UserRow) => {
+    try {
+      const res = await adminRestoreUserAction(user.id)
+      if ("error" in res && res.error) {
+        toast.error(res.error)
+        return
+      }
+      setUsers((prev) => prev.filter((u) => u.id !== user.id))
+      toast.success(fa ? "کاربر با موفقیت بازگردانی شد" : "User restored successfully")
+    } catch {
+      toast.error(fa ? "خطا در بازگردانی کاربر" : "Failed to restore user")
+    }
+  }
+
+  if (isArchived) {
+    columns.push({
+      key: "actions",
+      header: fa ? "عملیات" : "Actions",
+      align: "end",
+      render: (row) => (
+        <button
+          type="button"
+          onClick={() => handleRestoreUser(row)}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "0.25rem",
+            padding: "0.375rem 0.75rem",
+            borderRadius: "0.375rem",
+            border: "1px solid var(--color-border)",
+            backgroundColor: "var(--color-surface)",
+            cursor: "pointer",
+            fontSize: "0.8rem",
+            fontWeight: 500,
+          }}
+        >
+          <RotateCcw style={{ width: "0.875rem", height: "0.875rem" }} />
+          {fa ? "بازگردانی" : "Restore"}
+        </button>
+      ),
+    })
+  }
+
   return (
     <>
       <DataTable
         columns={columns}
         data={users}
         keyExtractor={(u) => u.id}
-        onRowAction={(action, row) => {
+        onRowAction={isArchived ? undefined : (action, row) => {
           if (action === "delete") {
             setDeleteTarget(row)
           }

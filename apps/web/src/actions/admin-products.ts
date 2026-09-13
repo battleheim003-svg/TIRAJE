@@ -314,13 +314,36 @@ export async function adminDeleteProductAction(
   const user = await requireAdminPerm(PERMISSIONS.PRODUCTS_DELETE)
   if (!productId) throw new Error("Product ID missing")
 
-  await db.product.delete({
+  await db.product.update({
     where: { id: productId },
+    data: { archivedAt: new Date(), isActive: false },
   })
 
   await audit({
     userId: user.id,
     action: "product.archive",
+    resource: "Product",
+    resourceId: productId,
+  })
+
+  revalidatePath("/admin/products")
+  return { ok: true }
+}
+
+export async function adminRestoreProductAction(
+  productId: string
+): Promise<{ ok: true }> {
+  const user = await requireAdminPerm(PERMISSIONS.PRODUCTS_UPDATE)
+  if (!productId) throw new Error("Product ID missing")
+
+  await db.product.update({
+    where: { id: productId },
+    data: { archivedAt: null, isActive: true },
+  })
+
+  await audit({
+    userId: user.id,
+    action: "product.restore",
     resource: "Product",
     resourceId: productId,
   })

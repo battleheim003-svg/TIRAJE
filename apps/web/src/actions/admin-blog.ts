@@ -261,11 +261,37 @@ export async function adminDeletePostAction(
   const user = await requireAdminPerm(PERMISSIONS.BLOG_ALL)
   const id = str(formData, "id")
   if (!id) throw new Error("شناسه مقاله الزامی است")
-  await db.post.delete({ where: { id } })
+  await db.post.update({
+    where: { id },
+    data: { archivedAt: new Date() },
+  })
 
   await audit({
     userId: user.id,
     action: "post.delete",
+    resource: "Post",
+    resourceId: id,
+  })
+
+  revalidatePath("/admin/blog")
+  return { ok: true }
+}
+
+export async function adminRestorePostAction(
+  formData: FormData
+): Promise<{ ok: true }> {
+  const user = await requireAdminPerm(PERMISSIONS.BLOG_ALL)
+  const id = str(formData, "id")
+  if (!id) throw new Error("شناسه مقاله الزامی است")
+
+  await db.post.update({
+    where: { id },
+    data: { archivedAt: null },
+  })
+
+  await audit({
+    userId: user.id,
+    action: "post.restore",
     resource: "Post",
     resourceId: id,
   })

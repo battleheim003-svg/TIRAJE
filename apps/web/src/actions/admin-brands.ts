@@ -108,11 +108,38 @@ export async function adminDeleteBrandAction(
   const productCount = await db.product.count({ where: { brandId } })
   if (productCount > 0) throw new Error(`این برند در ${productCount} محصول استفاده شده است`)
 
-  await db.brand.delete({ where: { id: brandId } })
+  await db.brand.update({
+    where: { id: brandId },
+    data: { archivedAt: new Date() },
+  })
 
   await audit({
     userId: user.id,
     action: "brand.delete",
+    resource: "Brand",
+    resourceId: brandId,
+  })
+
+  revalidatePath("/admin/brands")
+  return { ok: true }
+}
+
+export async function adminRestoreBrandAction(
+  formData: FormData
+): Promise<{ ok: true }> {
+  const user = await requireAdminPerm(PERMISSIONS.BRANDS_ALL)
+
+  const brandId = (formData.get("brandId") as string | null)?.trim()
+  if (!brandId) throw new Error("Brand ID missing")
+
+  await db.brand.update({
+    where: { id: brandId },
+    data: { archivedAt: null },
+  })
+
+  await audit({
+    userId: user.id,
+    action: "brand.restore",
     resource: "Brand",
     resourceId: brandId,
   })

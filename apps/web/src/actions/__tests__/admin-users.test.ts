@@ -55,7 +55,7 @@ describe("Admin Users Actions & Anti-self-destruction Guards", () => {
   it("prevents admin from deleting their own account", async () => {
     const result = await adminDeleteUserAction("admin-1")
     expect(result).toEqual({ success: false, error: "نمیتوانید حساب خود را حذف کنید" })
-    expect(mockDb.user.delete).not.toHaveBeenCalled()
+    expect(mockDb.user.update).not.toHaveBeenCalled()
   })
 
   it("prevents deleting the last active super_admin", async () => {
@@ -67,22 +67,55 @@ describe("Admin Users Actions & Anti-self-destruction Guards", () => {
 
     const result = await adminDeleteUserAction("admin-2")
     expect(result).toEqual({ success: false, error: "آخرین مدیر ارشد سیستم را نمیتوان حذف کرد" })
-    expect(mockDb.user.delete).not.toHaveBeenCalled()
+    expect(mockDb.user.update).not.toHaveBeenCalled()
   })
 
-  it("allows deleting super_admin if another active super_admin exists", async () => {
+  it("allows soft-deleting super_admin if another active super_admin exists", async () => {
     mockDb.user.count.mockResolvedValue(2) // 2 active super_admins
-    mockDb.user.delete.mockResolvedValue({ id: "admin-2" })
+    mockDb.user.update.mockResolvedValue({ id: "admin-2" })
     mockDb.auditLog.create.mockResolvedValue({ id: "audit-1" })
 
     const result = await adminDeleteUserAction("admin-2")
     expect(result).toEqual({ ok: true, success: true })
-    expect(mockDb.user.delete).toHaveBeenCalledWith({ where: { id: "admin-2" } })
+    expect(mockDb.user.update).toHaveBeenCalledWith({
+      where: { id: "admin-2" },
+      data: {
+        archivedAt: expect.any(Date),
+        isActive: false,
+        tokenVersion: { increment: 1 },
+      },
+    })
     expect(mockDb.auditLog.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
           userId: "admin-1",
           action: "user.archive",
+          resource: "User",
+          resourceId: "admin-2",
+        }),
+      })
+    )
+  })
+
+  it("restores user by setting archivedAt null and isActive true", async () => {
+    mockDb.user.update.mockResolvedValue({ id: "admin-2" })
+    mockDb.auditLog.create.mockResolvedValue({ id: "audit-restore" })
+
+    const { adminRestoreUserAction } = await import("../admin-users")
+    const result = await adminRestoreUserAction("admin-2")
+    expect(result).toEqual({ ok: true, success: true })
+    expect(mockDb.user.update).toHaveBeenCalledWith({
+      where: { id: "admin-2" },
+      data: {
+        archivedAt: null,
+        isActive: true,
+      },
+    })
+    expect(mockDb.auditLog.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          userId: "admin-1",
+          action: "user.restore",
           resource: "User",
           resourceId: "admin-2",
         }),

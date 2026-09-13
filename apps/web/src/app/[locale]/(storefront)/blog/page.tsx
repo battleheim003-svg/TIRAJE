@@ -13,7 +13,7 @@ export default async function BlogPage() {
   const fa = locale === "fa"
 
   const posts = await db.post.findMany({
-    where: { status: "PUBLISHED" },
+    where: { status: "PUBLISHED", archivedAt: null },
     orderBy: { publishedAt: "desc" },
     include: {
       category: {

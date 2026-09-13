@@ -1,4 +1,4 @@
-﻿import Link from "next/link"
+import Link from "next/link"
 import Image from "next/image"
 import { getLocale } from "next-intl/server"
 import { db } from "@tirajeh/database"
@@ -61,7 +61,7 @@ export default async function HomePage() {
   const [featuredProducts, categories, recentPosts, productCount, brandCount] =
     await Promise.all([
       db.product.findMany({
-        where: { isFeatured: true, isActive: true },
+        where: { isFeatured: true, isActive: true, archivedAt: null },
         include: {
           images: { where: { isPrimary: true }, take: 1 },
           brand: true,
@@ -71,17 +71,17 @@ export default async function HomePage() {
         take: 8,
       }),
       db.category.findMany({
-        where: { isActive: true, parentId: null },
+        where: { isActive: true, parentId: null, archivedAt: null },
         orderBy: { sortOrder: "asc" },
         take: 8,
       }),
       db.post.findMany({
-        where: { status: "PUBLISHED" },
+        where: { status: "PUBLISHED", archivedAt: null },
         orderBy: { publishedAt: "desc" },
         take: 3,
       }),
-      db.product.count({ where: { isActive: true } }),
-      db.brand.count({ where: { isActive: true } }),
+      db.product.count({ where: { isActive: true, archivedAt: null } }),
+      db.brand.count({ where: { isActive: true, archivedAt: null } }),
     ])
 
   // ─── content maps ──────────────────────────────────────────────────────

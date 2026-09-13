@@ -10,11 +10,19 @@ import styles from "./Categories.module.css"
 
 export const metadata: Metadata = { title: "دسته‌بندی‌ها | پنل مدیریت تیراژه" }
 
-export default async function AdminCategoriesPage() {
+type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> }
+
+export default async function AdminCategoriesPage({ searchParams }: Props) {
   const locale = await getLocale()
   const fa = locale === "fa"
+  const sp = await searchParams
+
+  const isArchived = (Array.isArray(sp.archived) ? sp.archived[0] : sp.archived) === "true"
+
+  const where = isArchived ? { archivedAt: { not: null } } : { archivedAt: null }
 
   const categories = await db.category.findMany({
+    where,
     orderBy: [{ sortOrder: "asc" }, { nameFa: "asc" }],
     include: {
       parent: { select: { nameFa: true, nameEn: true } },
@@ -41,16 +49,52 @@ export default async function AdminCategoriesPage() {
       {/* Header */}
       <div className={styles["web-adm-cat__header"]}>
         <div>
-          <h1 className={styles["web-adm-cat__title"]}>{fa ? "دسته‌بندی‌ها" : "Categories"}</h1>
+          <h1 className={styles["web-adm-cat__title"]}>
+            {fa ? (isArchived ? "دسته‌بندی‌های آرشیو شده" : "دسته‌بندی‌ها") : (isArchived ? "Archived Categories" : "Categories")}
+          </h1>
           <p className={styles["web-adm-cat__count"]}>
             {fa
               ? `${categories.length} دسته‌بندی — ${totalActive} فعال`
               : `${categories.length} total — ${totalActive} active`}
           </p>
         </div>
-        <Link href={`/${locale}/admin/categories/new`} className={styles["web-adm-cat__addBtn"]}>
-          <Plus style={{ width: "1rem", height: "1rem" }} />
-          {fa ? "دسته جدید" : "New Category"}
+        {!isArchived && (
+          <Link href={`/${locale}/admin/categories/new`} className={styles["web-adm-cat__addBtn"]}>
+            <Plus style={{ width: "1rem", height: "1rem" }} />
+            {fa ? "دسته جدید" : "New Category"}
+          </Link>
+        )}
+      </div>
+
+      {/* Tabs */}
+      <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem" }}>
+        <Link
+          href={`/${locale}/admin/categories`}
+          style={{
+            padding: "0.4rem 0.85rem",
+            borderRadius: "0.375rem",
+            fontWeight: !isArchived ? 600 : 400,
+            fontSize: "0.85rem",
+            textDecoration: "none",
+            backgroundColor: !isArchived ? "var(--color-primary-subtle, rgba(0,0,0,0.06))" : "transparent",
+            color: !isArchived ? "var(--color-primary, #0284c7)" : "var(--color-text-secondary, #64748b)",
+          }}
+        >
+          {fa ? "دسته‌بندی‌های فعال" : "Active Categories"}
+        </Link>
+        <Link
+          href={`/${locale}/admin/categories?archived=true`}
+          style={{
+            padding: "0.4rem 0.85rem",
+            borderRadius: "0.375rem",
+            fontWeight: isArchived ? 600 : 400,
+            fontSize: "0.85rem",
+            textDecoration: "none",
+            backgroundColor: isArchived ? "var(--color-primary-subtle, rgba(0,0,0,0.06))" : "transparent",
+            color: isArchived ? "var(--color-primary, #0284c7)" : "var(--color-text-secondary, #64748b)",
+          }}
+        >
+          {fa ? "آرشیو شده" : "Archived"}
         </Link>
       </div>
 
@@ -107,14 +151,17 @@ export default async function AdminCategoriesPage() {
                     </td>
                     <td className={styles["web-adm-cat__td"]}>
                       <div className={styles["web-adm-cat__actions"]}>
-                        <Link href={`/${locale}/admin/categories/${cat.id}`} className={styles["web-adm-cat__editBtn"]}>
-                          {fa ? "ویرایش" : "Edit"}
-                        </Link>
+                        {!isArchived && (
+                          <Link href={`/${locale}/admin/categories/${cat.id}`} className={styles["web-adm-cat__editBtn"]}>
+                            {fa ? "ویرایش" : "Edit"}
+                          </Link>
+                        )}
                         <CategoryActions
                           categoryId={cat.id}
                           fa={fa}
                           productCount={cat._count.productCategories}
                           childCount={cat._count.children}
+                          isArchived={isArchived}
                         />
                       </div>
                     </td>
@@ -154,14 +201,17 @@ export default async function AdminCategoriesPage() {
                       </td>
                       <td className={styles["web-adm-cat__td"]}>
                         <div className={styles["web-adm-cat__actions"]}>
-                          <Link href={`/${locale}/admin/categories/${child.id}`} className={styles["web-adm-cat__editBtn"]}>
-                            {fa ? "ویرایش" : "Edit"}
-                          </Link>
+                          {!isArchived && (
+                            <Link href={`/${locale}/admin/categories/${child.id}`} className={styles["web-adm-cat__editBtn"]}>
+                              {fa ? "ویرایش" : "Edit"}
+                            </Link>
+                          )}
                           <CategoryActions
                             categoryId={child.id}
                             fa={fa}
                             productCount={child._count.productCategories}
                             childCount={child._count.children}
+                            isArchived={isArchived}
                           />
                         </div>
                       </td>

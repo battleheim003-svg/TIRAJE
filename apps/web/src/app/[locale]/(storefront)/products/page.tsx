@@ -1,4 +1,4 @@
-﻿import Link from "next/link"
+import Link from "next/link"
 import { getLocale } from "next-intl/server"
 import { db } from "@tirajeh/database"
 import type { Metadata } from "next"
@@ -73,7 +73,7 @@ export default async function ProductsPage({ searchParams }: Props) {
   const maxPrice = maxPriceStr ? Number(maxPriceStr) : undefined
 
   // ── build where clause ───────────────────────────────────────────────
-  const where: Record<string, unknown> = { isActive: true }
+  const where: Record<string, unknown> = { isActive: true, archivedAt: null }
 
   if (q) {
     where.OR = [
@@ -144,11 +144,11 @@ export default async function ProductsPage({ searchParams }: Props) {
     }),
     db.product.count({ where }),
     db.category.findMany({
-      where: { isActive: true, parentId: null },
+      where: { isActive: true, parentId: null, archivedAt: null },
       orderBy: { sortOrder: "asc" },
     }),
     db.brand.findMany({
-      where: { isActive: true },
+      where: { isActive: true, archivedAt: null },
       orderBy: { sortOrder: "asc" },
     }),
     db.factory.findMany({

@@ -64,13 +64,40 @@ export async function adminDeleteUserAction(
     }
   }
 
-  await db.user.delete({
+  await db.user.update({
     where: { id: userId },
+    data: {
+      archivedAt: new Date(),
+      isActive: false,
+      tokenVersion: { increment: 1 },
+    },
   })
 
   await audit({
     userId: user.id,
     action: "user.archive",
+    resource: "User",
+    resourceId: userId,
+  })
+
+  revalidatePath("/admin/users")
+  return { ok: true, success: true }
+}
+
+export async function adminRestoreUserAction(
+  userId: string
+): Promise<UserActionResult> {
+  const user = await requireAdminPerm(PERMISSIONS.USERS_UPDATE)
+  if (!userId) throw new Error("شناسه کاربر الزامی است")
+
+  await db.user.update({
+    where: { id: userId },
+    data: { archivedAt: null, isActive: true },
+  })
+
+  await audit({
+    userId: user.id,
+    action: "user.restore",
     resource: "User",
     resourceId: userId,
   })
