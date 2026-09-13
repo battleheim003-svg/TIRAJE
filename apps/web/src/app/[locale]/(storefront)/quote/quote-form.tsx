@@ -168,6 +168,16 @@ export function QuoteForm({ products, locale }: QuoteFormProps) {
   return (
     <Card variant="raised" className={styles["web-rfq__card"]}>
       <form onSubmit={handleSubmit} className={styles["web-rfq__form"]} noValidate>
+        {/* Honeypot field for anti-spam */}
+        <input
+          type="text"
+          name="_hp"
+          aria-hidden="true"
+          tabIndex={-1}
+          style={{ position: "absolute", left: "-9999px", width: "1px", height: "1px", overflow: "hidden" }}
+          autoComplete="off"
+        />
+
         {globalError && (
           <div className={styles["web-rfq__error-banner"]} role="alert">
             {globalError}

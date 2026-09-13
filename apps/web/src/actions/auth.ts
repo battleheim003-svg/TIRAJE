@@ -5,15 +5,42 @@ import { db } from "@tirajeh/database"
 import { RegisterSchema, LoginSchema, ChangePasswordSchema, UpdateProfileSchema } from "@tirajeh/shared"
 import type { ActionResult } from "@tirajeh/shared"
 import { auth } from "@tirajeh/auth"
+import { rateLimit } from "@tirajeh/integrations"
 import bcrypt from "bcryptjs"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { mergeCartAction } from "./cart"
+import { getClientIp } from "@/lib/ip"
+
+const RATE_LIMIT_MESSAGE = "تعداد درخواستهای شما بیش از حد مجاز است. لطفاً چند دقیقه صبر کنید."
 
 export async function loginAction(formData: FormData): Promise<ActionResult> {
+  const ip = await getClientIp()
   const raw = {
     email: formData.get("email"),
     password: formData.get("password"),
+  }
+
+  // Rate limit by IP (5 per 900s)
+  const ipRl = await rateLimit(`login:ip:${ip}`, 5, 900)
+  if (!ipRl.ok) {
+    return {
+      success: false,
+      error: RATE_LIMIT_MESSAGE,
+      retryAfterSec: ipRl.retryAfterSec,
+    }
+  }
+
+  // Rate limit by email if provided (5 per 900s)
+  if (typeof raw.email === "string" && raw.email.trim()) {
+    const emailRl = await rateLimit(`login:email:${raw.email.trim().toLowerCase()}`, 5, 900)
+    if (!emailRl.ok) {
+      return {
+        success: false,
+        error: RATE_LIMIT_MESSAGE,
+        retryAfterSec: emailRl.retryAfterSec,
+      }
+    }
   }
 
   const parsed = LoginSchema.safeParse(raw)
@@ -39,6 +66,18 @@ export async function loginAction(formData: FormData): Promise<ActionResult> {
 }
 
 export async function registerAction(formData: FormData): Promise<ActionResult<{ id: string }>> {
+  const ip = await getClientIp()
+
+  // Rate limit by IP (3 per 3600s)
+  const ipRl = await rateLimit(`register:ip:${ip}`, 3, 3600)
+  if (!ipRl.ok) {
+    return {
+      success: false,
+      error: RATE_LIMIT_MESSAGE,
+      retryAfterSec: ipRl.retryAfterSec,
+    }
+  }
+
   const raw = Object.fromEntries(formData)
   const parsed = RegisterSchema.safeParse(raw)
 

@@ -13,6 +13,7 @@ export const CreateQuoteSchema = z.object({
     .max(10000, "حداکثر ۱۰۰۰۰ تن"),
   deliveryCity: z.string().max(100).optional(),
   message: z.string().max(1000).optional(),
+  _hp: z.string().optional(),
 })
 
 export const RespondQuoteSchema = z.object({

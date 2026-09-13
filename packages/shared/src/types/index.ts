@@ -9,6 +9,7 @@ export type ActionError = {
   success: false
   error: string
   fieldErrors?: Record<string, string[]>
+  retryAfterSec?: number
 }
 
 export type ActionResult<T = void> = ActionSuccess<T> | ActionError

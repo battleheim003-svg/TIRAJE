@@ -62,6 +62,16 @@ export function ContactForm({ locale }: ContactFormProps) {
         </div>
       ) : (
         <form onSubmit={handleSubmit} className={styles["web-con__form"]} noValidate>
+          {/* Honeypot field for anti-spam */}
+          <input
+            type="text"
+            name="_hp"
+            aria-hidden="true"
+            tabIndex={-1}
+            style={{ position: "absolute", left: "-9999px", width: "1px", height: "1px", overflow: "hidden" }}
+            autoComplete="off"
+          />
+
           {result && !result.success && (
             <div className={styles["web-con__error"]} role="alert">
               {result.error ??

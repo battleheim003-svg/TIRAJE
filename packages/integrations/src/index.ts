@@ -29,5 +29,10 @@ export { publishDailyPrice, getActiveDailyPriceBulletin } from "./telegram/daily
 // Storage
 export { StorageService, storageService } from "./storage/service"
 
+// Rate Limit & Redis
+export { rateLimit, type RateLimitResult } from "./rate-limit"
+export { getRedisClient } from "./redis"
+
 // Search — SQL file imported as string via ?raw bundler convention
 // consumers: import ftsSQL from "@tirajeh/integrations/search/fts-migration.sql?raw"
+

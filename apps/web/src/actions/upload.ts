@@ -1,11 +1,14 @@
 "use server"
 import { z } from "zod"
 import { randomUUID } from "crypto"
-import { storageService } from "@tirajeh/integrations"
+import { storageService, rateLimit } from "@tirajeh/integrations"
 import { requireAdminPerm } from "@/lib/admin-guard"
 import { PERMISSIONS } from "@tirajeh/shared"
+import { getClientIp } from "@/lib/ip"
 
-export type ActionResult<T = void> = { success: true; data: T } | { success: false; error: string }
+export type ActionResult<T = void> = { success: true; data: T } | { success: false; error: string; retryAfterSec?: number }
+
+const RATE_LIMIT_MESSAGE = "تعداد درخواستهای شما بیش از حد مجاز است. لطفاً چند دقیقه صبر کنید."
 
 const UploadSchema = z.object({
   kind: z.enum(["products", "blog", "avatars"]),
@@ -16,6 +19,18 @@ const UploadSchema = z.object({
 export async function createUploadUrlAction(
   input: unknown
 ): Promise<ActionResult<{ uploadUrl: string; publicUrl: string; key: string }>> {
+  const ip = await getClientIp()
+
+  // Rate limit by IP (30 per 3600s)
+  const rl = await rateLimit(`upload:ip:${ip}`, 30, 3600)
+  if (!rl.ok) {
+    return {
+      success: false,
+      error: RATE_LIMIT_MESSAGE,
+      retryAfterSec: rl.retryAfterSec,
+    }
+  }
+
   try {
     await requireAdminPerm([
       PERMISSIONS.PRODUCTS_CREATE,

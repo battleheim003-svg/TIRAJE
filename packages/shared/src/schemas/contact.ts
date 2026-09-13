@@ -10,6 +10,7 @@ export const ContactSchema = z.object({
     .or(z.literal("")),
   subject: z.string().min(3, "موضوع الزامی").max(200),
   message: z.string().min(10, "پیام الزامی").max(2000),
+  _hp: z.string().optional(),
 })
 
 export type ContactInput = z.infer<typeof ContactSchema>
