@@ -15,9 +15,13 @@ import {
 import { Card, Badge } from "@tirajeh/ui"
 import { StatCard } from "@/components/admin/StatCard"
 import { TodayQueue } from "@/components/admin/TodayQueue"
+import { RevenueChart } from "@/components/admin/RevenueChart"
+import { BarChart } from "@/components/admin/BarChart"
+import { ConversionCard } from "@/components/admin/ConversionCard"
 import { getTodayTasks } from "@/lib/admin-today-tasks"
+import { getSalesStats } from "@/lib/sales-stats"
 import { formatToman } from "@/lib/cement"
-import { formatRelativeFa } from "@tirajeh/shared"
+import { formatRelativeFa, toFarsiDigits } from "@tirajeh/shared"
 import styles from "./Dashboard.module.css"
 
 export const metadata: Metadata = { title: "داشبورد | پنل مدیریت تیراژه" }
@@ -56,6 +60,7 @@ export default async function DashboardPage() {
     unreadTicketsCount,
     recentOrders,
     todayTasks,
+    salesStats,
   ] = await Promise.all([
     db.order.count({ where: { createdAt: { gte: startOfToday } } }),
     db.order.count({ where: { createdAt: { gte: startOfYesterday, lt: startOfToday } } }),
@@ -69,9 +74,14 @@ export default async function DashboardPage() {
       include: { user: { select: { name: true, email: true } } },
     }),
     getTodayTasks(),
+    getSalesStats(),
   ])
 
   const orderDiff = todayOrdersCount - yesterdayOrdersCount
+
+  // آرایه‌های روند ۷ و ۳۰ روز اخیر برای Sparkline
+  const revenueSparkData = salesStats.daily.slice(-7).map((d) => d.revenueToman)
+  const weightSparkData = salesStats.daily.slice(-7).map((d) => d.weightTon)
 
   return (
     <div className={styles["web-adm-dash__root"]}>
@@ -87,10 +97,10 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      {/* Today's Queue (above KPIs) */}
+      {/* 1. Today's Queue (above KPIs) */}
       <TodayQueue tasks={todayTasks} locale={locale} />
 
-      {/* KPI Stat Cards */}
+      {/* 2. KPI Stat Cards (with Sparklines) */}
       <div className={styles["web-adm-dash__kpi-grid"]}>
         <StatCard
           label={fa ? "سفارش‌های امروز" : "Today's Orders"}
@@ -103,6 +113,7 @@ export default async function DashboardPage() {
           }}
           desc={fa ? "سفارش‌های ثبت شده امروز" : "Total registered orders today"}
           href={`/${locale}/admin/orders`}
+          sparkData={revenueSparkData}
         />
 
         <StatCard
@@ -124,6 +135,7 @@ export default async function DashboardPage() {
           icon={<Package style={{ width: "1.25rem", height: "1.25rem" }} aria-hidden="true" />}
           desc={fa ? "آماده برای فروش و استعلام" : "Available in catalog"}
           href={`/${locale}/admin/products`}
+          sparkData={weightSparkData}
         />
 
         <StatCard
@@ -142,6 +154,37 @@ export default async function DashboardPage() {
           href={`/${locale}/admin/tickets`}
         />
       </div>
+
+      {/* 3. 30-day Revenue Chart (Full Width) */}
+      <RevenueChart data={salesStats.daily} locale={locale} />
+
+      {/* 4. Two Columns: Brand & Province Bar Charts */}
+      <div className={styles["web-adm-dash__charts-grid"]}>
+        <BarChart
+          title={fa ? "فروش به تفکیک برندها" : "Sales by Brand"}
+          items={salesStats.byBrand.map((b) => ({
+            label: b.brandNameFa,
+            value: b.revenueToman,
+            subLabel: fa ? `${toFarsiDigits(b.weightTon)} تن` : `${b.weightTon} t`,
+          }))}
+          valueFormatter={(v) => formatToman(v, locale as "fa" | "en")}
+          color="var(--color-accent)"
+        />
+
+        <BarChart
+          title={fa ? "توزیع جغرافیایی سفارش‌ها (استان)" : "Orders by Province"}
+          items={salesStats.byProvince.map((p) => ({
+            label: p.province,
+            value: p.orderCount,
+            subLabel: formatToman(p.revenueToman, locale as "fa" | "en"),
+          }))}
+          valueFormatter={(v) => (fa ? `${toFarsiDigits(v)} سفارش` : `${v} orders`)}
+          color="#3b82f6"
+        />
+      </div>
+
+      {/* 5. Conversion Rate Card */}
+      <ConversionCard conversion={salesStats.conversion} locale={locale} />
 
       {/* Recent Orders Table */}
       <Card variant="flat" className={styles["web-adm-dash__section-card"]}>

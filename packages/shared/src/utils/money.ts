@@ -29,3 +29,10 @@ export function pricePerTon(unitPriceToman: Toman, unitWeightKg: number): Toman 
   if (!unitWeightKg) return 0
   return Math.round((unitPriceToman / unitWeightKg) * 1000)
 }
+
+/** تبدیل اعداد به ارقام فارسی */
+export function toFarsiDigits(n: number | string): string {
+  const str = String(n)
+  const farsiDigits = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"]
+  return str.replace(/[0-9]/g, (w) => farsiDigits[+w] || w)
+}

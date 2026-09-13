@@ -51,6 +51,19 @@
   }
 }
 
+/* Charts Grid */
+.web-adm-dash__charts-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+}
+
+@media (min-width: 56rem) {
+  .web-adm-dash__charts-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 /* Recent Orders Section */
 .web-adm-dash__section-card {
   background-color: var(--color-bg-elevated);

@@ -78,8 +78,22 @@
   font-weight: var(--font-weight-medium);
 }
 
+.web-adm-kpi__bottom {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-block-start: auto;
+}
+
 .web-adm-kpi__desc {
   font-size: var(--font-size-xs);
   color: var(--color-text-muted);
-  margin-block-start: var(--space-1);
+  flex: 1;
+}
+
+.web-adm-kpi__sparkline {
+  display: flex;
+  align-items: flex-end;
+  flex-shrink: 0;
 }

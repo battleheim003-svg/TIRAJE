@@ -1,5 +1,6 @@
 import React from "react"
 import Link from "next/link"
+import { Sparkline } from "./Sparkline"
 import styles from "./StatCard.module.css"
 
 export interface StatCardProps {
@@ -13,9 +14,10 @@ export interface StatCardProps {
   }
   desc?: string
   href?: string
+  sparkData?: number[]
 }
 
-export function StatCard({ label, value, icon, trend, desc, href }: StatCardProps) {
+export function StatCard({ label, value, icon, trend, desc, href, sparkData }: StatCardProps) {
   const content = (
     <>
       <div className={styles["web-adm-kpi__top"]}>
@@ -41,7 +43,16 @@ export function StatCard({ label, value, icon, trend, desc, href }: StatCardProp
         <span className={styles["web-adm-kpi__label"]}>{label}</span>
       </div>
 
-      {desc && <span className={styles["web-adm-kpi__desc"]}>{desc}</span>}
+      {(desc || sparkData) && (
+        <div className={styles["web-adm-kpi__bottom"]}>
+          {desc && <span className={styles["web-adm-kpi__desc"]}>{desc}</span>}
+          {sparkData && (
+            <div className={styles["web-adm-kpi__sparkline"]}>
+              <Sparkline data={sparkData} width={72} height={24} fill />
+            </div>
+          )}
+        </div>
+      )}
     </>
   )
 
