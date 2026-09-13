@@ -31,6 +31,7 @@ const nextConfig: NextConfig = {
       allowedOrigins: ["localhost:3000"],
     },
   },
+  serverExternalPackages: ["@napi-rs/canvas"],
 }
 
 export default withNextIntl(nextConfig)
