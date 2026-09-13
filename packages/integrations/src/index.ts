@@ -17,8 +17,18 @@ export {
   publishScheduledPosts,
   sendTelegramDirectMessage,
 } from "./telegram/service"
-export { POST as telegramWebhookHandler } from "./telegram/webhook"
-export { publishDailyPrice, getActiveDailyPriceBulletin } from "./telegram/daily-price-service"
+export {
+  publishDailyPrice,
+  getActiveDailyPriceBulletin,
+} from "./telegram/daily-price-service"
+export {
+  renderPriceCardPng,
+  classifyGroupTitle,
+  stripGroupPrefix,
+  type PriceCardData,
+  type PriceCardGroup,
+  type PriceCardItem,
+} from "./telegram/price-card"
 
 // Storage
 export { StorageService, storageService } from "./storage/service"

@@ -521,3 +521,114 @@
   font-variant-numeric: tabular-nums;
   font-weight: 600;
 }
+
+/* T2.5 New Styles */
+.dpBrandSelect {
+  padding-block: var(--space-2);
+  padding-inline: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  min-width: 11rem;
+}
+
+.dpBrandSelect:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.dpPctUp {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--color-danger, #ef4444);
+  font-weight: 700;
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.dpPctDown {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--color-success, #22c55e);
+  font-weight: 700;
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.dpPctNone {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.dpBtnPreview {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  background-color: var(--color-bg-elevated);
+  color: var(--color-text);
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  padding-block: var(--space-3);
+  padding-inline: var(--space-5);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.dpBtnPreview:hover:not(:disabled) {
+  background-color: var(--color-border-subtle);
+}
+
+.dpBtnPreview:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dpModalOverlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 60;
+  padding: var(--space-4);
+}
+
+.dpModalCard {
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2xl);
+  width: 100%;
+  max-width: 48rem;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-xl);
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.dpPreviewImageWrap {
+  display: flex;
+  justify-content: center;
+  background-color: #0c1420;
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  overflow: hidden;
+}
+
+.dpPreviewImage {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+}
+

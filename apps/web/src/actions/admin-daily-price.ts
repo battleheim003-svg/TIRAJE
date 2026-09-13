@@ -7,10 +7,42 @@ import { requireAdminPerm, AdminUser } from "@/lib/admin-guard"
 import { PERMISSIONS } from "@tirajeh/shared"
 import { audit } from "@/lib/audit"
 
-/** Fetch all active products for the price form */
+import { tehranDayStart } from "@tirajeh/shared"
+
+/** Fetch all active products for the price form with yesterday's price */
 export async function getProductsForPricingAction() {
   await requireAdminPerm(PERMISSIONS.PRICES_PUBLISH)
 
+  const today = tehranDayStart()
+
+  // 1. Fetch the latest bulletin before today
+  const lastBulletinBeforeToday = await db.dailyPriceBulletin.findFirst({
+    where: {
+      date: { lt: today },
+      isActive: true,
+    },
+    orderBy: { date: "desc" },
+    include: {
+      items: {
+        select: {
+          productId: true,
+          price: true,
+        },
+      },
+    },
+  })
+
+  // Map of productId -> price for yesterday
+  const yesterdayPrices = new Map<string, number>()
+  if (lastBulletinBeforeToday) {
+    for (const item of lastBulletinBeforeToday.items) {
+      if (item.productId) {
+        yesterdayPrices.set(item.productId, Number(item.price))
+      }
+    }
+  }
+
+  // 2. Fetch products ordered by brand.nameFa then nameFa
   const products = await db.product.findMany({
     where: { isActive: true },
     select: {
@@ -21,11 +53,16 @@ export async function getProductsForPricingAction() {
       lastPriceUpdate: true,
       packagingType: true,
       cementType: true,
-      brand: { select: { nameFa: true } },
+      brand: { select: { id: true, nameFa: true } },
     },
-    orderBy: [{ brandId: "asc" }, { nameFa: "asc" }],
+    orderBy: [{ brand: { nameFa: "asc" } }, { nameFa: "asc" }],
   })
-  return products
+
+  return products.map((p) => ({
+    ...p,
+    price: Number(p.price),
+    yesterdayPrice: yesterdayPrices.get(p.id) ?? null,
+  }))
 }
 
 /** Get the current active bulletin */

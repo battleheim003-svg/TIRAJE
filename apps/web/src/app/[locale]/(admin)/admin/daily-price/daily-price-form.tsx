@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useState, useTransition, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import {
   TrendingUp,
@@ -15,20 +15,25 @@ import {
   RefreshCw,
   Clock,
   User,
+  Eye,
+  CornerDownLeft,
+  X,
 } from "lucide-react"
 import { submitDailyPriceAction } from "@/actions/admin-daily-price"
 import { useToast } from "@/components/admin/Toast"
+import { formatToman } from "@tirajeh/shared"
 import styles from "./DailyPrice.module.css"
 
 export interface PricingProduct {
   id: string
   nameFa: string
   nameEn: string | null
-  price: number | string | { toString(): string }
+  price: number
+  yesterdayPrice: number | null
   lastPriceUpdate: Date
   packagingType: string
   cementType: string | null
-  brand: { nameFa: string } | null
+  brand: { id?: string; nameFa: string } | null
 }
 
 export interface ActiveBulletin {
@@ -57,14 +62,7 @@ interface DailyPriceFormProps {
   locale: string
 }
 
-function formatToman(val: number | string): string {
-  const num = typeof val === "string" ? parseInt(val.replace(/\D/g, ""), 10) : val
-  if (isNaN(num) || num === null || num === undefined) return ""
-  return num.toLocaleString("fa-IR")
-}
-
 function parseRawNumber(val: string): number {
-  // Convert Persian digits to English digits and remove commas
   const p2e = val
     .replace(/[۰-۹]/g, (d) => "۰۱۲۳۴۵۶۷۸۹".indexOf(d).toString())
     .replace(/,/g, "")
@@ -81,14 +79,12 @@ export function DailyPriceForm({ products, activeBulletin, locale }: DailyPriceF
 
   // State: selected product IDs
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => {
-    // If active bulletin exists for today, pre-select its products
     if (activeBulletin) {
       const ids = activeBulletin.items
         .map((i) => i.product?.id)
         .filter((id): id is string => Boolean(id))
       if (ids.length > 0) return new Set(ids)
     }
-    // Default: select all active products
     return new Set(products.map((p) => p.id))
   })
 
@@ -96,14 +92,20 @@ export function DailyPriceForm({ products, activeBulletin, locale }: DailyPriceF
   const [prices, setPrices] = useState<Record<string, string>>(() => {
     const init: Record<string, string> = {}
     products.forEach((p) => {
-      const pNum = Number(p.price) || 0
-      init[p.id] = pNum > 0 ? String(pNum) : ""
+      // Default: if yesterdayPrice exists use it, else current product price
+      const val = p.yesterdayPrice ?? p.price
+      init[p.id] = val > 0 ? String(val) : ""
     })
     return init
   })
 
   const [sendToTelegram, setSendToTelegram] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
+  const [selectedBrand, setSelectedBrand] = useState("ALL")
+
+  // PNG Preview Modal state
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
 
   // Check if today already has a bulletin
   const isTodayBulletin = Boolean(
@@ -116,6 +118,22 @@ export function DailyPriceForm({ products, activeBulletin, locale }: DailyPriceF
     timeZone: "Asia/Tehran",
   }).format(new Date())
 
+  // Brand list for filter
+  const brandList = useMemo(() => {
+    const map = new Map<string, string>()
+    products.forEach((p) => {
+      if (p.brand?.nameFa) {
+        map.set(p.brand.nameFa, p.brand.nameFa)
+      }
+    })
+    return Array.from(map.keys()).sort((a, b) => a.localeCompare(b, "fa"))
+  }, [products])
+
+  // Count products with yesterdayPrice
+  const hasAnyYesterdayPrice = useMemo(() => {
+    return products.some((p) => p.yesterdayPrice !== null && p.yesterdayPrice > 0)
+  }, [products])
+
   // Toggle selection
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) => {
@@ -124,11 +142,11 @@ export function DailyPriceForm({ products, activeBulletin, locale }: DailyPriceF
         next.delete(id)
       } else {
         next.add(id)
-        // If price is empty, prefill with current product price
         if (!prices[id]) {
           const prod = products.find((p) => p.id === id)
-          if (prod && Number(prod.price) > 0) {
-            setPrices((p) => ({ ...p, [id]: String(Number(prod.price)) }))
+          const fallbackVal = prod ? (prod.yesterdayPrice ?? prod.price) : 0
+          if (fallbackVal > 0) {
+            setPrices((p) => ({ ...p, [id]: String(fallbackVal) }))
           }
         }
       }
@@ -137,11 +155,39 @@ export function DailyPriceForm({ products, activeBulletin, locale }: DailyPriceF
   }
 
   const selectAll = () => {
-    setSelectedIds(new Set(products.map((p) => p.id)))
+    setSelectedIds(new Set(filteredProducts.map((p) => p.id)))
   }
 
   const deselectAll = () => {
     setSelectedIds(new Set())
+  }
+
+  // Copy yesterday's prices for products that have it
+  const copyYesterdayPrices = () => {
+    const nextPrices = { ...prices }
+    const nextSelected = new Set(selectedIds)
+
+    let copiedCount = 0
+    products.forEach((p) => {
+      if (p.yesterdayPrice !== null && p.yesterdayPrice > 0) {
+        nextPrices[p.id] = String(p.yesterdayPrice)
+        nextSelected.add(p.id)
+        copiedCount++
+      }
+    })
+
+    setPrices(nextPrices)
+    setSelectedIds(nextSelected)
+
+    if (copiedCount > 0) {
+      toast.success(
+        fa
+          ? `قیمت دیروز برای ${copiedCount} محصول کپی و انتخاب شد.`
+          : `Copied yesterday's prices for ${copiedCount} products.`
+      )
+    } else {
+      toast.info(fa ? "قیمت روز قبل ثبت نشده است." : "No yesterday prices found.")
+    }
   }
 
   const handlePriceChange = (productId: string, rawVal: string) => {
@@ -152,7 +198,11 @@ export function DailyPriceForm({ products, activeBulletin, locale }: DailyPriceF
     }))
   }
 
+  // Filter products by search query and brand
   const filteredProducts = products.filter((p) => {
+    if (selectedBrand !== "ALL" && p.brand?.nameFa !== selectedBrand) {
+      return false
+    }
     if (!searchQuery.trim()) return true
     const q = searchQuery.toLowerCase()
     return (
@@ -161,6 +211,36 @@ export function DailyPriceForm({ products, activeBulletin, locale }: DailyPriceF
       (p.brand?.nameFa && p.brand.nameFa.toLowerCase().includes(q))
     )
   })
+
+  // Validation: are all selected products priced with a valid number > 0?
+  const isFormValid = useMemo(() => {
+    if (selectedIds.size === 0) return false
+    for (const id of Array.from(selectedIds)) {
+      const val = parseRawNumber(prices[id] || "")
+      if (val <= 0) return false
+    }
+    return true
+  }, [selectedIds, prices])
+
+  // Open Preview Modal
+  const handleOpenPreview = () => {
+    if (selectedIds.size === 0) return
+
+    const parts: string[] = []
+    for (const id of Array.from(selectedIds)) {
+      const p = parseRawNumber(prices[id] || "")
+      if (p > 0) parts.push(`${id}:${p}`)
+    }
+
+    if (parts.length === 0) {
+      toast.error(fa ? "لطفاً برای محصولات انتخاب شده قیمت وارد کنید." : "Please enter prices first.")
+      return
+    }
+
+    const url = `/api/admin/price-card/preview?items=${encodeURIComponent(parts.join(","))}`
+    setPreviewUrl(url)
+    setPreviewOpen(true)
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -202,44 +282,45 @@ export function DailyPriceForm({ products, activeBulletin, locale }: DailyPriceF
           toast.error(res.error || "خطا در ثبت قیمت‌ها")
         }
       } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : "خطای غیرمنتظره در ثبت قیمت"
-        toast.error(message)
+        toast.error(err instanceof Error ? err.message : "خطای ناشناخته در ارتباط با سرور")
       }
     })
   }
 
   return (
     <div className={`${styles.dpWrapper}`}>
-      {/* Header Banner */}
+      {/* Header Card */}
       <div className={`${styles.dpHeaderCard}`}>
         <div className={`${styles.dpHeaderMain}`}>
           <div className={`${styles.dpHeaderIconBox}`}>
             <TrendingUp style={{ width: "1.75rem", height: "1.75rem" }} />
           </div>
           <div>
-            <h1 className={`${styles.dpTitle}`}>{fa ? "اعلام قیمت روز محصولات" : "Daily Price Declaration"}</h1>
+            <h1 className={`${styles.dpTitle}`}>
+              {fa ? "اعلام قیمت روز سیمان" : "Daily Cement Pricing"}
+            </h1>
             <p className={`${styles.dpSubtitle}`}>
               {fa
-                ? "ثبت و انتشار قیمت‌های رسمی سیمان و مصالح در نوار بالای سایت و کانال تلگرام"
-                : "Submit official daily prices to the storefront ticker and Telegram channel"}
+                ? "به‌روزرسانی قیمت‌های روز، تیکر سایت، و انتشار خودکار به کانال رسمی تلگرام"
+                : "Update daily prices, storefront ticker, and auto-broadcast to Telegram"}
             </p>
           </div>
         </div>
 
         <div className={`${styles.dpDateBadge}`}>
-          <Calendar style={{ width: "1rem", height: "1rem" }} />
+          <Calendar style={{ width: "1.125rem", height: "1.125rem" }} />
           <span>{todayJalali}</span>
         </div>
       </div>
 
-      {/* Warning if already submitted today */}
+      {/* Warning if already published today */}
       {isTodayBulletin && (
         <div className={`${styles.dpWarningAlert}`} role="alert">
           <AlertTriangle style={{ width: "1.25rem", height: "1.25rem", flexShrink: 0 }} />
           <div className={`${styles.dpWarningText}`}>
             <strong>{fa ? "توجه:" : "Notice:"}</strong>{" "}
             {fa
-              ? "قیمت روز برای امروز قبلاً ثبت شده است. ثبت مجدد، مقادیر قبلی را جایگزین کرده و پیام جدید به کانال می‌فرستد."
+              ? "قیمت روز برای امروز قبلاً ثبت شده است. ثبت جدید جایگزین می‌شود."
               : "Daily prices were already published today. Re-submitting will overwrite previous entries."}
           </div>
         </div>
@@ -249,19 +330,46 @@ export function DailyPriceForm({ products, activeBulletin, locale }: DailyPriceF
       <form onSubmit={handleSubmit} className={`${styles.dpFormCard}`}>
         {/* Controls Bar */}
         <div className={`${styles.dpControlsBar}`}>
-          <div className={`${styles.dpSearchBox}`}>
-            <Search style={{ width: "1rem", height: "1rem" }} />
-            <input
-              type="text"
-              placeholder={fa ? "جستجوی محصول یا کارخانه..." : "Search product or brand..."}
-              aria-label={fa ? "جستجوی محصول یا کارخانه" : "Search product or brand"}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className={`${styles.dpSearchInput}`}
-            />
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-3)", flex: 1 }}>
+            <div className={`${styles.dpSearchBox}`}>
+              <Search style={{ width: "1rem", height: "1rem" }} />
+              <input
+                type="text"
+                placeholder={fa ? "جستجو در نام محصول..." : "Search product name..."}
+                aria-label={fa ? "جستجو در نام محصول" : "Search product name"}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={`${styles.dpSearchInput}`}
+              />
+            </div>
+
+            {/* Brand Filter */}
+            <select
+              value={selectedBrand}
+              onChange={(e) => setSelectedBrand(e.target.value)}
+              className={styles.dpBrandSelect}
+              aria-label={fa ? "فیلتر برند" : "Filter by brand"}
+            >
+              <option value="ALL">{fa ? "همه برندها" : "All Brands"}</option>
+              {brandList.map((b) => (
+                <option key={b} value={b}>{b}</option>
+              ))}
+            </select>
           </div>
 
           <div className={`${styles.dpSelectionActions}`}>
+            {/* Copy Yesterday Prices Button */}
+            <button
+              type="button"
+              onClick={copyYesterdayPrices}
+              disabled={!hasAnyYesterdayPrice}
+              title={!hasAnyYesterdayPrice ? (fa ? "قیمت روز قبل ثبت نشده" : "No yesterday prices available") : undefined}
+              className={`${styles.dpBtnSecondary}`}
+            >
+              <CornerDownLeft style={{ width: "0.875rem", height: "0.875rem" }} />
+              <span>{fa ? "کپی قیمت‌های دیروز" : "Copy Yesterday"}</span>
+            </button>
+
             <button
               type="button"
               onClick={selectAll}
@@ -280,8 +388,8 @@ export function DailyPriceForm({ products, activeBulletin, locale }: DailyPriceF
             </button>
             <div className={`${styles.dpCountPill}`}>
               {fa
-                ? `${selectedIds.size} از ${products.length} محصول انتخاب شده`
-                : `${selectedIds.size} of ${products.length} selected`}
+                ? `نمایش ${filteredProducts.length} از ${products.length} محصول (${selectedIds.size} انتخاب شده)`
+                : `Showing ${filteredProducts.length} of ${products.length} (${selectedIds.size} selected)`}
             </div>
           </div>
         </div>
@@ -294,9 +402,11 @@ export function DailyPriceForm({ products, activeBulletin, locale }: DailyPriceF
                 <th style={{ width: "3.5rem", textAlign: "center" }}>
                   {fa ? "انتخاب" : "Select"}
                 </th>
-                <th>{fa ? "نام محصول و مشخصات" : "Product & Specs"}</th>
-                <th style={{ width: "12rem" }}>{fa ? "برند / کارخانه" : "Brand"}</th>
-                <th style={{ width: "15rem" }}>{fa ? "قیمت روز (تومان)" : "Daily Price (Toman)"}</th>
+                <th>{fa ? "محصول" : "Product"}</th>
+                <th style={{ width: "10rem" }}>{fa ? "برند / کارخانه" : "Brand"}</th>
+                <th style={{ width: "9rem" }}>{fa ? "قیمت دیروز" : "Yesterday"}</th>
+                <th style={{ width: "13rem" }}>{fa ? "قیمت امروز (تومان)" : "Today's Price"}</th>
+                <th style={{ width: "6.5rem", textAlign: "center" }}>{fa ? "تغییر" : "Change"}</th>
               </tr>
             </thead>
             <tbody>
@@ -304,8 +414,13 @@ export function DailyPriceForm({ products, activeBulletin, locale }: DailyPriceF
                 const isSelected = selectedIds.has(prod.id)
                 const currentVal = prices[prod.id] || ""
                 const numVal = parseRawNumber(currentVal)
-                const originalPrice = Number(prod.price) || 0
-                const isChanged = numVal > 0 && numVal !== originalPrice
+                const yPrice = prod.yesterdayPrice
+
+                // Calculate percentage change client-side
+                let pctChange: number | null = null
+                if (yPrice && numVal > 0) {
+                  pctChange = ((numVal - yPrice) / yPrice) * 100
+                }
 
                 return (
                   <tr
@@ -338,39 +453,46 @@ export function DailyPriceForm({ products, activeBulletin, locale }: DailyPriceF
                           {prod.packagingType === "BULK" && (
                             <span className={`${styles.dpBadge} ${styles.dpBadgeBulk}`}>فله</span>
                           )}
-                          {prod.cementType && (
-                            <span className={styles.dpBadge}>{prod.cementType}</span>
-                          )}
                         </div>
                       </div>
                     </td>
 
-                    <td>
-                      <span className={styles.dpBrandName}>
-                        {prod.brand?.nameFa || "—"}
-                      </span>
+                    <td style={{ color: "var(--color-text-muted)", fontSize: "var(--font-size-xs)" }}>
+                      {prod.brand?.nameFa || "—"}
                     </td>
 
+                    {/* Yesterday Price Column */}
+                    <td style={{ fontVariantNumeric: "tabular-nums", color: "var(--color-text-muted)" }}>
+                      {yPrice ? formatToman(yPrice) : "—"}
+                    </td>
+
+                    {/* Today Price Input */}
                     <td onClick={(e) => e.stopPropagation()}>
                       <div className={styles.dpPriceInputWrapper}>
                         <input
                           type="text"
                           inputMode="numeric"
-                          value={currentVal ? formatToman(currentVal) : ""}
+                          value={currentVal ? Number(currentVal).toLocaleString("fa-IR") : ""}
                           onChange={(e) => handlePriceChange(prod.id, e.target.value)}
-                          placeholder={formatToman(originalPrice) || "۰"}
-                          disabled={!isSelected}
-                          aria-label={`${fa ? "قیمت روز برای" : "Daily price for"} ${prod.nameFa}`}
+                          placeholder={yPrice ? Number(yPrice).toLocaleString("fa-IR") : (prod.price ? Number(prod.price).toLocaleString("fa-IR") : "0")}
                           className={`${styles.dpPriceInput} ${!isSelected ? styles.dpPriceInputDisabled : ""}`}
+                          disabled={!isSelected}
                         />
-                        <span className={styles.dpPriceUnit}>{fa ? "تومان" : "Toman"}</span>
                       </div>
-                      {isChanged && (
-                        <div className={`${styles.dpPriceChangeHint}`}>
-                          {fa
-                            ? `قیمت قبلی: ${formatToman(originalPrice)} تومان`
-                            : `Prev: ${originalPrice.toLocaleString()} Toman`}
-                        </div>
+                    </td>
+
+                    {/* Percentage Change Column */}
+                    <td style={{ textAlign: "center" }}>
+                      {pctChange === null || Math.abs(pctChange) < 0.01 ? (
+                        <span className={styles.dpPctNone}>—</span>
+                      ) : pctChange > 0 ? (
+                        <span className={styles.dpPctUp}>
+                          ↑ {Math.abs(pctChange).toFixed(1)}٪
+                        </span>
+                      ) : (
+                        <span className={styles.dpPctDown}>
+                          ↓ {Math.abs(pctChange).toFixed(1)}٪
+                        </span>
                       )}
                     </td>
                   </tr>
@@ -379,7 +501,7 @@ export function DailyPriceForm({ products, activeBulletin, locale }: DailyPriceF
 
               {filteredProducts.length === 0 && (
                 <tr>
-                  <td colSpan={4} className={`${styles.dpEmptyRow}`}>
+                  <td colSpan={6} className={`${styles.dpEmptyRow}`}>
                     <Package style={{ width: "2rem", height: "2rem", opacity: 0.4 }} />
                     <span>{fa ? "هیچ محصول فعالی یافت نشد" : "No active products found"}</span>
                   </td>
@@ -402,34 +524,93 @@ export function DailyPriceForm({ products, activeBulletin, locale }: DailyPriceF
             <Send style={{ width: "1.125rem", height: "1.125rem", color: "var(--color-info)" }} />
             <span className={`${styles.dpTelegramText}`}>
               {fa
-                ? "ارسال همزمان به کانال رسمی تلگرام (@tirajeconcrete)"
+                ? "ارسال همزمان به کانال رسمی تلگرام (@TirajehConcrete)"
                 : "Post simultaneously to Telegram channel"}
             </span>
           </label>
 
-          <button
-            type="submit"
-            disabled={isPending || selectedIds.size === 0}
-            className={`${styles.dpBtnSubmit}`}
-          >
-            {isPending ? (
-              <>
-                <RefreshCw style={{ width: "1.25rem", height: "1.25rem" }} className={`${styles.dpSpin}`} />
-                <span>{fa ? "در حال ثبت و انتشار..." : "Publishing..."}</span>
-              </>
-            ) : (
-              <>
-                <CheckCircle2 style={{ width: "1.25rem", height: "1.25rem" }} />
-                <span>
-                  {fa
-                    ? `ثبت و انتشار قیمت روز (${selectedIds.size} محصول)`
-                    : `Publish Daily Prices (${selectedIds.size})`}
-                </span>
-              </>
-            )}
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: "var(--space-3)", flexWrap: "wrap" }}>
+            {/* Preview PNG Button */}
+            <button
+              type="button"
+              onClick={handleOpenPreview}
+              disabled={selectedIds.size === 0}
+              title={selectedIds.size === 0 ? (fa ? "ابتدا محصولات را انتخاب کنید" : "Select products first") : undefined}
+              className={styles.dpBtnPreview}
+            >
+              <Eye style={{ width: "1.125rem", height: "1.125rem" }} />
+              <span>{fa ? "پیش‌نمایش کارت قیمت" : "Preview Card"}</span>
+            </button>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={isPending || !isFormValid}
+              title={!isFormValid ? (fa ? "لطفاً برای همه محصولات انتخاب‌شده قیمت وارد کنید" : "Please enter prices for all selected products") : undefined}
+              className={`${styles.dpBtnSubmit}`}
+            >
+              {isPending ? (
+                <>
+                  <RefreshCw style={{ width: "1.25rem", height: "1.25rem" }} className={`${styles.dpSpin}`} />
+                  <span>{fa ? "در حال ثبت و انتشار..." : "Publishing..."}</span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 style={{ width: "1.25rem", height: "1.25rem" }} />
+                  <span>
+                    {fa
+                      ? `ثبت و انتشار قیمت روز (${selectedIds.size} محصول)`
+                      : `Publish Daily Prices (${selectedIds.size})`}
+                  </span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </form>
+
+      {/* Preview Dialog / Modal */}
+      {previewOpen && previewUrl && (
+        <div className={styles.dpModalOverlay} onClick={() => setPreviewOpen(false)}>
+          <div className={styles.dpModalCard} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
+                <Eye style={{ width: "1.2rem", height: "1.2rem", color: "var(--color-accent-text)" }} />
+                <h2 style={{ fontSize: "var(--font-size-base)", fontWeight: 800, margin: 0 }}>
+                  {fa ? "پیش‌نمایش کارت قیمت تلگرام (PNG)" : "Telegram Price Card Preview"}
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPreviewOpen(false)}
+                className={styles.dpBtnSecondary}
+                style={{ padding: "var(--space-1-5)" }}
+              >
+                <X style={{ width: "1.2rem", height: "1.2rem" }} />
+              </button>
+            </div>
+
+            <div className={styles.dpPreviewImageWrap}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={previewUrl}
+                alt="Price Card Preview"
+                className={styles.dpPreviewImage}
+              />
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              <button
+                type="button"
+                onClick={() => setPreviewOpen(false)}
+                className={styles.dpBtnSecondary}
+              >
+                {fa ? "بستن پیش‌نمایش" : "Close"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Last Bulletin Summary Card */}
       {activeBulletin && (
@@ -465,19 +646,13 @@ export function DailyPriceForm({ products, activeBulletin, locale }: DailyPriceF
                   {item.product?.nameFa || item.customName || "—"}
                 </div>
                 <div className={`${styles.dpHistoryItemPrice}`}>
-                  <strong>{formatToman(Number(item.price))}</strong>{" "}
-                  <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
-                    تومان
-                  </span>
+                  <strong>{formatToman(Number(item.price))}</strong>
                 </div>
               </div>
             ))}
           </div>
         </div>
       )}
-
-      {/* Scoped Styles */}
-      
     </div>
   )
 }
