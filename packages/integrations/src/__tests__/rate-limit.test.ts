@@ -21,7 +21,7 @@ describe("rateLimit", () => {
       ttl: vi.fn().mockResolvedValue(900),
     }
 
-    vi.spyOn(redisModule, "getRedisClient").mockReturnValue(mockClient as unknown as RedisClientType)
+    vi.spyOn(redisModule, "getRedisClient").mockResolvedValue(mockClient as unknown as RedisClientType)
 
     const res = await rateLimit("test:ip:127.0.0.1", 5, 900)
 
@@ -43,7 +43,7 @@ describe("rateLimit", () => {
       ttl: vi.fn().mockResolvedValue(750),
     }
 
-    vi.spyOn(redisModule, "getRedisClient").mockReturnValue(mockClient as unknown as RedisClientType)
+    vi.spyOn(redisModule, "getRedisClient").mockResolvedValue(mockClient as unknown as RedisClientType)
 
     const res = await rateLimit("test:ip:127.0.0.1", 5, 900)
 
@@ -59,7 +59,7 @@ describe("rateLimit", () => {
 
   it("bypasses when Redis client is not available in development/test", async () => {
     process.env.NODE_ENV = "development"
-    vi.spyOn(redisModule, "getRedisClient").mockReturnValue(null)
+    vi.spyOn(redisModule, "getRedisClient").mockRejectedValue(new Error("No redis"))
 
     const res = await rateLimit("test:ip:127.0.0.1", 5, 900)
 
@@ -72,7 +72,9 @@ describe("rateLimit", () => {
 
   it("throws AppError 503 when Redis client is not available in production", async () => {
     process.env.NODE_ENV = "production"
-    vi.spyOn(redisModule, "getRedisClient").mockReturnValue(null)
+    vi.spyOn(redisModule, "getRedisClient").mockRejectedValue(
+      new AppError("Redis پیکربندی نشده", "SERVICE_UNAVAILABLE", 503)
+    )
 
     await expect(rateLimit("test:ip:127.0.0.1", 5, 900)).rejects.toThrow(AppError)
     try {
@@ -94,7 +96,7 @@ describe("rateLimit", () => {
       ttl: vi.fn(),
     }
 
-    vi.spyOn(redisModule, "getRedisClient").mockReturnValue(mockClient as unknown as RedisClientType)
+    vi.spyOn(redisModule, "getRedisClient").mockResolvedValue(mockClient as unknown as RedisClientType)
 
     await expect(rateLimit("test:ip:127.0.0.1", 5, 900)).rejects.toThrow(AppError)
   })

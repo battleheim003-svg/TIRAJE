@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { drainTelegramQueue, publishScheduledPosts } from "@tirajeh/integrations"
+import { publishScheduledPosts } from "@tirajeh/integrations"
 import { verifyCronSecret, cronUnauthorizedResponse } from "@/lib/cron-guard"
 
 export const dynamic = "force-dynamic"
@@ -19,17 +19,13 @@ async function handleCron(request: Request) {
   }
 
   try {
-    const [drained, publishedCount] = await Promise.all([
-      drainTelegramQueue().then(() => "ok").catch((err) => `drain error: ${err}`),
-      publishScheduledPosts().catch((err) => {
-        console.error("[cron:publishScheduledPosts] error:", err)
-        return 0
-      }),
-    ])
+    const publishedCount = await publishScheduledPosts().catch((err) => {
+      console.error("[cron:publishScheduledPosts] error:", err)
+      return 0
+    })
 
     return NextResponse.json({
       success: true,
-      drained,
       publishedScheduledPosts: publishedCount,
       timestamp: new Date().toISOString(),
     })

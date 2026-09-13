@@ -3,10 +3,10 @@
  * Mount at POST /api/telegram
  */
 import { Bot, InlineKeyboard, webhookCallback } from "grammy"
-import { createClient } from "redis"
+import { getRedisClient } from "../redis"
 import { db } from "@tirajeh/database"
-import { escapeHtml } from "@tirajeh/shared"
-import { notifyNewContact } from "./service"
+import { escapeHtml, OUTBOX_EVENTS, OUTBOX_CHANNELS } from "@tirajeh/shared"
+import { enqueue } from "../outbox/publish"
 import {
   startPriceFlow,
   getPriceFlowState,
@@ -29,56 +29,39 @@ const CATEGORY_LABELS: Record<string, string> = {
   OTHER: "❓ سایر موارد",
 }
 
-function getRedis() {
-  const url = process.env.REDIS_URL
-  if (!url) return null
-  return createClient({ url })
-}
-
 const memoryPending = new Map<number | string, { category: string; expiresAt: number }>()
 
 async function setPendingCategory(chatId: number | string, category: string): Promise<void> {
-  const redis = getRedis()
-  if (!redis) {
-    memoryPending.set(chatId, { category, expiresAt: Date.now() + 600_000 })
-    return
-  }
   try {
-    await redis.connect()
+    const redis = await getRedisClient()
     await redis.set(`tg:ticket_pending:${chatId}`, category, { EX: 600 })
-    await redis.disconnect()
   } catch (err) {
-    console.warn("[telegram:redis] Failed to set in Redis, falling back to memory:", err)
-    memoryPending.set(chatId, { category, expiresAt: Date.now() + 600_000 })
+    if (process.env.NODE_ENV !== "production") {
+      memoryPending.set(chatId, { category, expiresAt: Date.now() + 600_000 })
+      return
+    }
+    console.warn("[telegram:redis] Failed to set in Redis:", err)
   }
 }
 
 async function getAndClearPendingCategory(chatId: number | string): Promise<string | null> {
-  const redis = getRedis()
-  if (!redis) {
-    const item = memoryPending.get(chatId)
-    if (item && item.expiresAt > Date.now()) {
-      memoryPending.delete(chatId)
-      return item.category
-    }
-    memoryPending.delete(chatId)
-    return null
-  }
   try {
-    await redis.connect()
+    const redis = await getRedisClient()
     const val = await redis.get(`tg:ticket_pending:${chatId}`)
     if (val) {
       await redis.del(`tg:ticket_pending:${chatId}`)
     }
-    await redis.disconnect()
     return val
   } catch (err) {
-    console.warn("[telegram:redis] Failed to get from Redis, checking memory:", err)
-    const item = memoryPending.get(chatId)
-    if (item && item.expiresAt > Date.now()) {
-      memoryPending.delete(chatId)
-      return item.category
+    if (process.env.NODE_ENV !== "production") {
+      const item = memoryPending.get(chatId)
+      if (item && item.expiresAt > Date.now()) {
+        memoryPending.delete(chatId)
+        return item.category
+      }
+      return null
     }
+    console.warn("[telegram:redis] Failed to get from Redis:", err)
     return null
   }
 }
@@ -404,38 +387,46 @@ function registerCommands(bot: Bot): void {
         [ctx.from?.first_name, ctx.from?.last_name].filter(Boolean).join(" ") || "کاربر تلگرام"
 
       try {
-        const contact = await db.contact.create({
-          data: {
-            name: fullName,
-            subject: categoryName,
-            message: ctx.message.text,
-            category: pendingCategory as any,
-            source: "TELEGRAM",
-            telegramChatId: String(chatId),
-            telegramUserId: String(ctx.from?.id ?? ""),
-            telegramUsername: ctx.from?.username ?? null,
-            status: "UNREAD",
-          },
+        let contactId = ""
+        await db.$transaction(async (tx) => {
+          const contact = await tx.contact.create({
+            data: {
+              name: fullName,
+              subject: categoryName,
+              message: ctx.message.text,
+              category: pendingCategory as any,
+              source: "TELEGRAM",
+              telegramChatId: String(chatId),
+              telegramUserId: String(ctx.from?.id ?? ""),
+              telegramUsername: ctx.from?.username ?? null,
+              status: "UNREAD",
+            },
+          })
+          contactId = contact.id
+
+          await enqueue(tx, {
+            event: OUTBOX_EVENTS.CONTACT_CREATED,
+            channel: OUTBOX_CHANNELS.TG_ADMIN,
+            payload: {
+              contactId: contact.id,
+              name: fullName,
+              email: ctx.from?.username ? `@${ctx.from.username}` : null,
+              phone: null,
+              subject: categoryName,
+              message: ctx.message.text,
+              category: categoryName,
+              source: "TELEGRAM",
+            },
+          })
         })
 
-        const shortId = contact.id.split("-")[0]?.toUpperCase() ?? contact.id
+        const shortId = contactId.split("-")[0]?.toUpperCase() ?? contactId
 
         await ctx.reply(
           `✅ تیکت پشتیبانی شما با شناسه پیگیری <code>#${shortId}</code> با موفقیت ثبت شد.\n\n` +
             "تیم پشتیبانی تیراژه درخواست شما را بررسی کرده و پاسخ را مستقیماً از طریق همین ربات برای شما ارسال خواهد کرد.",
           { parse_mode: "HTML" }
         )
-
-        // Notify Admin
-        void notifyNewContact({
-          name: fullName,
-          email: ctx.from?.username ? `@${ctx.from.username}` : null,
-          phone: null,
-          subject: categoryName,
-          message: ctx.message.text,
-          category: categoryName,
-          source: "TELEGRAM",
-        }).catch((err) => console.error("[telegram:notifyAdmin] Error:", err))
 
         // Forum Topics support (optional feature behind flag)
         if (

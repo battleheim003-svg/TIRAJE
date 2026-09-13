@@ -1,17 +1,49 @@
 import { createClient, type RedisClientType } from "redis"
+import { AppError } from "@tirajeh/shared"
 
-let clientInstance: RedisClientType | null = null
+let _client: RedisClientType | null = null
+let _connecting = false
 
-export function getRedisClient(): RedisClientType | null {
-  const url = process.env.REDIS_URL
-  if (!url) return null
+export async function getRedisClient(): Promise<RedisClientType> {
+  if (_client?.isReady) return _client
 
-  if (!clientInstance) {
-    clientInstance = createClient({ url })
-    clientInstance.on("error", (err) => {
-      console.warn("[redis] Client error:", err)
+  if (_connecting) {
+    // صبر تا اتصال برقرار شود
+    await new Promise<void>((resolve) => {
+      const interval = setInterval(() => {
+        if (_client?.isReady || !_connecting) {
+          clearInterval(interval)
+          resolve()
+        }
+      }, 50)
     })
+    if (_client?.isReady) return _client
   }
 
-  return clientInstance
+  if (!process.env.REDIS_URL) {
+    if (process.env.NODE_ENV === "production") {
+      throw new AppError("Redis پیکربندی نشده", "SERVICE_UNAVAILABLE", 503)
+    }
+    throw new Error("[redis] REDIS_URL is not set (development: set it to redis://localhost:6379)")
+  }
+
+  _connecting = true
+  const client = createClient({ url: process.env.REDIS_URL }) as RedisClientType
+
+  client.on("error", (err) => {
+    console.error("[redis] client error", err)
+  })
+
+  await client.connect()
+  _client = client
+  _connecting = false
+  return _client
+}
+
+/** فقط برای تست */
+export async function closeRedisClient(): Promise<void> {
+  if (_client) {
+    await _client.quit()
+    _client = null
+  }
 }

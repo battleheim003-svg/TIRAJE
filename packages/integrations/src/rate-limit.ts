@@ -17,9 +17,12 @@ export async function rateLimit(
   windowSec: number
 ): Promise<RateLimitResult> {
   const redisKey = `rl:${key}`
-  const client = getRedisClient()
+  let client
 
-  if (!client) {
+  try {
+    client = await getRedisClient()
+  } catch (err) {
+    if (err instanceof AppError) throw err
     if (process.env.NODE_ENV === "production") {
       throw new AppError("سرویس موقتاً در دسترس نیست", "SERVICE_UNAVAILABLE", 503)
     }
@@ -28,9 +31,7 @@ export async function rateLimit(
   }
 
   try {
-    if (!client.isOpen) {
-      await client.connect()
-    }
+
 
     const currentCount = await client.incr(redisKey)
 

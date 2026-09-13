@@ -2,7 +2,7 @@
  * State machine for Telegram price declaration flow (/price).
  */
 import { InlineKeyboard, Context } from "grammy"
-import { createClient } from "redis"
+import { getRedisClient } from "../redis"
 import { db } from "@tirajeh/database"
 import { escapeHtml } from "@tirajeh/shared"
 import { buildProductHashtags } from "./hashtags"
@@ -27,36 +27,27 @@ export interface PriceFlowState {
 const FLOW_TTL = 1800 // 30 mins
 const PAGE_SIZE = 8
 
-function getRedis() {
-  const url = process.env.REDIS_URL
-  if (!url) return null
-  return createClient({ url })
-}
-
 const memoryFlow = new Map<number | string, { state: PriceFlowState; expiresAt: number }>()
 
 const flowKey = (chatId: number | string) => `tg:price_flow:${chatId}`
 
 export async function getPriceFlowState(chatId: number | string): Promise<PriceFlowState | null> {
-  const redis = getRedis()
-  if (!redis) {
-    const item = memoryFlow.get(chatId)
-    if (item && item.expiresAt > Date.now()) {
-      return item.state
-    }
-    memoryFlow.delete(chatId)
-    return null
-  }
   try {
-    await redis.connect()
+    const redis = await getRedisClient()
     const data = await redis.get(flowKey(chatId))
-    await redis.disconnect()
     if (!data) return null
     return JSON.parse(data) as PriceFlowState
   } catch (err) {
-    console.warn("[telegram:redis] getPriceFlowState error, falling back to memory:", err)
-    const item = memoryFlow.get(chatId)
-    return item && item.expiresAt > Date.now() ? item.state : null
+    if (process.env.NODE_ENV !== "production") {
+      const item = memoryFlow.get(chatId)
+      if (item && item.expiresAt > Date.now()) {
+        return item.state
+      }
+      memoryFlow.delete(chatId)
+      return null
+    }
+    console.warn("[telegram:redis] getPriceFlowState error:", err)
+    return null
   }
 }
 
@@ -64,29 +55,23 @@ export async function savePriceFlowState(
   chatId: number | string,
   state: PriceFlowState
 ): Promise<void> {
-  const redis = getRedis()
-  if (!redis) {
-    memoryFlow.set(chatId, { state, expiresAt: Date.now() + FLOW_TTL * 1000 })
-    return
-  }
   try {
-    await redis.connect()
+    const redis = await getRedisClient()
     await redis.set(flowKey(chatId), JSON.stringify(state), { EX: FLOW_TTL })
-    await redis.disconnect()
   } catch (err) {
-    console.warn("[telegram:redis] savePriceFlowState error, falling back to memory:", err)
-    memoryFlow.set(chatId, { state, expiresAt: Date.now() + FLOW_TTL * 1000 })
+    if (process.env.NODE_ENV !== "production") {
+      memoryFlow.set(chatId, { state, expiresAt: Date.now() + FLOW_TTL * 1000 })
+      return
+    }
+    console.warn("[telegram:redis] savePriceFlowState error:", err)
   }
 }
 
 export async function clearPriceFlowState(chatId: number | string): Promise<void> {
-  const redis = getRedis()
   memoryFlow.delete(chatId)
-  if (!redis) return
   try {
-    await redis.connect()
+    const redis = await getRedisClient()
     await redis.del(flowKey(chatId))
-    await redis.disconnect()
   } catch (err) {
     console.warn("[telegram:redis] clearPriceFlowState error:", err)
   }

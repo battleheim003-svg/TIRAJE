@@ -12,12 +12,6 @@ export { OrderStatusEmail } from "./email/templates/order-status"
 
 // Telegram
 export {
-  enqueueTelegramMessage,
-  drainTelegramQueue,
-  notifyNewOrder,
-  notifyNewQuote,
-  notifyPaymentReceived,
-  notifyNewContact,
   publishPostToChannel,
   publishProductToChannel,
   publishScheduledPosts,
