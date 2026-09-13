@@ -60,7 +60,7 @@ vi.mock("@/lib/stock", () => ({
   releaseOrderStock: (...args: unknown[]) => mockReleaseOrderStock(...args),
 }))
 
-import { adminUpdateOrderStatusAction } from "../admin-orders"
+import { adminUpdateOrderStatusAction, adminMoveOrderAction } from "../admin-orders"
 
 describe("Order Status State Machine (Task T1.4)", () => {
   describe("canTransition rules", () => {
@@ -234,6 +234,83 @@ describe("Order Status State Machine (Task T1.4)", () => {
       const result = await adminUpdateOrderStatusAction(fd)
       expect(result).toEqual({ ok: true, success: true })
       expect(mockReleaseOrderStock).toHaveBeenCalledWith(expect.anything(), "order-3")
+    })
+  })
+
+  describe("T2.7 Kanban - adminMoveOrderAction", () => {
+    const validOrderId = "123e4567-e89b-12d3-a456-426614174000"
+
+    beforeEach(() => {
+      vi.clearAllMocks()
+      mockRequireAdminPerm.mockResolvedValue({ id: "admin-1", role: "admin", permissions: ["orders:update"] })
+    })
+
+    it("rejects invalid UUID orderId", async () => {
+      const result = await adminMoveOrderAction({
+        orderId: "invalid-uuid",
+        newStatus: "CONFIRMED",
+      })
+      expect(result).toEqual({ ok: false, success: false, error: expect.any(String) })
+    })
+
+    it("returns error when order not found", async () => {
+      mockDb.order.findUnique.mockResolvedValueOnce(null)
+      const result = await adminMoveOrderAction({
+        orderId: validOrderId,
+        newStatus: "CONFIRMED",
+      })
+      expect(result).toEqual({ ok: false, success: false, error: "سفارش یافت نشد" })
+    })
+
+    it("returns error on invalid transition (e.g. DELIVERED → PROCESSING)", async () => {
+      mockDb.order.findUnique.mockResolvedValueOnce({
+        id: validOrderId,
+        status: "DELIVERED",
+        orderNumber: 2001,
+      })
+      const result = await adminMoveOrderAction({
+        orderId: validOrderId,
+        newStatus: "PROCESSING",
+      })
+      expect(result.ok).toBe(false)
+      expect(result.error).toContain("گذار از DELIVERED به PROCESSING مجاز نیست")
+      expect(mockDb.order.update).not.toHaveBeenCalled()
+    })
+
+    it("updates status, creates OrderEvent, releases stock if CANCELLED, and logs audit on valid transition", async () => {
+      mockDb.order.findUnique.mockResolvedValueOnce({
+        id: validOrderId,
+        status: "CONFIRMED",
+        orderNumber: 2002,
+      })
+
+      const result = await adminMoveOrderAction({
+        orderId: validOrderId,
+        newStatus: "PROCESSING",
+      })
+
+      expect(result).toEqual({ ok: true, success: true })
+      expect(mockDb.order.update).toHaveBeenCalledWith({
+        where: { id: validOrderId },
+        data: { status: "PROCESSING" },
+      })
+      expect(mockDb.orderEvent.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          orderId: validOrderId,
+          status: "PROCESSING",
+          createdBy: "admin-1",
+        }),
+      })
+      expect(mockAudit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: "admin-1",
+          action: "ORDER_MOVE",
+          resource: "Order",
+          resourceId: validOrderId,
+          before: { status: "CONFIRMED" },
+          after: { status: "PROCESSING" },
+        })
+      )
     })
   })
 })

@@ -13,7 +13,7 @@ export {
 
 // ─── Price formatting ──────────────────────────────────────────────────────
 
-export { formatToman } from "@tirajeh/shared"
+export { formatToman, toFarsiDigits } from "@tirajeh/shared"
 
 // ─── Relative time and Jalali formatting ───────────────────────────────────
 

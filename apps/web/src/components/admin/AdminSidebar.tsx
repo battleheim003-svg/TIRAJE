@@ -73,6 +73,7 @@ const NAV_SECTIONS: NavSectionDef[] = [
       { key: "factories", href: "/admin/factories", icon: Factory, fa: "کارخانجات", en: "Factories", permission: PERMISSIONS.FACTORIES_MANAGE },
       { key: "shipping", href: "/admin/shipping", icon: Truck, fa: "مناطق و کرایه حمل", en: "Shipping", permission: PERMISSIONS.SHIPPING_MANAGE },
       { key: "orders", href: "/admin/orders", icon: ShoppingCart, fa: "سفارش‌ها", en: "Orders", countKey: "pendingOrders", permission: PERMISSIONS.ORDERS_READ },
+      { key: "orders-kanban", href: "/admin/orders/kanban", icon: LayoutDashboard, fa: "برد کانبان", en: "Kanban Board", permission: PERMISSIONS.ORDERS_UPDATE },
       { key: "quotes", href: "/admin/quotes", icon: MessageSquare, fa: "استعلام‌های قیمت", en: "Quotes", countKey: "unansweredQuotes", permission: PERMISSIONS.QUOTES_UPDATE },
     ],
   },

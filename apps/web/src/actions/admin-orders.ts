@@ -7,6 +7,7 @@ import { emailService, enqueue } from "@tirajeh/integrations"
 import { requireAdminPerm, AdminUser } from "@/lib/admin-guard"
 import { PERMISSIONS, canTransition, OUTBOX_EVENTS, OUTBOX_CHANNELS } from "@tirajeh/shared"
 import { audit } from "@/lib/audit"
+import { parseAction } from "@/lib/parse-action"
 import { z } from "zod"
 
 export type UpdateOrderStatusResult =
@@ -109,3 +110,90 @@ export async function adminUpdateOrderStatusAction(
   revalidatePath("/admin/orders")
   return { ok: true, success: true }
 }
+
+export const MoveOrderSchema = z.object({
+  orderId: z.string().uuid("شناسه سفارش نامعتبر است"),
+  newStatus: z.nativeEnum(OrderStatus, { errorMap: () => ({ message: "وضعیت جدید نامعتبر است" }) }),
+})
+
+export type MoveOrderResult =
+  | { ok: true; success: true }
+  | { ok: false; success: false; error: string }
+
+export async function adminMoveOrderAction(input: unknown): Promise<MoveOrderResult> {
+  const user = await requireAdminPerm(PERMISSIONS.ORDERS_UPDATE)
+  const parsed = parseAction(MoveOrderSchema, input)
+  if ("error" in parsed) {
+    return { ok: false, success: false, error: parsed.error.error }
+  }
+
+  const { orderId, newStatus } = parsed.data
+
+  const order = await db.order.findUnique({
+    where: { id: orderId },
+    select: { id: true, status: true, orderNumber: true },
+  })
+
+  if (!order) {
+    return { ok: false, success: false, error: "سفارش یافت نشد" }
+  }
+
+  if (!canTransition(order.status, newStatus)) {
+    return { ok: false, success: false, error: `گذار از ${order.status} به ${newStatus} مجاز نیست` }
+  }
+
+  await db.$transaction(async (tx) => {
+    await tx.order.update({
+      where: { id: orderId },
+      data: { status: newStatus },
+    })
+
+    if (newStatus === "CANCELLED" || newStatus === "REFUNDED") {
+      await releaseOrderStock(tx, orderId)
+    }
+
+    await tx.orderEvent.create({
+      data: {
+        orderId,
+        status: newStatus,
+        note: `جابه‌جایی در کانبان توسط ${user.name ?? user.email}`,
+        createdBy: user.id,
+      },
+    })
+
+    try {
+      await enqueue(tx, {
+        event: OUTBOX_EVENTS.ORDER_STATUS_CHANGED,
+        channel: OUTBOX_CHANNELS.TG_ADMIN,
+        payload: {
+          orderId,
+          orderNumber: order.orderNumber,
+          from: order.status,
+          to: newStatus,
+          adminId: user.id,
+        },
+      })
+    } catch {
+      // Ignore outbox enqueue errors in non-critical flow
+    }
+  })
+
+  try {
+    await audit({
+      userId: user.id,
+      action: "ORDER_MOVE",
+      resource: "Order",
+      resourceId: orderId,
+      before: { status: order.status },
+      after: { status: newStatus },
+    })
+  } catch (e) {
+    console.error("[audit] order move:", e)
+  }
+
+  revalidatePath("/admin/orders")
+  revalidatePath("/admin/orders/kanban")
+
+  return { ok: true, success: true }
+}
+
