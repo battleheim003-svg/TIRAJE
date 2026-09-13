@@ -9,6 +9,18 @@ const { mockDb, mockRequireAdminPerm, mockHeaders } = vi.hoisted(() => {
         count: vi.fn(),
         findUnique: vi.fn(),
       },
+      order: {
+        findMany: vi.fn(),
+        count: vi.fn(),
+      },
+      quoteRequest: {
+        findMany: vi.fn(),
+        count: vi.fn(),
+      },
+      contact: {
+        findMany: vi.fn(),
+        count: vi.fn(),
+      },
       auditLog: {
         create: vi.fn(),
       },
@@ -20,6 +32,11 @@ const { mockDb, mockRequireAdminPerm, mockHeaders } = vi.hoisted(() => {
 
 vi.mock("@tirajeh/database", () => ({
   db: mockDb,
+  CustomerType: {
+    NORMAL: "NORMAL",
+    CONTRACTOR: "CONTRACTOR",
+    COMPANY: "COMPANY",
+  },
   Prisma: {},
 }))
 
@@ -35,7 +52,16 @@ vi.mock("next/headers", () => ({
   headers: () => mockHeaders(),
 }))
 
-import { adminToggleUserStatusAction, adminDeleteUserAction } from "../admin-users"
+import {
+  adminToggleUserStatusAction,
+  adminDeleteUserAction,
+  adminRestoreUserAction,
+  changeCustomerTypeAction,
+  getUserProfileAction,
+  getUserOrdersAction,
+  getUserQuotesAction,
+  getUserContactsAction,
+} from "../admin-users"
 import { audit } from "@/lib/audit"
 
 describe("Admin Users Actions & Anti-self-destruction Guards", () => {
@@ -101,7 +127,6 @@ describe("Admin Users Actions & Anti-self-destruction Guards", () => {
     mockDb.user.update.mockResolvedValue({ id: "admin-2" })
     mockDb.auditLog.create.mockResolvedValue({ id: "audit-restore" })
 
-    const { adminRestoreUserAction } = await import("../admin-users")
     const result = await adminRestoreUserAction("admin-2")
     expect(result).toEqual({ ok: true, success: true })
     expect(mockDb.user.update).toHaveBeenCalledWith({
@@ -161,6 +186,151 @@ describe("Admin Users Actions & Anti-self-destruction Guards", () => {
         tokenVersion: { increment: 1 },
       },
     })
+  })
+})
+
+describe("Customer 360 Profile Actions (T2.10)", () => {
+  const currentAdmin = { id: "admin-1", role: "super_admin", permissions: ["users:update", "users:read", "orders:read"] }
+  const validUserId = "123e4567-e89b-12d3-a456-426614174000"
+  const selfAdminId = "11111111-1111-4111-a111-111111111111"
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockRequireAdminPerm.mockResolvedValue({ id: selfAdminId, role: "super_admin" })
+  })
+
+  it("prevents changing self customerType", async () => {
+    const result = await changeCustomerTypeAction({
+      userId: selfAdminId,
+      customerType: "COMPANY",
+    })
+    expect(result).toEqual({
+      ok: false,
+      success: false,
+      error: "نمیتوانید نوع مشتری خود را تغییر دهید",
+    })
+    expect(mockDb.user.update).not.toHaveBeenCalled()
+  })
+
+  it("validates invalid UUID or invalid customerType", async () => {
+    const result1 = await changeCustomerTypeAction({
+      userId: "invalid-uuid",
+      customerType: "COMPANY",
+    })
+    expect(result1.ok).toBe(false)
+    expect(mockDb.user.update).not.toHaveBeenCalled()
+
+    const result2 = await changeCustomerTypeAction({
+      userId: validUserId,
+      customerType: "INVALID_TYPE",
+    })
+    expect(result2.ok).toBe(false)
+    expect(mockDb.user.update).not.toHaveBeenCalled()
+  })
+
+  it("updates customerType and writes audit log on success", async () => {
+    mockDb.user.findUnique.mockResolvedValue({
+      id: validUserId,
+      customerType: "NORMAL",
+    })
+    mockDb.user.update.mockResolvedValue({
+      id: validUserId,
+      customerType: "CONTRACTOR",
+    })
+    mockDb.auditLog.create.mockResolvedValue({ id: "audit-ct" })
+
+    const result = await changeCustomerTypeAction({
+      userId: validUserId,
+      customerType: "CONTRACTOR",
+    })
+
+    expect(result).toEqual({ ok: true, success: true })
+    expect(mockDb.user.update).toHaveBeenCalledWith({
+      where: { id: validUserId },
+      data: { customerType: "CONTRACTOR" },
+    })
+    expect(mockDb.auditLog.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          userId: selfAdminId,
+          action: "user.change_customer_type",
+          resource: "User",
+          resourceId: validUserId,
+          oldValues: { customerType: "NORMAL" },
+          newValues: { customerType: "CONTRACTOR" },
+        }),
+      })
+    )
+  })
+
+  it("returns ok: false for nonexistent user in getUserProfileAction", async () => {
+    mockDb.user.findUnique.mockResolvedValue(null)
+
+    const result = await getUserProfileAction(validUserId)
+    expect(result).toEqual({
+      ok: false,
+      success: false,
+      error: "کاربر یافت نشد",
+    })
+  })
+
+  it("returns full profile data and stats in getUserProfileAction", async () => {
+    mockDb.user.findUnique.mockResolvedValue({
+      id: validUserId,
+      name: "تست کاربر",
+      email: "test@example.com",
+      phone: "09123456789",
+      isActive: true,
+      customerType: "COMPANY",
+      createdAt: new Date("2026-01-01T00:00:00Z"),
+      customerProfile: {
+        companyName: "شرکت سپهر",
+        nationalId: "1010101010",
+        economicCode: "4111111111",
+        address: "تهران خیابان آزادی",
+        postalCode: "1234567890",
+      },
+    })
+    mockDb.order.findMany.mockResolvedValue([
+      { totalAmount: 5000000 },
+      { totalAmount: 3000000 },
+    ])
+    mockDb.quoteRequest.count.mockResolvedValue(4)
+    mockDb.contact.count.mockResolvedValue(2)
+    mockDb.order.count.mockResolvedValue(2)
+
+    const result = await getUserProfileAction(validUserId)
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.data.name).toBe("تست کاربر")
+      expect(result.data.customerProfile?.companyName).toBe("شرکت سپهر")
+      expect(result.data._stats.totalPurchaseToman).toBe(8000000)
+      expect(result.data._stats.orderCount).toBe(2)
+      expect(result.data._stats.quoteCount).toBe(4)
+      expect(result.data._stats.contactCount).toBe(2)
+      expect(result.data.telegramUserId).toBeNull()
+    }
+  })
+
+  it("getUserOrdersAction returns user orders with pagination", async () => {
+    mockDb.order.findMany.mockResolvedValue([
+      {
+        id: "ord-1",
+        orderNumber: "ORD-1001",
+        status: "DELIVERED",
+        totalAmount: 4500000,
+        createdAt: new Date("2026-02-01T12:00:00Z"),
+      },
+    ])
+    mockDb.order.count.mockResolvedValue(1)
+
+    const result = await getUserOrdersAction({ userId: validUserId, page: 1 })
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.data.total).toBe(1)
+      expect(result.data.items).toHaveLength(1)
+      expect(result.data.items[0].orderNumber).toBe("ORD-1001")
+    }
   })
 })
 

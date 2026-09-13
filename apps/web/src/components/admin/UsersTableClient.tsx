@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
+import Link from "next/link"
 import { Users as UsersIcon, RotateCcw } from "lucide-react"
 import { DataTable, Column, InlineToggle } from "./DataTable"
 import { ConfirmDialog } from "./ConfirmDialog"
@@ -101,9 +102,16 @@ export function UsersTableClient({
       key: "name",
       header: fa ? "نام" : "Name",
       render: (row) => (
-        <span style={{ fontWeight: 600, color: "var(--color-text)" }}>
+        <Link
+          href={`/${locale}/admin/users/${row.id}`}
+          style={{
+            fontWeight: 600,
+            color: "var(--color-accent)",
+            textDecoration: "none",
+          }}
+        >
           {row.name || (fa ? "بدون نام" : "Unnamed")}
-        </span>
+        </Link>
       ),
     },
     {
