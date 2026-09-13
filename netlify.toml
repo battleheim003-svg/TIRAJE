@@ -1,6 +1,10 @@
 [build]
-  command = "pnpm install && pnpm --filter=@tirajeh/web build"
+  command = "pnpm install --prod=false && pnpm --filter=@tirajeh/web build"
   publish = "apps/web/.next"
+
+[build.environment]
+  NODE_ENV = "production"
+  NPM_FLAGS = "--include=dev"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
