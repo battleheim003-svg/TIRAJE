@@ -181,6 +181,7 @@ model User {
   handledQuotes     QuoteRequest[]   @relation("QuoteHandler")
   auditLogs         AuditLog[]
   publishedBulletins DailyPriceBulletin[] @relation("BulletinPublisher")
+  contactMessages   ContactMessage[]
 
   @@index([roleId])
   @@index([customerType])
@@ -844,11 +845,33 @@ model Contact {
   repliedAt        DateTime?        @map("replied_at")
 
   handler User? @relation("ContactHandler", fields: [handlerId], references: [id])
+  messages  ContactMessage[]
 
   @@index([status, createdAt])
   @@index([source, status])
   @@index([category])
   @@map("contacts")
+}
+
+model ContactMessage {
+  id         String            @id @default(uuid()) @db.Uuid
+  contactId  String            @map("contact_id") @db.Uuid
+  body       String            @db.Text
+  authorType ContactAuthorType @map("author_type")
+  authorId   String?           @map("author_id") @db.Uuid
+  createdAt  DateTime          @default(now()) @map("created_at")
+
+  contact Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  author  User?   @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([contactId, createdAt])
+  @@map("contact_messages")
+}
+
+enum ContactAuthorType {
+  CUSTOMER
+  ADMIN
+  @@map("contact_author_type")
 }
 
 model Setting {

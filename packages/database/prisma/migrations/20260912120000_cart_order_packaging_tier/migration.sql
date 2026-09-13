@@ -1,8 +1,8 @@
 -- DropIndex
-DROP INDEX "cart_items_session_id_product_id_key";
+DROP INDEX IF EXISTS "cart_items_session_id_product_id_key";
 
 -- DropIndex
-DROP INDEX "cart_items_user_id_product_id_key";
+DROP INDEX IF EXISTS "cart_items_user_id_product_id_key";
 
 -- AlterTable
 ALTER TABLE "cart_items" ADD COLUMN     "packaging_tier" "PackagingTier";
