@@ -57,7 +57,11 @@ async function main() {
   if (!channelId) throw new Error("TELEGRAM_CHANNEL_ID is required in .env.local")
 
   console.log(`🚀 Initializing Telegram Channel Seeder for channel: ${channelId}...`)
-  const bot = new Bot(token)
+  const bot = new Bot(token, {
+    client: {
+      apiRoot: process.env.TELEGRAM_API_ROOT ?? "https://api.telegram.org",
+    },
+  })
 
   // 1. Fetch all active products with brand, category, and primary image
   const products = await db.product.findMany({

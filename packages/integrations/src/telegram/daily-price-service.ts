@@ -176,7 +176,11 @@ export async function publishDailyPrice(params: PublishDailyPriceParams): Promis
       const channelHandle = process.env.TELEGRAM_CHANNEL_USERNAME || "@tirajeconcrete"
 
       const { Bot, InlineKeyboard, InputFile } = await import("grammy")
-      const bot = new Bot(botToken)
+      const bot = new Bot(botToken, {
+        client: {
+          apiRoot: process.env.TELEGRAM_API_ROOT ?? "https://api.telegram.org",
+        },
+      })
       const keyboard = new InlineKeyboard().url("🛒 مشاهده و سفارش آنلاین", `${SITE_URL}/fa/products`)
 
       // Build the price-card image data: group each priced item the same way

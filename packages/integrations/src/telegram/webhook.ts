@@ -94,7 +94,11 @@ function buildCategoryKeyboard(): InlineKeyboard {
 export function createSupportBot(): Bot {
   const token = process.env.TELEGRAM_BOT_TOKEN
   if (!token) throw new Error("TELEGRAM_BOT_TOKEN env var is required")
-  const bot = new Bot(token)
+  const bot = new Bot(token, {
+    client: {
+      apiRoot: process.env.TELEGRAM_API_ROOT ?? "https://api.telegram.org",
+    },
+  })
   registerCommands(bot)
   return bot
 }

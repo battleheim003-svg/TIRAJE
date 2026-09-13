@@ -36,7 +36,11 @@ export async function enqueueTelegramMessage(msg: QueuedMessage): Promise<void> 
   if (!redis) {
     const token = process.env.TELEGRAM_BOT_TOKEN
     if (token) {
-      const bot = new Bot(token)
+      const bot = new Bot(token, {
+        client: {
+          apiRoot: process.env.TELEGRAM_API_ROOT ?? "https://api.telegram.org",
+        },
+      })
       await bot.api
         .sendMessage(msg.chatId, msg.text, {
           parse_mode: msg.parseMode ?? "HTML",
@@ -57,7 +61,11 @@ export async function drainTelegramQueue(): Promise<void> {
   const token = process.env.TELEGRAM_BOT_TOKEN
   if (!token) throw new Error("TELEGRAM_BOT_TOKEN env var is required")
 
-  const bot = new Bot(token)
+  const bot = new Bot(token, {
+    client: {
+      apiRoot: process.env.TELEGRAM_API_ROOT ?? "https://api.telegram.org",
+    },
+  })
   const redis = getRedis()
   if (!redis) {
     console.warn("[telegram:drain] Redis is not configured, skipping drain.")
@@ -210,7 +218,11 @@ function getSiteUrl(): string {
 function getBot(): Bot | null {
   const token = process.env.TELEGRAM_BOT_TOKEN
   if (!token) return null
-  return new Bot(token)
+  return new Bot(token, {
+    client: {
+      apiRoot: process.env.TELEGRAM_API_ROOT ?? "https://api.telegram.org",
+    },
+  })
 }
 
 export async function publishPostToChannel(post: {
@@ -529,6 +541,10 @@ export async function sendTelegramDirectMessage(
 ): Promise<void> {
   const token = process.env.TELEGRAM_BOT_TOKEN
   if (!token) return
-  const bot = new Bot(token)
+  const bot = new Bot(token, {
+    client: {
+      apiRoot: process.env.TELEGRAM_API_ROOT ?? "https://api.telegram.org",
+    },
+  })
   await bot.api.sendMessage(chatId, text, { parse_mode: "HTML" })
 }

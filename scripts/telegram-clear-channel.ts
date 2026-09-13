@@ -48,7 +48,11 @@ async function main() {
   if (!channelId) throw new Error("TELEGRAM_CHANNEL_ID is required in .env.local")
 
   console.log(`🧹 Initializing Telegram Channel Message Cleaner for channel: ${channelId}...`)
-  const bot = new Bot(token)
+  const bot = new Bot(token, {
+    client: {
+      apiRoot: process.env.TELEGRAM_API_ROOT ?? "https://api.telegram.org",
+    },
+  })
 
   // Find all sent messages logged in TelegramLog
   const logs = await db.telegramLog.findMany({
