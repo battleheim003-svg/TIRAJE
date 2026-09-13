@@ -32,6 +32,16 @@ const nextConfig: NextConfig = {
     },
   },
   serverExternalPackages: ["@napi-rs/canvas"],
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals.push("@napi-rs/canvas");
+    }
+    config.module.rules.push({
+      test: /\.node$/,
+      use: "node-loader",
+    });
+    return config;
+  },
 }
 
 export default withNextIntl(nextConfig)
