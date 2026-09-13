@@ -33,6 +33,7 @@ export type {
   Session,
   DailyPriceBulletin,
   DailyPriceItem,
+  ProductDocument,
 } from "@prisma/client"
 
 export {
@@ -52,5 +53,6 @@ export {
   ContactCategory,
   ContactSource,
   PackagingTier,
+  DocType,
   Prisma,
 } from "@prisma/client"

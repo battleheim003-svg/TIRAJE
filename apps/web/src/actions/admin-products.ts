@@ -1,6 +1,6 @@
 "use server"
 
-import { db, CementType, PackagingType, StockStatus } from "@tirajeh/database"
+import { db, CementType, PackagingType, StockStatus, PackagingTier, DocType } from "@tirajeh/database"
 import { revalidatePath } from "next/cache"
 import { publishProductToChannel } from "@tirajeh/integrations"
 import { CEMENT_TYPE_LABEL, PACKAGING_LABEL } from "@/lib/cement"
@@ -9,6 +9,28 @@ import { PERMISSIONS } from "@tirajeh/shared"
 import { audit } from "@/lib/audit"
 
 import { z } from "zod"
+
+const ProductPackagingOptionInputSchema = z.object({
+  tier: z.nativeEnum(PackagingTier),
+  labelFa: z.string().min(1, "عنوان بسته‌بندی الزامی است"),
+  labelEn: z.string().optional().nullable(),
+  bagCount: z.coerce.number().int().positive("تعداد کیسه الزامی است"),
+  price: z.coerce.number().int().nonnegative("قیمت باید نامنفی باشد"),
+  comparePrice: z.preprocess((v) => {
+    if (v === "" || v === null || v === undefined) return null
+    return Number(v)
+  }, z.number().int().nonnegative().nullable().optional()),
+  stockQty: z.coerce.number().int().default(0),
+  isDefault: z.boolean().default(false),
+  sortOrder: z.coerce.number().int().default(0),
+  isActive: z.boolean().default(true),
+})
+
+const ProductDocumentInputSchema = z.object({
+  title: z.string().min(1, "عنوان سند الزامی است"),
+  url: z.string().url("آدرس سند نامعتبر است"),
+  docType: z.nativeEnum(DocType),
+})
 
 const ProductAdminSchema = z.object({
   nameFa: z.string().min(1, "نام فارسی الزامی است").transform((s) => s.trim()),
@@ -33,6 +55,8 @@ const ProductAdminSchema = z.object({
   descriptionFa: z.string().optional().nullable().transform((s) => s?.trim() || null),
   descriptionEn: z.string().optional().nullable().transform((s) => s?.trim() || null),
   images: z.string().optional().nullable().transform((s) => s?.trim() || null),
+  packagingOptions: z.string().optional().nullable().transform((s) => s?.trim() || null),
+  documents: z.string().optional().nullable().transform((s) => s?.trim() || null),
   channelUsername: z.string().optional().nullable().transform((s) => s?.trim() || undefined),
   customHashtags: z.string().optional().nullable().transform((s) => s?.trim() || null),
 })
@@ -102,6 +126,53 @@ export async function adminCreateProductAction(
           })
         }
       } catch(e) { console.error("Failed to parse images JSON", e) }
+    }
+
+    const packagingRaw = data.packagingOptions
+    if (packagingRaw) {
+      try {
+        const parsed = JSON.parse(packagingRaw)
+        const validOptions = z.array(ProductPackagingOptionInputSchema).parse(parsed)
+        if (validOptions.length > 0) {
+          await db.productPackagingOption.createMany({
+            data: validOptions.map((opt) => ({
+              productId: product.id,
+              tier: opt.tier,
+              labelFa: opt.labelFa,
+              labelEn: opt.labelEn,
+              bagCount: opt.bagCount,
+              price: opt.price,
+              comparePrice: opt.comparePrice,
+              stockQty: opt.stockQty,
+              isDefault: opt.isDefault,
+              sortOrder: opt.sortOrder,
+              isActive: opt.isActive,
+            })),
+          })
+        }
+      } catch (e) {
+        console.error("Failed to parse/save packaging options", e)
+      }
+    }
+
+    const documentsRaw = data.documents
+    if (documentsRaw) {
+      try {
+        const parsed = JSON.parse(documentsRaw)
+        const validDocs = z.array(ProductDocumentInputSchema).parse(parsed)
+        if (validDocs.length > 0) {
+          await db.productDocument.createMany({
+            data: validDocs.map((doc) => ({
+              productId: product.id,
+              title: doc.title,
+              url: doc.url,
+              docType: doc.docType,
+            })),
+          })
+        }
+      } catch (e) {
+        console.error("Failed to parse/save product documents", e)
+      }
     }
 
     const channelUsername = data.channelUsername
@@ -263,6 +334,59 @@ export async function adminUpdateProductAction(
         await db.productImage.deleteMany({ where: { productId } })
       }
     } catch(e) { console.error("Failed to parse images JSON", e) }
+  }
+
+  const packagingRaw = data.packagingOptions
+  if (packagingRaw) {
+    try {
+      const parsed = JSON.parse(packagingRaw)
+      const validOptions = z.array(ProductPackagingOptionInputSchema).parse(parsed)
+      await db.$transaction(async (tx) => {
+        await tx.productPackagingOption.deleteMany({ where: { productId } })
+        if (validOptions.length > 0) {
+          await tx.productPackagingOption.createMany({
+            data: validOptions.map((opt) => ({
+              productId,
+              tier: opt.tier,
+              labelFa: opt.labelFa,
+              labelEn: opt.labelEn,
+              bagCount: opt.bagCount,
+              price: opt.price,
+              comparePrice: opt.comparePrice,
+              stockQty: opt.stockQty,
+              isDefault: opt.isDefault,
+              sortOrder: opt.sortOrder,
+              isActive: opt.isActive,
+            })),
+          })
+        }
+      })
+    } catch (e) {
+      console.error("Failed to parse/update packaging options", e)
+    }
+  }
+
+  const documentsRaw = data.documents
+  if (documentsRaw) {
+    try {
+      const parsed = JSON.parse(documentsRaw)
+      const validDocs = z.array(ProductDocumentInputSchema).parse(parsed)
+      await db.$transaction(async (tx) => {
+        await tx.productDocument.deleteMany({ where: { productId } })
+        if (validDocs.length > 0) {
+          await tx.productDocument.createMany({
+            data: validDocs.map((doc) => ({
+              productId,
+              title: doc.title,
+              url: doc.url,
+              docType: doc.docType,
+            })),
+          })
+        }
+      })
+    } catch (e) {
+      console.error("Failed to parse/update product documents", e)
+    }
   }
 
   const channelUsername = data.channelUsername

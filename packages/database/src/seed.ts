@@ -72,6 +72,9 @@ export async function seedRolesAndPermissions(db: PrismaClient) {
     { resource: "quotes", action: "update" },
     { resource: "categories", action: "*" },
     { resource: "brands", action: "*" },
+    { resource: "shipping", action: "manage" },
+    { resource: "factories", action: "manage" },
+    { resource: "settings", action: "manage" },
 
     // Legacy permissions
     { resource: "product", action: "read" },

@@ -328,3 +328,93 @@
   background-color: var(--color-border-subtle);
   color: var(--color-text);
 }
+
+/* Sub-tables: Packaging Options & Documents */
+.subTableWrapper {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg);
+}
+
+.subTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-xs);
+  text-align: start;
+}
+
+.subTable th {
+  background-color: var(--color-bg-subtle, rgba(0, 0, 0, 0.02));
+  padding-block: var(--space-2);
+  padding-inline: var(--space-3);
+  font-weight: 700;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.subTable td {
+  padding-block: var(--space-2);
+  padding-inline: var(--space-3);
+  border-bottom: 1px solid var(--color-border-subtle);
+  vertical-align: middle;
+}
+
+.subTable tr:last-child td {
+  border-bottom: none;
+}
+
+.subTableInput {
+  width: 100%;
+  padding-block: var(--space-1);
+  padding-inline: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-bg-elevated);
+  color: var(--color-text);
+  font-size: var(--font-size-xs);
+}
+
+.subTableInput:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.subTableBtnAdd {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding-block: var(--space-1-5);
+  padding-inline: var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--color-border);
+  background-color: transparent;
+  color: var(--color-accent-text, #0284c7);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: background-color var(--transition-fast);
+}
+
+.subTableBtnAdd:hover {
+  background-color: var(--color-border-subtle);
+}
+
+.subTableBtnDel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-1);
+  border-radius: var(--radius-sm);
+  border: none;
+  background-color: transparent;
+  color: var(--color-danger, #ef4444);
+  cursor: pointer;
+}
+
+.subTableBtnDel:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+}
+

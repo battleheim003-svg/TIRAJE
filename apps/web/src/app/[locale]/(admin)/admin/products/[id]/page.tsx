@@ -43,6 +43,10 @@ export default async function AdminProductEditPage({ params }: Props) {
           select: { url: true, isPrimary: true },
           orderBy: [{ isPrimary: "desc" }, { sortOrder: "asc" }],
         },
+        packagingOptions: {
+          orderBy: { sortOrder: "asc" },
+        },
+        documents: true,
       },
     }),
     db.brand.findMany({ orderBy: { nameFa: "asc" }, select: { id: true, nameFa: true, nameEn: true } }),
@@ -91,6 +95,25 @@ export default async function AdminProductEditPage({ params }: Props) {
             descriptionFa: product.descriptionFa ?? null,
             descriptionEn: product.descriptionEn ?? null,
             primaryImageUrl: primaryImage?.url ?? null,
+            packagingOptions: product.packagingOptions.map((po) => ({
+              id: po.id,
+              tier: po.tier,
+              labelFa: po.labelFa,
+              labelEn: po.labelEn,
+              bagCount: po.bagCount,
+              price: Number(po.price),
+              comparePrice: po.comparePrice != null ? Number(po.comparePrice) : null,
+              stockQty: po.stockQty,
+              isDefault: po.isDefault,
+              sortOrder: po.sortOrder,
+              isActive: po.isActive,
+            })),
+            documents: product.documents.map((d) => ({
+              id: d.id,
+              title: d.title,
+              url: d.url,
+              docType: d.docType,
+            })),
           }}
         />
       </div>

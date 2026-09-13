@@ -18,6 +18,10 @@ import {
   X,
   LogOut,
   Store,
+  Truck,
+  Factory,
+  Settings,
+  ShieldCheck,
 } from "lucide-react"
 import { signOut } from "next-auth/react"
 import { PERMISSIONS } from "@tirajeh/shared"
@@ -64,7 +68,9 @@ const NAV_SECTIONS: NavSectionDef[] = [
     items: [
       { key: "products", href: "/admin/products", icon: Package, fa: "محصولات", en: "Products", permission: [PERMISSIONS.PRODUCTS_CREATE, PERMISSIONS.PRODUCTS_UPDATE] },
       { key: "categories", href: "/admin/categories", icon: Tag, fa: "دسته‌بندی‌ها", en: "Categories", permission: PERMISSIONS.CATEGORIES_ALL },
-      { key: "brands", href: "/admin/brands", icon: Building2, fa: "برندها و کارخانجات", en: "Brands", permission: PERMISSIONS.BRANDS_ALL },
+      { key: "brands", href: "/admin/brands", icon: Building2, fa: "برندها", en: "Brands", permission: PERMISSIONS.BRANDS_ALL },
+      { key: "factories", href: "/admin/factories", icon: Factory, fa: "کارخانجات", en: "Factories", permission: PERMISSIONS.FACTORIES_MANAGE },
+      { key: "shipping", href: "/admin/shipping", icon: Truck, fa: "مناطق و کرایه حمل", en: "Shipping", permission: PERMISSIONS.SHIPPING_MANAGE },
       { key: "orders", href: "/admin/orders", icon: ShoppingCart, fa: "سفارش‌ها", en: "Orders", countKey: "pendingOrders", permission: PERMISSIONS.ORDERS_READ },
       { key: "quotes", href: "/admin/quotes", icon: MessageSquare, fa: "استعلام‌های قیمت", en: "Quotes", countKey: "unansweredQuotes", permission: PERMISSIONS.QUOTES_UPDATE },
     ],
@@ -74,8 +80,10 @@ const NAV_SECTIONS: NavSectionDef[] = [
     labelEn: "Management & CRM",
     items: [
       { key: "users", href: "/admin/users", icon: Users, fa: "کاربران", en: "Users", permission: PERMISSIONS.USERS_READ },
+      { key: "roles", href: "/admin/roles", icon: ShieldCheck, fa: "نقش‌ها و دسترسی‌ها", en: "Roles & Permissions", permission: PERMISSIONS.USERS_READ },
       { key: "tickets", href: "/admin/tickets", icon: LifeBuoy, fa: "تیکت‌های پشتیبانی", en: "Tickets", countKey: "openTickets", permission: PERMISSIONS.TICKETS_REPLY },
       { key: "blog", href: "/admin/blog", icon: FileText, fa: "مقالات وبلاگ", en: "Blog Posts", permission: PERMISSIONS.BLOG_ALL },
+      { key: "settings", href: "/admin/settings", icon: Settings, fa: "تنظیمات سامانه", en: "Settings", permission: PERMISSIONS.SETTINGS_MANAGE },
     ],
   },
 ]

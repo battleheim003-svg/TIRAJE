@@ -3,7 +3,7 @@
 import React, { useState, useTransition, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { Save, Copy, Check } from "lucide-react"
+import { Save, Copy, Check, Plus, Trash2 } from "lucide-react"
 import {
   CEMENT_TYPE_LABEL,
   PACKAGING_LABEL,
@@ -20,6 +20,30 @@ import { ImageUploadDropzone } from "@/components/admin/ImageUploadDropzone"
 import { InlineToggle } from "@/components/admin/DataTable"
 import { buildProductHashtags } from "@tirajeh/integrations/telegram/hashtags"
 import styles from "./ProductForm.module.css"
+
+export type PackagingTierType = "SINGLE" | "PAIR" | "TRUCK_6W" | "TRUCK_10W"
+export type DocTypeVal = "DATASHEET" | "CERTIFICATE" | "MSDS" | "CATALOG"
+
+export interface PackagingOptionItem {
+  id?: string
+  tier: PackagingTierType
+  labelFa: string
+  labelEn?: string | null
+  bagCount: number
+  price: number
+  comparePrice?: number | null
+  stockQty: number
+  isDefault: boolean
+  sortOrder: number
+  isActive: boolean
+}
+
+export interface DocumentItem {
+  id?: string
+  title: string
+  url: string
+  docType: DocTypeVal
+}
 
 interface Brand {
   id: string
@@ -62,6 +86,8 @@ export interface Product {
   descriptionFa: string | null
   descriptionEn: string | null
   primaryImageUrl?: string | null
+  packagingOptions?: PackagingOptionItem[]
+  documents?: DocumentItem[]
 }
 
 interface Props {
@@ -118,6 +144,44 @@ export default function ProductForm({
   const [isFeatured] = useState(product?.isFeatured ?? false)
   const [channelUsername, setChannelUsername] = useState(DEFAULT_CHANNEL)
   const [copied, setCopied] = useState(false)
+
+  // Packaging Options State
+  const [packagingOptions, setPackagingOptions] = useState<PackagingOptionItem[]>(() => {
+    if (product?.packagingOptions && product.packagingOptions.length > 0) {
+      return product.packagingOptions
+    }
+    return [
+      {
+        tier: "SINGLE",
+        labelFa: "کیسه‌ای (تک کیسه)",
+        labelEn: "Single Bag",
+        bagCount: 1,
+        price: Number(product?.price || 0),
+        comparePrice: null,
+        stockQty: 100,
+        isDefault: true,
+        sortOrder: 0,
+        isActive: true,
+      },
+      {
+        tier: "PAIR",
+        labelFa: "بسته دو عددی",
+        labelEn: "Double Bag",
+        bagCount: 2,
+        price: Number(product?.price || 0) * 2,
+        comparePrice: null,
+        stockQty: 50,
+        isDefault: false,
+        sortOrder: 1,
+        isActive: true,
+      },
+    ]
+  })
+
+  // Documents State
+  const [documents, setDocuments] = useState<DocumentItem[]>(() => {
+    return product?.documents ?? []
+  })
 
   // Selected brand label for hashtags
   const selectedBrand = useMemo(() => brands.find((b) => b.id === brandId), [brands, brandId])
@@ -180,6 +244,8 @@ export default function ProductForm({
     if (image) fd.set("imageUrl", image)
     fd.set("channelUsername", channelUsername)
     fd.set("customHashtags", JSON.stringify(hashtags))
+    fd.set("packagingOptions", JSON.stringify(packagingOptions))
+    fd.set("documents", JSON.stringify(documents))
 
     startTransition(async () => {
       try {
@@ -580,7 +646,291 @@ export default function ProductForm({
             </div>
           </fieldset>
 
-          {/* 9. Active/Inactive Toggle Switch */}
+          {/* 9. Packaging Options (Tiers) */}
+          <fieldset className={styles.tflFieldset}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <legend className={styles.tflLegend}>
+                {fa ? "گزینه‌های بسته‌بندی و سفارش عمده" : "Packaging & Bulk Options"}
+              </legend>
+              <button
+                type="button"
+                className={styles.subTableBtnAdd}
+                onClick={() => {
+                  setPackagingOptions((prev) => [
+                    ...prev,
+                    {
+                      tier: "TRUCK_6W",
+                      labelFa: "کامیون تک (۶ چرخ)",
+                      labelEn: "6-Wheel Truck",
+                      bagCount: 200,
+                      price: Number(price || 0) * 200,
+                      comparePrice: null,
+                      stockQty: 10,
+                      isDefault: false,
+                      sortOrder: prev.length,
+                      isActive: true,
+                    },
+                  ])
+                }}
+              >
+                <Plus style={{ width: "0.85rem", height: "0.85rem" }} />
+                <span>{fa ? "افزودن بسته‌بندی" : "Add Option"}</span>
+              </button>
+            </div>
+
+            <div className={styles.subTableWrapper}>
+              <table className={styles.subTable}>
+                <thead>
+                  <tr>
+                    <th>{fa ? "سطح (Tier)" : "Tier"}</th>
+                    <th>{fa ? "عنوان فارسی" : "Title (Fa)"}</th>
+                    <th>{fa ? "تعداد کیسه" : "Bags"}</th>
+                    <th>{fa ? "قیمت (تومان)" : "Price"}</th>
+                    <th>{fa ? "موجودی" : "Stock"}</th>
+                    <th>{fa ? "پیش‌فرض" : "Default"}</th>
+                    <th>{fa ? "فعال" : "Active"}</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {packagingOptions.map((opt, idx) => (
+                    <tr key={idx}>
+                      <td>
+                        <select
+                          value={opt.tier}
+                          onChange={(e) => {
+                            const val = e.target.value as PackagingTierType
+                            setPackagingOptions((prev) =>
+                              prev.map((o, i) => (i === idx ? { ...o, tier: val } : o))
+                            )
+                          }}
+                          className={styles.subTableInput}
+                        >
+                          <option value="SINGLE">SINGLE (تک)</option>
+                          <option value="PAIR">PAIR (جفت)</option>
+                          <option value="TRUCK_6W">TRUCK_6W (۶ چرخ)</option>
+                          <option value="TRUCK_10W">TRUCK_10W (۱۰ چرخ / تریلی)</option>
+                        </select>
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          value={opt.labelFa}
+                          onChange={(e) => {
+                            const val = e.target.value
+                            setPackagingOptions((prev) =>
+                              prev.map((o, i) => (i === idx ? { ...o, labelFa: val } : o))
+                            )
+                          }}
+                          className={styles.subTableInput}
+                          dir="rtl"
+                          placeholder={fa ? "عنوان فارسی" : "Title"}
+                        />
+                      </td>
+                      <td style={{ width: "80px" }}>
+                        <input
+                          type="number"
+                          min="1"
+                          value={opt.bagCount}
+                          onChange={(e) => {
+                            const val = Number(e.target.value) || 1
+                            setPackagingOptions((prev) =>
+                              prev.map((o, i) => (i === idx ? { ...o, bagCount: val } : o))
+                            )
+                          }}
+                          className={styles.subTableInput}
+                        />
+                      </td>
+                      <td style={{ width: "120px" }}>
+                        <input
+                          type="number"
+                          min="0"
+                          value={opt.price}
+                          onChange={(e) => {
+                            const val = Number(e.target.value) || 0
+                            setPackagingOptions((prev) =>
+                              prev.map((o, i) => (i === idx ? { ...o, price: val } : o))
+                            )
+                          }}
+                          className={styles.subTableInput}
+                        />
+                      </td>
+                      <td style={{ width: "80px" }}>
+                        <input
+                          type="number"
+                          min="0"
+                          value={opt.stockQty}
+                          onChange={(e) => {
+                            const val = Number(e.target.value) || 0
+                            setPackagingOptions((prev) =>
+                              prev.map((o, i) => (i === idx ? { ...o, stockQty: val } : o))
+                            )
+                          }}
+                          className={styles.subTableInput}
+                        />
+                      </td>
+                      <td style={{ textAlign: "center" }}>
+                        <input
+                          type="radio"
+                          name="defaultPackaging"
+                          checked={opt.isDefault}
+                          onChange={() => {
+                            setPackagingOptions((prev) =>
+                              prev.map((o, i) => ({ ...o, isDefault: i === idx }))
+                            )
+                          }}
+                        />
+                      </td>
+                      <td style={{ textAlign: "center" }}>
+                        <input
+                          type="checkbox"
+                          checked={opt.isActive}
+                          onChange={(e) => {
+                            const val = e.target.checked
+                            setPackagingOptions((prev) =>
+                              prev.map((o, i) => (i === idx ? { ...o, isActive: val } : o))
+                            )
+                          }}
+                        />
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          className={styles.subTableBtnDel}
+                          onClick={() => {
+                            setPackagingOptions((prev) => prev.filter((_, i) => i !== idx))
+                          }}
+                          title={fa ? "حذف گزینه" : "Delete"}
+                        >
+                          <Trash2 style={{ width: "0.85rem", height: "0.85rem" }} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {packagingOptions.length === 0 && (
+                    <tr>
+                      <td colSpan={8} style={{ textAlign: "center", color: "var(--color-text-muted)" }}>
+                        {fa ? "هیچ گزینه بسته‌بندی اضافه نشده است" : "No packaging options added"}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </fieldset>
+
+          {/* 10. Product Documents (Technical Datasheets & Certificates) */}
+          <fieldset className={styles.tflFieldset}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <legend className={styles.tflLegend}>
+                {fa ? "اسناد و گواهی‌نامه‌های فنی" : "Technical Documents & Certificates"}
+              </legend>
+              <button
+                type="button"
+                className={styles.subTableBtnAdd}
+                onClick={() => {
+                  setDocuments((prev) => [
+                    ...prev,
+                    {
+                      title: "برگه مشخصات فنی (Datasheet)",
+                      url: "https://",
+                      docType: "DATASHEET",
+                    },
+                  ])
+                }}
+              >
+                <Plus style={{ width: "0.85rem", height: "0.85rem" }} />
+                <span>{fa ? "افزودن سند" : "Add Document"}</span>
+              </button>
+            </div>
+
+            <div className={styles.subTableWrapper}>
+              <table className={styles.subTable}>
+                <thead>
+                  <tr>
+                    <th>{fa ? "نوع سند" : "Type"}</th>
+                    <th>{fa ? "عنوان سند" : "Document Title"}</th>
+                    <th>{fa ? "آدرس اینترنتی (URL)" : "URL"}</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {documents.map((doc, idx) => (
+                    <tr key={idx}>
+                      <td style={{ width: "140px" }}>
+                        <select
+                          value={doc.docType}
+                          onChange={(e) => {
+                            const val = e.target.value as DocTypeVal
+                            setDocuments((prev) =>
+                              prev.map((d, i) => (i === idx ? { ...d, docType: val } : d))
+                            )
+                          }}
+                          className={styles.subTableInput}
+                        >
+                          <option value="DATASHEET">DATASHEET (دیتاشیت)</option>
+                          <option value="CERTIFICATE">CERTIFICATE (گواهی استاندارد)</option>
+                          <option value="MSDS">MSDS (ایمنی مواد)</option>
+                          <option value="CATALOG">CATALOG (کاتالوگ)</option>
+                        </select>
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          value={doc.title}
+                          onChange={(e) => {
+                            const val = e.target.value
+                            setDocuments((prev) =>
+                              prev.map((d, i) => (i === idx ? { ...d, title: val } : d))
+                            )
+                          }}
+                          className={styles.subTableInput}
+                          dir="rtl"
+                          placeholder={fa ? "مثال: گواهی استاندارد ملی" : "Certificate Title"}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="url"
+                          value={doc.url}
+                          onChange={(e) => {
+                            const val = e.target.value
+                            setDocuments((prev) =>
+                              prev.map((d, i) => (i === idx ? { ...d, url: val } : d))
+                            )
+                          }}
+                          className={styles.subTableInput}
+                          dir="ltr"
+                          placeholder="https://..."
+                        />
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          className={styles.subTableBtnDel}
+                          onClick={() => {
+                            setDocuments((prev) => prev.filter((_, i) => i !== idx))
+                          }}
+                          title={fa ? "حذف سند" : "Delete"}
+                        >
+                          <Trash2 style={{ width: "0.85rem", height: "0.85rem" }} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {documents.length === 0 && (
+                    <tr>
+                      <td colSpan={4} style={{ textAlign: "center", color: "var(--color-text-muted)" }}>
+                        {fa ? "هیچ سندی اضافه نشده است" : "No documents added"}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </fieldset>
+
+          {/* 11. Active/Inactive Toggle Switch */}
           <div className={styles.tflSwitchRow}>
             <div className={styles.tflSwitchInfo}>
               <span className={styles.tflSwitchLabel}>

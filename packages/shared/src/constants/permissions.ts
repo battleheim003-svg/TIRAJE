@@ -12,6 +12,9 @@ export const PERMISSIONS = {
   QUOTES_UPDATE: "quotes:update",
   CATEGORIES_ALL: "categories:*",
   BRANDS_ALL: "brands:*",
+  SHIPPING_MANAGE: "shipping:manage",
+  FACTORIES_MANAGE: "factories:manage",
+  SETTINGS_MANAGE: "settings:manage",
 } as const
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS]
