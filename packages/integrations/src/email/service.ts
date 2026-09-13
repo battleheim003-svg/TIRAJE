@@ -7,8 +7,10 @@ import {
   WelcomeEmail,
 } from "./templates"
 import { ContactNoticeEmail, type ContactNoticeEmailProps } from "./templates/contact-notice"
+import { OrderConfirmationEmail, type OrderConfirmationEmailProps } from "./templates/order-confirmation"
+import { OrderStatusEmail, type OrderStatusEmailProps, STATUS_FA } from "./templates/order-status"
 
-export type { ContactNoticeEmailProps }
+export type { ContactNoticeEmailProps, OrderConfirmationEmailProps, OrderStatusEmailProps }
 
 let _resend: Resend | null = null
 
@@ -21,7 +23,7 @@ function getResend(): Resend {
   return _resend
 }
 
-const FROM = process.env.EMAIL_FROM ?? "info@tirajeh.ir"
+const FROM = process.env.FROM_EMAIL ?? process.env.EMAIL_FROM ?? "info@tirajeh.ir"
 
 // ─── Email Service ────────────────────────────────────────────────────────────
 
@@ -36,20 +38,20 @@ export class EmailService {
     }
   }
 
-  async sendOrderConfirmation(params: {
-    to: string
-    orderNumber: string
-    recipientName: string
-    totalAmount: number
-    itemCount: number
-    estimatedDays: string
-    orderId: string
-  }) {
-    const trackingUrl = `${process.env.NEXTAUTH_URL}/account/orders/${params.orderId}`
+  async sendOrderConfirmation(params: OrderConfirmationEmailProps & { to: string }): Promise<void> {
     await this.send(
       params.to,
       `تأیید سفارش ${params.orderNumber} — تیراژه`,
-      React.createElement(OrderConfirmEmail, { ...params, trackingUrl })
+      React.createElement(OrderConfirmationEmail, params)
+    )
+  }
+
+  async sendOrderStatusUpdate(params: OrderStatusEmailProps): Promise<void> {
+    const statusText = STATUS_FA[params.newStatus] ?? params.newStatus
+    await this.send(
+      params.customerEmail,
+      `وضعیت سفارش ${params.orderNumber}: ${statusText} — تیراژه`,
+      React.createElement(OrderStatusEmail, params)
     )
   }
 

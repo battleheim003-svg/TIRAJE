@@ -16,10 +16,12 @@ export const serverEnvSchema = z.object({
   TELEGRAM_BOT_TOKEN: z.string().min(1),
   TELEGRAM_WEBHOOK_SECRET: z.string().min(16),
   TELEGRAM_CHANNEL_ID: z.string().min(1),
+  TELEGRAM_ADMIN_CHAT_ID: z.string().min(1),
   // Payment
   ZARINPAL_MERCHANT_ID: z.string().length(36),
   // Email
   RESEND_API_KEY: z.string().startsWith("re_"),
+  FROM_EMAIL: z.string().email().optional(),
   // Cron
   CRON_SECRET: z.string().min(32),
   // Optional

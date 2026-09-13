@@ -4,6 +4,13 @@ import { db } from "@tirajeh/database"
 import { auth } from "@tirajeh/auth"
 import { CreateQuoteSchema } from "@tirajeh/shared"
 import type { ActionResult } from "@tirajeh/shared"
+import { notifyNewQuote } from "@tirajeh/integrations"
+
+const CUSTOMER_TYPE_LABELS: Record<string, string> = {
+  NORMAL: "عادی",
+  CONTRACTOR: "پیمانکار",
+  COMPANY: "شرکت",
+}
 
 export async function createQuoteAction(formData: FormData): Promise<ActionResult<{ id: string }>> {
   const session = await auth()
@@ -24,8 +31,20 @@ export async function createQuoteAction(formData: FormData): Promise<ActionResul
       userId: session?.user?.id ?? null,
       quantityTon: parsed.data.quantityTon,
     },
-    select: { id: true },
+    include: { product: { select: { nameFa: true } } },
   })
+
+  try {
+    await notifyNewQuote({
+      name: quote.name,
+      productName: quote.product.nameFa,
+      quantityTon: Number(quote.quantityTon),
+      phone: quote.phone,
+      customerType: (quote.customerType && CUSTOMER_TYPE_LABELS[quote.customerType]) || "عادی",
+    })
+  } catch (e) {
+    console.error("[notify] quote:", e)
+  }
 
   return { success: true, data: { id: quote.id } }
 }

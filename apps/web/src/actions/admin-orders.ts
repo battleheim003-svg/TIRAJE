@@ -16,6 +16,7 @@ async function requireAdmin() {
 }
 
 import { releaseOrderStock, PrismaTx } from "../lib/stock"
+import { emailService } from "@tirajeh/integrations"
 
 export async function adminUpdateOrderStatusAction(
   formData: FormData
@@ -28,7 +29,10 @@ export async function adminUpdateOrderStatusAction(
 
   if (!orderId || !status) throw new Error("Missing required fields")
 
-  const order = await db.order.findUnique({ where: { id: orderId }, select: { id: true } })
+  const order = await db.order.findUnique({
+    where: { id: orderId },
+    include: { user: { select: { email: true, name: true } } },
+  })
   if (!order) throw new Error("Order not found")
 
   await db.$transaction(async (tx) => {
@@ -50,6 +54,20 @@ export async function adminUpdateOrderStatusAction(
       },
     })
   })
+
+  if (order.user?.email) {
+    try {
+      await emailService.sendOrderStatusUpdate({
+        customerName: order.user.name ?? "",
+        customerEmail: order.user.email,
+        orderNumber: String(order.orderNumber),
+        newStatus: status,
+        note: note ?? undefined,
+      })
+    } catch (e) {
+      console.error("[notify] status email:", e)
+    }
+  }
 
   revalidatePath(`/admin/orders/${orderId}`)
   revalidatePath("/admin/orders")
