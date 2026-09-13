@@ -1,21 +1,11 @@
 "use server"
 
-import { db } from "@tirajeh/database"
-import { auth } from "@tirajeh/auth"
+import { db, CementType, PackagingType, StockStatus } from "@tirajeh/database"
 import { revalidatePath } from "next/cache"
 import { publishProductToChannel } from "@tirajeh/integrations"
 import { CEMENT_TYPE_LABEL, PACKAGING_LABEL } from "@/lib/cement"
-
-const ADMIN_ROLES = ["admin", "super_admin"]
-
-async function requireAdmin() {
-  const session = await auth()
-  const roleName = (session?.user as any)?.roleName as string | undefined
-  if (!session?.user || !roleName || !ADMIN_ROLES.includes(roleName)) {
-    throw new Error("Unauthorized")
-  }
-  return session.user as any
-}
+import { requireAdminPerm } from "@/lib/admin-guard"
+import { PERMISSIONS } from "@tirajeh/shared"
 
 function parseProductFormData(fd: FormData) {
   const nameFa = (fd.get("nameFa") as string | null)?.trim() ?? ""
@@ -49,12 +39,12 @@ function parseProductFormData(fd: FormData) {
     nameEn,
     slug,
     brandId,
-    cementType: cementType as any,
-    packagingType: packagingType as any,
+    cementType: (cementType as CementType | null) ?? null,
+    packagingType: packagingType as PackagingType,
     weightKg,
     price,
     comparePrice,
-    stockStatus: stockStatus as any,
+    stockStatus: stockStatus as StockStatus,
     stockQty,
     minOrderQty,
     factoryId,
@@ -68,7 +58,7 @@ function parseProductFormData(fd: FormData) {
 export async function adminCreateProductAction(
   formData: FormData
 ): Promise<{ productId: string }> {
-  await requireAdmin()
+  await requireAdminPerm(PERMISSIONS.PRODUCTS_CREATE)
   const data = parseProductFormData(formData)
 
   try {
@@ -181,7 +171,7 @@ async function syncProductToTelegram(
 export async function adminUpdateProductAction(
   formData: FormData
 ): Promise<{ ok: true }> {
-  await requireAdmin()
+  await requireAdminPerm(PERMISSIONS.PRODUCTS_UPDATE)
 
   const productId = (formData.get("productId") as string | null)?.trim()
   if (!productId) throw new Error("Product ID missing")
@@ -211,8 +201,15 @@ export async function adminUpdateProductAction(
         descriptionEn: data.descriptionEn,
       },
     })
-  } catch (err: any) {
-    if (err?.code === "P2002") throw new Error("این اسلاگ قبلاً استفاده شده است")
+  } catch (err: unknown) {
+    if (
+      typeof err === "object" &&
+      err !== null &&
+      "code" in err &&
+      (err as { code: unknown }).code === "P2002"
+    ) {
+      throw new Error("این اسلاگ قبلاً استفاده شده است")
+    }
     throw err
   }
 
@@ -263,7 +260,7 @@ export async function adminToggleProductStatusAction(
   productId: string,
   isActive: boolean
 ): Promise<{ ok: true }> {
-  await requireAdmin()
+  await requireAdminPerm(PERMISSIONS.PRODUCTS_UPDATE)
   if (!productId) throw new Error("Product ID missing")
 
   await db.product.update({
@@ -283,7 +280,7 @@ export async function adminToggleProductStatusAction(
 export async function adminDeleteProductAction(
   productId: string
 ): Promise<{ ok: true }> {
-  await requireAdmin()
+  await requireAdminPerm(PERMISSIONS.PRODUCTS_DELETE)
   if (!productId) throw new Error("Product ID missing")
 
   await db.product.delete({

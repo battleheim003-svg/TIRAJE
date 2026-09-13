@@ -347,7 +347,8 @@ describe("checkoutAction — transaction rollback safety", () => {
   // ── Test 8: releaseOrderStock idempotency ─────────────────────────────────
   it("releaseOrderStock is idempotent: calling twice does not double-restore stock", async () => {
     const { releaseOrderStock } = await import("../../lib/stock")
-    let orderState: any = { id: "order-1", stockReleasedAt: null, items: [{ productId: "p1", quantity: 5 }] }
+    type PrismaTx = Parameters<Parameters<typeof db.$transaction>[0]>[0]
+    const orderState = { id: "order-1", stockReleasedAt: null as Date | null, items: [{ productId: "p1", quantity: 5 }] }
     
     const tx = {
       order: {
@@ -359,11 +360,11 @@ describe("checkoutAction — transaction rollback safety", () => {
       }
     }
     
-    await releaseOrderStock(tx as any, "order-1")
+    await releaseOrderStock(tx as unknown as PrismaTx, "order-1")
     expect(tx.product.update).toHaveBeenCalledTimes(1)
     
     // Second call should do nothing because orderState.stockReleasedAt is now set
-    await releaseOrderStock(tx as any, "order-1")
+    await releaseOrderStock(tx as unknown as PrismaTx, "order-1")
     expect(tx.product.update).toHaveBeenCalledTimes(1) // Still 1
   })
 })

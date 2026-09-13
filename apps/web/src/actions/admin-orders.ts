@@ -1,27 +1,16 @@
 "use server"
 
-import { db } from "@tirajeh/database"
-import { auth } from "@tirajeh/auth"
+import { db, OrderStatus } from "@tirajeh/database"
 import { revalidatePath } from "next/cache"
-
-const ADMIN_ROLES = ["admin", "super_admin"]
-
-async function requireAdmin() {
-  const session = await auth()
-  const roleName = (session?.user as any)?.roleName as string | undefined
-  if (!session?.user || !roleName || !ADMIN_ROLES.includes(roleName)) {
-    throw new Error("Unauthorized")
-  }
-  return session.user as any
-}
-
 import { releaseOrderStock, PrismaTx } from "../lib/stock"
 import { emailService } from "@tirajeh/integrations"
+import { requireAdminPerm, AdminUser } from "@/lib/admin-guard"
+import { PERMISSIONS } from "@tirajeh/shared"
 
 export async function adminUpdateOrderStatusAction(
   formData: FormData
 ): Promise<{ ok: true }> {
-  const admin = await requireAdmin()
+  const user: AdminUser = await requireAdminPerm(PERMISSIONS.ORDERS_UPDATE)
 
   const orderId = (formData.get("orderId") as string | null)?.trim()
   const status = (formData.get("status") as string | null)?.trim()
@@ -38,7 +27,7 @@ export async function adminUpdateOrderStatusAction(
   await db.$transaction(async (tx) => {
     await tx.order.update({
       where: { id: orderId },
-      data: { status: status as any, adminNote: note ?? undefined },
+      data: { status: status as OrderStatus, adminNote: note ?? undefined },
     })
 
     if (status === "CANCELLED" || status === "REFUNDED") {
@@ -48,9 +37,9 @@ export async function adminUpdateOrderStatusAction(
     await tx.orderEvent.create({
       data: {
         orderId,
-        status: status as any,
+        status: status as OrderStatus,
         note: note || "تغییر وضعیت توسط ادمین",
-        createdBy: admin.id,
+        createdBy: user.id,
       },
     })
   })

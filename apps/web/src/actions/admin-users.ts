@@ -1,22 +1,12 @@
 "use server"
 
 import { db } from "@tirajeh/database"
-import { auth } from "@tirajeh/auth"
 import { revalidatePath } from "next/cache"
-
-const ADMIN_ROLES = ["admin", "super_admin"]
-
-async function requireAdmin() {
-  const session = await auth()
-  const roleName = (session?.user as any)?.roleName as string | undefined
-  if (!session?.user || !roleName || !ADMIN_ROLES.includes(roleName)) {
-    throw new Error("Unauthorized")
-  }
-  return session.user as any
-}
+import { requireAdminPerm } from "@/lib/admin-guard"
+import { PERMISSIONS } from "@tirajeh/shared"
 
 export async function adminToggleUserStatusAction(userId: string, isActive: boolean): Promise<{ ok: true }> {
-  await requireAdmin()
+  await requireAdminPerm(PERMISSIONS.USERS_UPDATE)
   if (!userId) throw new Error("شناسه کاربر الزامی است")
 
   await db.user.update({
@@ -29,7 +19,7 @@ export async function adminToggleUserStatusAction(userId: string, isActive: bool
 }
 
 export async function adminDeleteUserAction(userId: string): Promise<{ ok: true }> {
-  await requireAdmin()
+  await requireAdminPerm(PERMISSIONS.USERS_UPDATE)
   if (!userId) throw new Error("شناسه کاربر الزامی است")
 
   await db.user.delete({

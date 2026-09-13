@@ -7,7 +7,7 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { getLocale } from "next-intl/server"
 import { AppError, OutOfStockError } from "@tirajeh/shared"
-import { releaseOrderStock } from "../lib/stock"
+import { releaseOrderStock, PrismaTx } from "../lib/stock"
 import { calculateShippingCost } from "../lib/shipping"
 import { paymentService } from "@tirajeh/integrations"
 import { z } from "zod"
@@ -164,10 +164,10 @@ export async function checkoutAction(
     let gatewayUrl = ""
     try {
       gatewayUrl = await paymentService.initiatePayment(order.id, callbackUrl)
-    } catch (err: any) {
+    } catch (err: unknown) {
       await db.$transaction(async (tx) => {
         await tx.order.update({ where: { id: order.id }, data: { status: "CANCELLED" } })
-        await releaseOrderStock(tx as any, order.id)
+        await releaseOrderStock(tx as PrismaTx, order.id)
       })
       return { success: false, error: "خطا در اتصال به درگاه پرداخت" }
     }

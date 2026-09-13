@@ -20,12 +20,14 @@ import {
   Store,
 } from "lucide-react"
 import { signOut } from "next-auth/react"
+import { PERMISSIONS } from "@tirajeh/shared"
 import styles from "./AdminSidebar.module.css"
 
 interface AdminSidebarProps {
   locale: string
   mobileOpen: boolean
   onCloseMobile: () => void
+  userPermissions?: string[]
   counts?: {
     orders?: number
     tickets?: number
@@ -39,6 +41,7 @@ interface NavItemDef {
   fa: string
   en: string
   countKey?: "orders" | "tickets"
+  permission?: string | string[]
 }
 
 interface NavSectionDef {
@@ -53,27 +56,27 @@ const NAV_SECTIONS: NavSectionDef[] = [
     labelEn: "Overview",
     items: [
       { key: "dashboard", href: "/admin/dashboard", icon: LayoutDashboard, fa: "داشبورد", en: "Dashboard" },
-      { key: "daily-price", href: "/admin/daily-price", icon: TrendingUp, fa: "اعلام قیمت روز", en: "Daily Prices" },
+      { key: "daily-price", href: "/admin/daily-price", icon: TrendingUp, fa: "اعلام قیمت روز", en: "Daily Prices", permission: PERMISSIONS.PRICES_PUBLISH },
     ],
   },
   {
     labelFa: "فروش و بازرگانی",
     labelEn: "Commerce",
     items: [
-      { key: "products", href: "/admin/products", icon: Package, fa: "محصولات", en: "Products" },
-      { key: "categories", href: "/admin/categories", icon: Tag, fa: "دسته‌بندی‌ها", en: "Categories" },
-      { key: "brands", href: "/admin/brands", icon: Building2, fa: "برندها و کارخانجات", en: "Brands" },
-      { key: "orders", href: "/admin/orders", icon: ShoppingCart, fa: "سفارش‌ها", en: "Orders", countKey: "orders" },
-      { key: "quotes", href: "/admin/quotes", icon: MessageSquare, fa: "استعلام‌های قیمت", en: "Quotes" },
+      { key: "products", href: "/admin/products", icon: Package, fa: "محصولات", en: "Products", permission: [PERMISSIONS.PRODUCTS_CREATE, PERMISSIONS.PRODUCTS_UPDATE] },
+      { key: "categories", href: "/admin/categories", icon: Tag, fa: "دسته‌بندی‌ها", en: "Categories", permission: PERMISSIONS.CATEGORIES_ALL },
+      { key: "brands", href: "/admin/brands", icon: Building2, fa: "برندها و کارخانجات", en: "Brands", permission: PERMISSIONS.BRANDS_ALL },
+      { key: "orders", href: "/admin/orders", icon: ShoppingCart, fa: "سفارش‌ها", en: "Orders", countKey: "orders", permission: PERMISSIONS.ORDERS_READ },
+      { key: "quotes", href: "/admin/quotes", icon: MessageSquare, fa: "استعلام‌های قیمت", en: "Quotes", permission: PERMISSIONS.QUOTES_UPDATE },
     ],
   },
   {
     labelFa: "مدیریت و پشتیبانی",
     labelEn: "Management & CRM",
     items: [
-      { key: "users", href: "/admin/users", icon: Users, fa: "کاربران", en: "Users" },
-      { key: "tickets", href: "/admin/tickets", icon: LifeBuoy, fa: "تیکت‌های پشتیبانی", en: "Tickets", countKey: "tickets" },
-      { key: "blog", href: "/admin/blog", icon: FileText, fa: "مقالات وبلاگ", en: "Blog Posts" },
+      { key: "users", href: "/admin/users", icon: Users, fa: "کاربران", en: "Users", permission: PERMISSIONS.USERS_READ },
+      { key: "tickets", href: "/admin/tickets", icon: LifeBuoy, fa: "تیکت‌های پشتیبانی", en: "Tickets", countKey: "tickets", permission: PERMISSIONS.TICKETS_REPLY },
+      { key: "blog", href: "/admin/blog", icon: FileText, fa: "مقالات وبلاگ", en: "Blog Posts", permission: PERMISSIONS.BLOG_ALL },
     ],
   },
 ]
@@ -82,10 +85,21 @@ export function AdminSidebar({
   locale,
   mobileOpen,
   onCloseMobile,
+  userPermissions,
   counts,
 }: AdminSidebarProps) {
   const pathname = usePathname()
   const fa = locale === "fa"
+
+  function canAccess(itemPermission?: string | string[]) {
+    if (!itemPermission) return true
+    if (!userPermissions) return true
+    if (userPermissions.includes("*")) return true
+    if (Array.isArray(itemPermission)) {
+      return itemPermission.some((p) => userPermissions.includes(p))
+    }
+    return userPermissions.includes(itemPermission)
+  }
 
   // Automatically close mobile drawer when route changes
   useEffect(() => {
@@ -139,13 +153,17 @@ export function AdminSidebar({
 
         {/* Navigation Sections */}
         <nav className={styles["web-adm-sb__nav"]}>
-          {NAV_SECTIONS.map((section, idx) => (
-            <div key={idx} className={styles["web-adm-sb__section"]}>
-              <span className={styles["web-adm-sb__section-label"]}>
-                {fa ? section.labelFa : section.labelEn}
-              </span>
-              <ul className={styles["web-adm-sb__list"]} role="list">
-                {section.items.map((item) => {
+          {NAV_SECTIONS.map((section, idx) => {
+            const visibleItems = section.items.filter((item) => canAccess(item.permission))
+            if (visibleItems.length === 0) return null
+
+            return (
+              <div key={idx} className={styles["web-adm-sb__section"]}>
+                <span className={styles["web-adm-sb__section-label"]}>
+                  {fa ? section.labelFa : section.labelEn}
+                </span>
+                <ul className={styles["web-adm-sb__list"]} role="list">
+                  {visibleItems.map((item) => {
                   const fullHref = `/${locale}${item.href}`
                   const isActive =
                     pathname === fullHref ||
@@ -183,7 +201,7 @@ export function AdminSidebar({
                 })}
               </ul>
             </div>
-          ))}
+          )})}
         </nav>
 
         {/* Footer Actions */}

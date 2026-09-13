@@ -1,10 +1,11 @@
 "use server"
 
 import { db } from "@tirajeh/database"
-import { auth } from "@tirajeh/auth"
 import { revalidatePath } from "next/cache"
 import { publishPostToChannel } from "@tirajeh/integrations"
 import sanitizeHtml from "sanitize-html"
+import { requireAdminPerm, AdminUser } from "@/lib/admin-guard"
+import { PERMISSIONS } from "@tirajeh/shared"
 
 const ALLOWED_TAGS = [
   "p", "br", "strong", "em", "u", "s", "a", "img",
@@ -21,17 +22,6 @@ const sanitizeOptions: sanitizeHtml.IOptions = {
   allowedSchemes: ["https", "http", "data"],
 }
 
-const ADMIN_ROLES = ["admin", "super_admin"]
-
-async function requireAdmin() {
-  const session = await auth()
-  const roleName = (session?.user as any)?.roleName as string | undefined
-  if (!session?.user || !roleName || !ADMIN_ROLES.includes(roleName)) {
-    throw new Error("Unauthorized")
-  }
-  return session.user as any
-}
-
 function str(fd: FormData, key: string): string {
   return ((fd.get(key) as string | null)?.trim() ?? "")
 }
@@ -43,7 +33,7 @@ function strOrNull(fd: FormData, key: string): string | null {
 export async function adminCreatePostAction(
   formData: FormData
 ): Promise<{ postId: string }> {
-  const admin = await requireAdmin()
+  const user: AdminUser = await requireAdminPerm(PERMISSIONS.BLOG_ALL)
 
   const titleFa   = str(formData, "titleFa")
   const titleEn   = strOrNull(formData, "titleEn")
@@ -103,7 +93,7 @@ export async function adminCreatePostAction(
         seoTitle,
         seoDescription,
         readingTimeMin: readingTimeMin ? parseInt(readingTimeMin, 10) : null,
-        authorId: admin.id,
+        authorId: user.id,
       },
       select: { id: true },
     })
@@ -130,8 +120,15 @@ export async function adminCreatePostAction(
     }
 
     return { postId: post.id }
-  } catch (err: any) {
-    if (err?.code === "P2002") throw new Error("این اسلاگ قبلاً استفاده شده است")
+  } catch (err: unknown) {
+    if (
+      typeof err === "object" &&
+      err !== null &&
+      "code" in err &&
+      (err as { code: unknown }).code === "P2002"
+    ) {
+      throw new Error("این اسلاگ قبلاً استفاده شده است")
+    }
     throw err
   }
 }
@@ -139,7 +136,7 @@ export async function adminCreatePostAction(
 export async function adminUpdatePostAction(
   formData: FormData
 ): Promise<{ ok: true }> {
-  await requireAdmin()
+  await requireAdminPerm(PERMISSIONS.BLOG_ALL)
 
   const id        = str(formData, "id")
   const titleFa   = str(formData, "titleFa")
@@ -230,8 +227,15 @@ export async function adminUpdatePostAction(
     }
 
     return { ok: true }
-  } catch (err: any) {
-    if (err?.code === "P2002") throw new Error("این اسلاگ قبلاً استفاده شده است")
+  } catch (err: unknown) {
+    if (
+      typeof err === "object" &&
+      err !== null &&
+      "code" in err &&
+      (err as { code: unknown }).code === "P2002"
+    ) {
+      throw new Error("این اسلاگ قبلاً استفاده شده است")
+    }
     throw err
   }
 }
@@ -239,7 +243,7 @@ export async function adminUpdatePostAction(
 export async function adminDeletePostAction(
   formData: FormData
 ): Promise<{ ok: true }> {
-  await requireAdmin()
+  await requireAdminPerm(PERMISSIONS.BLOG_ALL)
   const id = str(formData, "id")
   if (!id) throw new Error("شناسه مقاله الزامی است")
   await db.post.delete({ where: { id } })

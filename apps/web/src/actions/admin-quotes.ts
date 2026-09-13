@@ -1,24 +1,14 @@
 "use server"
 
-import { db } from "@tirajeh/database"
-import { auth } from "@tirajeh/auth"
+import { db, QuoteStatus } from "@tirajeh/database"
 import { revalidatePath } from "next/cache"
-
-const ADMIN_ROLES = ["admin", "super_admin"]
-
-async function requireAdmin() {
-  const session = await auth()
-  const roleName = (session?.user as any)?.roleName as string | undefined
-  if (!session?.user || !roleName || !ADMIN_ROLES.includes(roleName)) {
-    throw new Error("Unauthorized")
-  }
-  return session.user as any
-}
+import { requireAdminPerm, AdminUser } from "@/lib/admin-guard"
+import { PERMISSIONS } from "@tirajeh/shared"
 
 export async function adminUpdateQuoteAction(
   formData: FormData
 ): Promise<{ ok: true }> {
-  const admin = await requireAdmin()
+  const user: AdminUser = await requireAdminPerm(PERMISSIONS.QUOTES_UPDATE)
 
   const quoteId = (formData.get("quoteId") as string | null)?.trim()
   if (!quoteId) throw new Error("Quote ID missing")
@@ -39,10 +29,10 @@ export async function adminUpdateQuoteAction(
   await db.quoteRequest.update({
     where: { id: quoteId },
     data: {
-      status: status as any,
+      status: status as QuoteStatus,
       quotedPrice: quotedPrice ?? null,
       adminNote,
-      handlerId: admin.id,
+      handlerId: user.id,
       expiresAt,
     },
   })

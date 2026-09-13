@@ -10,39 +10,70 @@ import bcrypt from "bcryptjs"
 
 const db = new PrismaClient()
 
-async function main() {
-  console.log("🌱 Seeding database…")
-
-  // ─── 1. Roles & Permissions ────────────────────────────────────────────────
-  const adminRole = await db.role.upsert({
-    where: { name: "admin" },
-    update: {
-      displayName: "مدیر سیستم",
-      description: "دسترسی کامل مدیریت سیستم",
+export async function seedRolesAndPermissions(db: PrismaClient) {
+  const rolesData = [
+    {
+      name: "super_admin",
+      displayName: "مدیر ارشد",
+      description: "دسترسی کامل به تمام بخش‌های سیستم",
+      isSystem: true,
     },
-    create: {
+    {
       name: "admin",
       displayName: "مدیر سیستم",
       description: "دسترسی کامل مدیریت سیستم",
       isSystem: true,
     },
-  })
-
-  const superAdminRole = await db.role.upsert({
-    where: { name: "super_admin" },
-    update: {
-      displayName: "مدیر ارشد",
-      description: "دسترسی ارشد سیستم",
-    },
-    create: {
-      name: "super_admin",
-      displayName: "مدیر ارشد",
-      description: "دسترسی ارشد سیستم",
+    {
+      name: "operator",
+      displayName: "اپراتور",
+      description: "مدیریت محصولات، سفارش‌ها و قیمت‌ها",
       isSystem: true,
     },
-  })
+    {
+      name: "support",
+      displayName: "پشتیبان",
+      description: "پشتیبانی تیکت‌ها و سفارش‌ها",
+      isSystem: true,
+    },
+    {
+      name: "customer",
+      displayName: "مشتری",
+      description: "کاربر عادی سامانه",
+      isSystem: true,
+    },
+  ]
+
+  const rolesMap = new Map<string, Awaited<ReturnType<typeof db.role.upsert>>>()
+  for (const r of rolesData) {
+    const role = await db.role.upsert({
+      where: { name: r.name },
+      update: {
+        displayName: r.displayName,
+        description: r.description,
+      },
+      create: r,
+    })
+    rolesMap.set(r.name, role)
+  }
 
   const permissionsData = [
+    // Standard system permissions
+    { resource: "products", action: "create" },
+    { resource: "products", action: "update" },
+    { resource: "products", action: "delete" },
+    { resource: "orders", action: "read" },
+    { resource: "orders", action: "update" },
+    { resource: "users", action: "read" },
+    { resource: "users", action: "update" },
+    { resource: "blog", action: "*" },
+    { resource: "prices", action: "publish" },
+    { resource: "tickets", action: "reply" },
+    { resource: "quotes", action: "update" },
+    { resource: "categories", action: "*" },
+    { resource: "brands", action: "*" },
+
+    // Legacy permissions
     { resource: "product", action: "read" },
     { resource: "product", action: "create" },
     { resource: "product", action: "update" },
@@ -71,13 +102,35 @@ async function main() {
     { resource: "dashboard", action: "read" },
   ]
 
+  const operatorPerms = [
+    "products:create", "products:update", "products:delete",
+    "orders:read", "orders:update",
+    "prices:publish",
+    "categories:*", "brands:*",
+    "product:read", "product:create", "product:update",
+    "order:read", "order:update",
+  ]
+
+  const supportPerms = [
+    "tickets:reply", "orders:read", "users:read", "quotes:update",
+    "contact:read", "contact:respond", "quote:read", "order:read",
+  ]
+
   for (const p of permissionsData) {
     const perm = await db.permission.upsert({
       where: { resource_action: { resource: p.resource, action: p.action } },
       update: {},
       create: p,
     })
-    for (const role of [adminRole, superAdminRole]) {
+
+    const permKey = `${p.resource}:${p.action}`
+    const targetRoles: string[] = ["super_admin", "admin"]
+    if (operatorPerms.includes(permKey)) targetRoles.push("operator")
+    if (supportPerms.includes(permKey)) targetRoles.push("support")
+
+    for (const roleName of targetRoles) {
+      const role = rolesMap.get(roleName)
+      if (!role) continue
       await db.rolePermission.upsert({
         where: {
           roleId_permissionId: {
@@ -93,7 +146,17 @@ async function main() {
       })
     }
   }
+
   console.log("✅ Roles and permissions seeded")
+  return rolesMap
+}
+
+async function main() {
+  console.log("🌱 Seeding database…")
+
+  // ─── 1. Roles & Permissions ────────────────────────────────────────────────
+  const rolesMap = await seedRolesAndPermissions(db)
+  const adminRole = rolesMap.get("admin")!
 
   // ─── 2. Admin User ─────────────────────────────────────────────────────────
   const adminPassword = await bcrypt.hash("Admin1234!", 12)

@@ -2,16 +2,10 @@
 import { z } from "zod"
 import { randomUUID } from "crypto"
 import { storageService } from "@tirajeh/integrations"
-import { auth } from "@tirajeh/auth"
+import { requireAdminPerm } from "@/lib/admin-guard"
+import { PERMISSIONS } from "@tirajeh/shared"
 
 export type ActionResult<T = void> = { success: true; data: T } | { success: false; error: string }
-
-async function requireAdmin() {
-  const session = await auth()
-  if (!session?.user || (session.user as any).role !== "ADMIN") {
-    throw new Error("دسترسی غیرمجاز")
-  }
-}
 
 const UploadSchema = z.object({
   kind: z.enum(["products", "blog", "avatars"]),
@@ -23,8 +17,12 @@ export async function createUploadUrlAction(
   input: unknown
 ): Promise<ActionResult<{ uploadUrl: string; publicUrl: string; key: string }>> {
   try {
-    await requireAdmin()
-  } catch (err) {
+    await requireAdminPerm([
+      PERMISSIONS.PRODUCTS_CREATE,
+      PERMISSIONS.PRODUCTS_UPDATE,
+      PERMISSIONS.BLOG_ALL,
+    ])
+  } catch {
     return { success: false, error: "احراز هویت انجام نشده است" }
   }
 

@@ -1,24 +1,14 @@
 "use server"
 
 import { db } from "@tirajeh/database"
-import { auth } from "@tirajeh/auth"
 import { revalidatePath } from "next/cache"
-
-const ADMIN_ROLES = ["admin", "super_admin"]
-
-async function requireAdmin() {
-  const session = await auth()
-  const roleName = (session?.user as any)?.roleName as string | undefined
-  if (!session?.user || !roleName || !ADMIN_ROLES.includes(roleName)) {
-    throw new Error("Unauthorized")
-  }
-  return session.user as any
-}
+import { requireAdminPerm } from "@/lib/admin-guard"
+import { PERMISSIONS } from "@tirajeh/shared"
 
 export async function adminCreateBrandAction(
   formData: FormData
 ): Promise<{ brandId: string }> {
-  await requireAdmin()
+  await requireAdminPerm(PERMISSIONS.BRANDS_ALL)
 
   const nameFa = (formData.get("nameFa") as string | null)?.trim() ?? ""
   const nameEn = (formData.get("nameEn") as string | null)?.trim() || null
@@ -37,8 +27,15 @@ export async function adminCreateBrandAction(
     })
     revalidatePath("/admin/brands")
     return { brandId: brand.id }
-  } catch (err: any) {
-    if (err?.code === "P2002") throw new Error("این اسلاگ قبلاً استفاده شده است")
+  } catch (err: unknown) {
+    if (
+      typeof err === "object" &&
+      err !== null &&
+      "code" in err &&
+      (err as { code: unknown }).code === "P2002"
+    ) {
+      throw new Error("این اسلاگ قبلاً استفاده شده است")
+    }
     throw err
   }
 }
@@ -46,7 +43,7 @@ export async function adminCreateBrandAction(
 export async function adminUpdateBrandAction(
   formData: FormData
 ): Promise<{ ok: true }> {
-  await requireAdmin()
+  await requireAdminPerm(PERMISSIONS.BRANDS_ALL)
 
   const brandId = (formData.get("brandId") as string | null)?.trim()
   if (!brandId) throw new Error("Brand ID missing")
@@ -66,8 +63,15 @@ export async function adminUpdateBrandAction(
       where: { id: brandId },
       data: { nameFa, nameEn, slug, description, sortOrder, isActive },
     })
-  } catch (err: any) {
-    if (err?.code === "P2002") throw new Error("این اسلاگ قبلاً استفاده شده است")
+  } catch (err: unknown) {
+    if (
+      typeof err === "object" &&
+      err !== null &&
+      "code" in err &&
+      (err as { code: unknown }).code === "P2002"
+    ) {
+      throw new Error("این اسلاگ قبلاً استفاده شده است")
+    }
     throw err
   }
 
@@ -78,7 +82,7 @@ export async function adminUpdateBrandAction(
 export async function adminDeleteBrandAction(
   formData: FormData
 ): Promise<{ ok: true }> {
-  await requireAdmin()
+  await requireAdminPerm(PERMISSIONS.BRANDS_ALL)
 
   const brandId = (formData.get("brandId") as string | null)?.trim()
   if (!brandId) throw new Error("Brand ID missing")

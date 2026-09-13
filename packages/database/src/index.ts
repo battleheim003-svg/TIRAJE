@@ -37,6 +37,10 @@ export type {
 
 export {
   CustomerType,
+  CementType,
+  CementGrade,
+  PackagingType,
+  StockStatus,
   OrderStatus,
   PaymentStatus,
   PaymentGateway,

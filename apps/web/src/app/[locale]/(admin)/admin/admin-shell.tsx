@@ -8,7 +8,7 @@ import styles from "@/components/admin/AdminShell.module.css"
 
 interface AdminShellProps {
   locale: string
-  user: { name?: string | null; email?: string | null; roleName?: string | null }
+  user: { name?: string | null; email?: string | null; roleName?: string | null; permissions?: string[] }
   children: React.ReactNode
 }
 
@@ -24,6 +24,7 @@ export function AdminShell({ locale, user, children }: AdminShellProps) {
           locale={locale}
           mobileOpen={mobileOpen}
           onCloseMobile={() => setMobileOpen(false)}
+          userPermissions={user.permissions}
         />
 
         {/* Main Column */}

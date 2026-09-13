@@ -1,24 +1,14 @@
 "use server"
 
 import { db } from "@tirajeh/database"
-import { auth } from "@tirajeh/auth"
 import { revalidatePath } from "next/cache"
-
-const ADMIN_ROLES = ["admin", "super_admin"]
-
-async function requireAdmin() {
-  const session = await auth()
-  const roleName = (session?.user as any)?.roleName as string | undefined
-  if (!session?.user || !roleName || !ADMIN_ROLES.includes(roleName)) {
-    throw new Error("Unauthorized")
-  }
-  return session.user as any
-}
+import { requireAdminPerm } from "@/lib/admin-guard"
+import { PERMISSIONS } from "@tirajeh/shared"
 
 export async function adminCreateCategoryAction(
   formData: FormData
 ): Promise<{ categoryId: string }> {
-  await requireAdmin()
+  await requireAdminPerm(PERMISSIONS.CATEGORIES_ALL)
 
   const nameFa = (formData.get("nameFa") as string | null)?.trim() ?? ""
   const nameEn = (formData.get("nameEn") as string | null)?.trim() || null
@@ -37,8 +27,15 @@ export async function adminCreateCategoryAction(
     })
     revalidatePath("/admin/categories")
     return { categoryId: category.id }
-  } catch (err: any) {
-    if (err?.code === "P2002") throw new Error("این اسلاگ قبلاً استفاده شده است")
+  } catch (err: unknown) {
+    if (
+      typeof err === "object" &&
+      err !== null &&
+      "code" in err &&
+      (err as { code: unknown }).code === "P2002"
+    ) {
+      throw new Error("این اسلاگ قبلاً استفاده شده است")
+    }
     throw err
   }
 }
@@ -46,7 +43,7 @@ export async function adminCreateCategoryAction(
 export async function adminUpdateCategoryAction(
   formData: FormData
 ): Promise<{ ok: true }> {
-  await requireAdmin()
+  await requireAdminPerm(PERMISSIONS.CATEGORIES_ALL)
 
   const categoryId = (formData.get("categoryId") as string | null)?.trim()
   if (!categoryId) throw new Error("Category ID missing")
@@ -66,8 +63,15 @@ export async function adminUpdateCategoryAction(
       where: { id: categoryId },
       data: { nameFa, nameEn, slug, parentId, sortOrder, isActive },
     })
-  } catch (err: any) {
-    if (err?.code === "P2002") throw new Error("این اسلاگ قبلاً استفاده شده است")
+  } catch (err: unknown) {
+    if (
+      typeof err === "object" &&
+      err !== null &&
+      "code" in err &&
+      (err as { code: unknown }).code === "P2002"
+    ) {
+      throw new Error("این اسلاگ قبلاً استفاده شده است")
+    }
     throw err
   }
 
@@ -78,7 +82,7 @@ export async function adminUpdateCategoryAction(
 export async function adminDeleteCategoryAction(
   formData: FormData
 ): Promise<{ ok: true }> {
-  await requireAdmin()
+  await requireAdminPerm(PERMISSIONS.CATEGORIES_ALL)
 
   const categoryId = (formData.get("categoryId") as string | null)?.trim()
   if (!categoryId) throw new Error("Category ID missing")

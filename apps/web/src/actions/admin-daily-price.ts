@@ -1,24 +1,14 @@
 "use server"
 
 import { db } from "@tirajeh/database"
-import { auth } from "@tirajeh/auth"
 import { publishDailyPrice } from "@tirajeh/integrations"
 import { revalidatePath } from "next/cache"
-
-const ADMIN_ROLES = ["admin", "super_admin"]
-
-async function requireAdmin() {
-  const session = await auth()
-  const roleName = (session?.user as any)?.roleName as string | undefined
-  if (!session?.user || !roleName || !ADMIN_ROLES.includes(roleName)) {
-    throw new Error("Unauthorized")
-  }
-  return session.user as { id: string; name?: string | null; roleName?: string }
-}
+import { requireAdminPerm, AdminUser } from "@/lib/admin-guard"
+import { PERMISSIONS } from "@tirajeh/shared"
 
 /** Fetch all active products for the price form */
 export async function getProductsForPricingAction() {
-  await requireAdmin()
+  await requireAdminPerm(PERMISSIONS.PRICES_PUBLISH)
 
   const products = await db.product.findMany({
     where: { isActive: true },
@@ -39,7 +29,7 @@ export async function getProductsForPricingAction() {
 
 /** Get the current active bulletin */
 export async function getActiveBulletinAction() {
-  await requireAdmin()
+  await requireAdminPerm(PERMISSIONS.PRICES_PUBLISH)
 
   return db.dailyPriceBulletin.findFirst({
     where: { isActive: true },
@@ -61,7 +51,7 @@ export async function submitDailyPriceAction(data: {
   items: Array<{ productId: string; price: number }>
   sendToTelegram?: boolean
 }) {
-  const admin = await requireAdmin()
+  const user: AdminUser = await requireAdminPerm(PERMISSIONS.PRICES_PUBLISH)
 
   if (!data.items || data.items.length === 0) {
     return { success: false, error: "حداقل یک محصول باید برای اعلام قیمت انتخاب شود" }
@@ -71,7 +61,7 @@ export async function submitDailyPriceAction(data: {
     const result = await publishDailyPrice({
       items: data.items,
       source: "ADMIN_PANEL",
-      publishedBy: admin.id,
+      publishedBy: user.id,
     })
 
     revalidatePath("/", "layout")
@@ -83,7 +73,8 @@ export async function submitDailyPriceAction(data: {
       telegramSent: result.telegramSent,
       telegramError: result.error,
     }
-  } catch (err: any) {
-    return { success: false, error: err?.message || "خطای ناشناخته در ثبت قیمت‌ها" }
+  } catch (err: unknown) {
+    const error = err instanceof Error ? err.message : "خطای ناشناخته در ثبت قیمت‌ها"
+    return { success: false, error }
   }
 }

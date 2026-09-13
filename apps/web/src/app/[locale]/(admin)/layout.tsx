@@ -10,6 +10,7 @@ interface AdminUser {
   name?: string | null
   email?: string | null
   roleName?: string | null
+  permissions?: string[]
 }
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {

@@ -1,24 +1,13 @@
 "use server"
 
 import { db } from "@tirajeh/database"
-import { auth } from "@tirajeh/auth"
 import { revalidatePath } from "next/cache"
 import { sendTelegramDirectMessage } from "@tirajeh/integrations"
-import { ReplyTicketSchema, escapeHtml } from "@tirajeh/shared"
-
-const ADMIN_ROLES = ["admin", "super_admin"]
-
-async function requireAdmin() {
-  const session = await auth()
-  const roleName = (session?.user as any)?.roleName as string | undefined
-  if (!session?.user || !roleName || !ADMIN_ROLES.includes(roleName)) {
-    throw new Error("Unauthorized")
-  }
-  return session.user as any
-}
+import { ReplyTicketSchema, escapeHtml, PERMISSIONS } from "@tirajeh/shared"
+import { requireAdminPerm, AdminUser } from "@/lib/admin-guard"
 
 export async function adminReplyTicketAction(formData: FormData): Promise<{ ok: true }> {
-  const admin = await requireAdmin()
+  const user: AdminUser = await requireAdminPerm(PERMISSIONS.TICKETS_REPLY)
 
   const raw = {
     ticketId: (formData.get("ticketId") as string | null)?.trim() ?? "",
@@ -48,7 +37,7 @@ export async function adminReplyTicketAction(formData: FormData): Promise<{ ok: 
       status,
       replyText,
       repliedAt: new Date(),
-      handlerId: admin.id,
+      handlerId: user.id,
     },
   })
 
