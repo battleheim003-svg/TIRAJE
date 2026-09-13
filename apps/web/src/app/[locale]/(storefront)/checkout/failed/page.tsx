@@ -2,12 +2,13 @@ import Link from "next/link"
 import { Button } from "@tirajeh/ui"
 import { retryPaymentAction } from "@/actions/order"
 
-export default function FailedPage({
+export default async function FailedPage({
   searchParams,
 }: {
-  searchParams: { order?: string }
+  searchParams: Promise<{ order?: string }>
 }) {
-  const orderId = searchParams.order
+  const resolvedParams = await searchParams;
+  const orderId = resolvedParams.order
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] py-12 px-4 sm:px-6 lg:px-8 text-center space-y-6">
