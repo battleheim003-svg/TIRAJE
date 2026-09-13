@@ -1,11 +1,12 @@
 import { redirect } from "next/navigation"
 
-export default function PaymentPage({
+export default async function PaymentPage({
   searchParams,
 }: {
-  searchParams: { url?: string }
+  searchParams: Promise<{ url?: string }>
 }) {
-  const url = searchParams.url
+  const resolvedParams = await searchParams;
+  const url = resolvedParams.url
   if (!url) redirect("/cart")
   redirect(decodeURIComponent(url))
 }
