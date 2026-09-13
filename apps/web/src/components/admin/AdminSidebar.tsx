@@ -60,6 +60,7 @@ const NAV_SECTIONS: NavSectionDef[] = [
     items: [
       { key: "dashboard", href: "/admin/dashboard", icon: LayoutDashboard, fa: "داشبورد", en: "Dashboard" },
       { key: "daily-price", href: "/admin/daily-price", icon: TrendingUp, fa: "اعلام قیمت روز", en: "Daily Prices", permission: PERMISSIONS.PRICES_PUBLISH },
+      { key: "prices-bulk", href: "/admin/prices/bulk", icon: TrendingUp, fa: "تنظیم گروهی قیمت", en: "Bulk Price Adjust", permission: PERMISSIONS.PRICES_PUBLISH },
     ],
   },
   {

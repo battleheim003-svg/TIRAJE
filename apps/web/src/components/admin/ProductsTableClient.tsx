@@ -18,6 +18,7 @@ import {
   adminDeleteProductAction,
   adminRestoreProductAction,
 } from "@/actions/admin-products"
+import { InlinePriceCell } from "./InlinePriceCell"
 
 export interface ProductRow {
   id: string
@@ -159,9 +160,17 @@ export function ProductsTableClient({
       key: "price",
       header: fa ? "قیمت" : "Price",
       render: (row) => (
-        <span style={{ fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>
-          {formatToman(row.price, locale as "fa" | "en")}
-        </span>
+        <InlinePriceCell
+          productId={row.id}
+          currentPrice={row.price}
+          locale={locale}
+          fa={fa}
+          onPriceUpdated={(newPrice) => {
+            setProducts((prev) =>
+              prev.map((p) => (p.id === row.id ? { ...p, price: newPrice } : p))
+            )
+          }}
+        />
       ),
     },
     {

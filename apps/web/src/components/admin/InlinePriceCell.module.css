@@ -1,0 +1,86 @@
+/* InlinePriceCell.module.css - prefix ipc- */
+
+.ipc-container {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  min-width: 6.5rem;
+}
+
+.ipc-display {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  border: 1px solid transparent;
+  user-select: none;
+}
+
+.ipc-display:hover {
+  background-color: var(--color-bg-subtle, rgba(0, 0, 0, 0.04));
+  border-color: var(--color-border);
+}
+
+.ipc-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+.ipc-icon {
+  opacity: 0;
+  color: var(--color-text-muted);
+  transition: opacity 0.15s ease, color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.ipc-display:hover .ipc-icon {
+  opacity: 1;
+  color: var(--color-accent);
+}
+
+.ipc-form {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.ipc-input {
+  width: 7.5rem;
+  padding: 0.25rem 0.5rem;
+  font-size: var(--font-size-sm);
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--color-text);
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-md);
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 20%, transparent);
+}
+
+.ipc-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ipc-spinner {
+  display: inline-block;
+  color: var(--color-accent);
+  animation: ipc-spin 1s linear infinite;
+  margin-inline-start: var(--space-1);
+}
+
+@keyframes ipc-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
