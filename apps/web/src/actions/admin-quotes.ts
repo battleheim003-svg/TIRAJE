@@ -4,6 +4,7 @@ import { db, QuoteStatus } from "@tirajeh/database"
 import { revalidatePath } from "next/cache"
 import { requireAdminPerm, AdminUser } from "@/lib/admin-guard"
 import { PERMISSIONS } from "@tirajeh/shared"
+import { audit } from "@/lib/audit"
 
 export async function adminUpdateQuoteAction(
   formData: FormData
@@ -35,6 +36,14 @@ export async function adminUpdateQuoteAction(
       handlerId: user.id,
       expiresAt,
     },
+  })
+
+  await audit({
+    userId: user.id,
+    action: "quote.update",
+    resource: "QuoteRequest",
+    resourceId: quoteId,
+    after: { status },
   })
 
   revalidatePath(`/admin/quotes/${quoteId}`)

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 import { sendTelegramDirectMessage } from "@tirajeh/integrations"
 import { ReplyTicketSchema, escapeHtml, PERMISSIONS } from "@tirajeh/shared"
 import { requireAdminPerm, AdminUser } from "@/lib/admin-guard"
+import { audit } from "@/lib/audit"
 
 export async function adminReplyTicketAction(formData: FormData): Promise<{ ok: true }> {
   const user: AdminUser = await requireAdminPerm(PERMISSIONS.TICKETS_REPLY)
@@ -39,6 +40,13 @@ export async function adminReplyTicketAction(formData: FormData): Promise<{ ok: 
       repliedAt: new Date(),
       handlerId: user.id,
     },
+  })
+
+  await audit({
+    userId: user.id,
+    action: "ticket.reply",
+    resource: "Contact",
+    resourceId: ticketId,
   })
 
   // If from Telegram, send the reply directly to the user's Telegram chat

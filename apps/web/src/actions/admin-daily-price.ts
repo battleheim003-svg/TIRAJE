@@ -5,6 +5,7 @@ import { publishDailyPrice } from "@tirajeh/integrations"
 import { revalidatePath } from "next/cache"
 import { requireAdminPerm, AdminUser } from "@/lib/admin-guard"
 import { PERMISSIONS } from "@tirajeh/shared"
+import { audit } from "@/lib/audit"
 
 /** Fetch all active products for the price form */
 export async function getProductsForPricingAction() {
@@ -62,6 +63,13 @@ export async function submitDailyPriceAction(data: {
       items: data.items,
       source: "ADMIN_PANEL",
       publishedBy: user.id,
+    })
+
+    await audit({
+      userId: user.id,
+      action: "price.publish",
+      resource: "DailyPriceBulletin",
+      resourceId: result.bulletinId,
     })
 
     revalidatePath("/", "layout")

@@ -6,6 +6,7 @@ import { releaseOrderStock, PrismaTx } from "../lib/stock"
 import { emailService } from "@tirajeh/integrations"
 import { requireAdminPerm, AdminUser } from "@/lib/admin-guard"
 import { PERMISSIONS } from "@tirajeh/shared"
+import { audit } from "@/lib/audit"
 
 export async function adminUpdateOrderStatusAction(
   formData: FormData
@@ -42,6 +43,15 @@ export async function adminUpdateOrderStatusAction(
         createdBy: user.id,
       },
     })
+  })
+
+  await audit({
+    userId: user.id,
+    action: "order.status_changed",
+    resource: "Order",
+    resourceId: orderId,
+    before: { status: order.status },
+    after: { status },
   })
 
   if (order.user?.email) {

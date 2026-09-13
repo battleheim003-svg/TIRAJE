@@ -6,6 +6,7 @@ import { publishPostToChannel } from "@tirajeh/integrations"
 import sanitizeHtml from "sanitize-html"
 import { requireAdminPerm, AdminUser } from "@/lib/admin-guard"
 import { PERMISSIONS } from "@tirajeh/shared"
+import { audit } from "@/lib/audit"
 
 const ALLOWED_TAGS = [
   "p", "br", "strong", "em", "u", "s", "a", "img",
@@ -119,6 +120,13 @@ export async function adminCreatePostAction(
       }
     }
 
+    await audit({
+      userId: user.id,
+      action: "post.create",
+      resource: "Post",
+      resourceId: post.id,
+    })
+
     return { postId: post.id }
   } catch (err: unknown) {
     if (
@@ -136,7 +144,7 @@ export async function adminCreatePostAction(
 export async function adminUpdatePostAction(
   formData: FormData
 ): Promise<{ ok: true }> {
-  await requireAdminPerm(PERMISSIONS.BLOG_ALL)
+  const user = await requireAdminPerm(PERMISSIONS.BLOG_ALL)
 
   const id        = str(formData, "id")
   const titleFa   = str(formData, "titleFa")
@@ -226,6 +234,13 @@ export async function adminUpdatePostAction(
       }
     }
 
+    await audit({
+      userId: user.id,
+      action: "post.update",
+      resource: "Post",
+      resourceId: id,
+    })
+
     return { ok: true }
   } catch (err: unknown) {
     if (
@@ -243,10 +258,18 @@ export async function adminUpdatePostAction(
 export async function adminDeletePostAction(
   formData: FormData
 ): Promise<{ ok: true }> {
-  await requireAdminPerm(PERMISSIONS.BLOG_ALL)
+  const user = await requireAdminPerm(PERMISSIONS.BLOG_ALL)
   const id = str(formData, "id")
   if (!id) throw new Error("شناسه مقاله الزامی است")
   await db.post.delete({ where: { id } })
+
+  await audit({
+    userId: user.id,
+    action: "post.delete",
+    resource: "Post",
+    resourceId: id,
+  })
+
   revalidatePath("/admin/blog")
   return { ok: true }
 }

@@ -4,11 +4,12 @@ import { db } from "@tirajeh/database"
 import { revalidatePath } from "next/cache"
 import { requireAdminPerm } from "@/lib/admin-guard"
 import { PERMISSIONS } from "@tirajeh/shared"
+import { audit } from "@/lib/audit"
 
 export async function adminCreateCategoryAction(
   formData: FormData
 ): Promise<{ categoryId: string }> {
-  await requireAdminPerm(PERMISSIONS.CATEGORIES_ALL)
+  const user = await requireAdminPerm(PERMISSIONS.CATEGORIES_ALL)
 
   const nameFa = (formData.get("nameFa") as string | null)?.trim() ?? ""
   const nameEn = (formData.get("nameEn") as string | null)?.trim() || null
@@ -25,6 +26,15 @@ export async function adminCreateCategoryAction(
       data: { nameFa, nameEn, slug, parentId, sortOrder, isActive },
       select: { id: true },
     })
+
+    await audit({
+      userId: user.id,
+      action: "category.create",
+      resource: "Category",
+      resourceId: category.id,
+      after: { nameFa, slug },
+    })
+
     revalidatePath("/admin/categories")
     return { categoryId: category.id }
   } catch (err: unknown) {
@@ -43,7 +53,7 @@ export async function adminCreateCategoryAction(
 export async function adminUpdateCategoryAction(
   formData: FormData
 ): Promise<{ ok: true }> {
-  await requireAdminPerm(PERMISSIONS.CATEGORIES_ALL)
+  const user = await requireAdminPerm(PERMISSIONS.CATEGORIES_ALL)
 
   const categoryId = (formData.get("categoryId") as string | null)?.trim()
   if (!categoryId) throw new Error("Category ID missing")
@@ -62,6 +72,14 @@ export async function adminUpdateCategoryAction(
     await db.category.update({
       where: { id: categoryId },
       data: { nameFa, nameEn, slug, parentId, sortOrder, isActive },
+    })
+
+    await audit({
+      userId: user.id,
+      action: "category.update",
+      resource: "Category",
+      resourceId: categoryId,
+      after: { nameFa, slug },
     })
   } catch (err: unknown) {
     if (
@@ -82,7 +100,7 @@ export async function adminUpdateCategoryAction(
 export async function adminDeleteCategoryAction(
   formData: FormData
 ): Promise<{ ok: true }> {
-  await requireAdminPerm(PERMISSIONS.CATEGORIES_ALL)
+  const user = await requireAdminPerm(PERMISSIONS.CATEGORIES_ALL)
 
   const categoryId = (formData.get("categoryId") as string | null)?.trim()
   if (!categoryId) throw new Error("Category ID missing")
@@ -94,6 +112,14 @@ export async function adminDeleteCategoryAction(
   if (productCount > 0) throw new Error(`این دسته‌بندی در ${productCount} محصول استفاده شده است`)
 
   await db.category.delete({ where: { id: categoryId } })
+
+  await audit({
+    userId: user.id,
+    action: "category.delete",
+    resource: "Category",
+    resourceId: categoryId,
+  })
+
   revalidatePath("/admin/categories")
   return { ok: true }
 }

@@ -50,7 +50,11 @@ export function UsersTableClient({
 
   const handleToggleActive = async (user: UserRow, nextVal: boolean) => {
     try {
-      await adminToggleUserStatusAction(user.id, nextVal)
+      const res = await adminToggleUserStatusAction(user.id, nextVal)
+      if ("error" in res && res.error) {
+        toast.error(res.error)
+        return
+      }
       setUsers((prev) =>
         prev.map((u) => (u.id === user.id ? { ...u, isActive: nextVal } : u))
       )
@@ -73,7 +77,11 @@ export function UsersTableClient({
     if (!deleteTarget) return
     setDeleting(true)
     try {
-      await adminDeleteUserAction(deleteTarget.id)
+      const res = await adminDeleteUserAction(deleteTarget.id)
+      if ("error" in res && res.error) {
+        toast.error(res.error)
+        return
+      }
       setUsers((prev) => prev.filter((u) => u.id !== deleteTarget.id))
       toast.success(fa ? "کاربر حذف شد" : "User deleted")
       setDeleteTarget(null)

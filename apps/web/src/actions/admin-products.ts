@@ -6,6 +6,7 @@ import { publishProductToChannel } from "@tirajeh/integrations"
 import { CEMENT_TYPE_LABEL, PACKAGING_LABEL } from "@/lib/cement"
 import { requireAdminPerm } from "@/lib/admin-guard"
 import { PERMISSIONS } from "@tirajeh/shared"
+import { audit } from "@/lib/audit"
 
 function parseProductFormData(fd: FormData) {
   const nameFa = (fd.get("nameFa") as string | null)?.trim() ?? ""
@@ -58,7 +59,7 @@ function parseProductFormData(fd: FormData) {
 export async function adminCreateProductAction(
   formData: FormData
 ): Promise<{ productId: string }> {
-  await requireAdminPerm(PERMISSIONS.PRODUCTS_CREATE)
+  const user = await requireAdminPerm(PERMISSIONS.PRODUCTS_CREATE)
   const data = parseProductFormData(formData)
 
   try {
@@ -83,6 +84,14 @@ export async function adminCreateProductAction(
         descriptionEn: data.descriptionEn,
       },
       select: { id: true },
+    })
+
+    await audit({
+      userId: user.id,
+      action: "product.create",
+      resource: "Product",
+      resourceId: product.id,
+      after: { name: data.nameFa, price: data.price },
     })
 
     revalidatePath("/admin/products")
@@ -171,12 +180,17 @@ async function syncProductToTelegram(
 export async function adminUpdateProductAction(
   formData: FormData
 ): Promise<{ ok: true }> {
-  await requireAdminPerm(PERMISSIONS.PRODUCTS_UPDATE)
+  const user = await requireAdminPerm(PERMISSIONS.PRODUCTS_UPDATE)
 
   const productId = (formData.get("productId") as string | null)?.trim()
   if (!productId) throw new Error("Product ID missing")
 
   const data = parseProductFormData(formData)
+
+  const oldProduct = await db.product.findUnique({
+    where: { id: productId },
+    select: { price: true },
+  })
 
   try {
     await db.product.update({
@@ -200,6 +214,15 @@ export async function adminUpdateProductAction(
         descriptionFa: data.descriptionFa,
         descriptionEn: data.descriptionEn,
       },
+    })
+
+    await audit({
+      userId: user.id,
+      action: "product.update",
+      resource: "Product",
+      resourceId: productId,
+      before: { price: oldProduct?.price },
+      after: { price: data.price },
     })
   } catch (err: unknown) {
     if (
@@ -260,12 +283,20 @@ export async function adminToggleProductStatusAction(
   productId: string,
   isActive: boolean
 ): Promise<{ ok: true }> {
-  await requireAdminPerm(PERMISSIONS.PRODUCTS_UPDATE)
+  const user = await requireAdminPerm(PERMISSIONS.PRODUCTS_UPDATE)
   if (!productId) throw new Error("Product ID missing")
 
   await db.product.update({
     where: { id: productId },
     data: { isActive },
+  })
+
+  await audit({
+    userId: user.id,
+    action: "product.status_changed",
+    resource: "Product",
+    resourceId: productId,
+    after: { isActive },
   })
 
   revalidatePath("/admin/products")
@@ -280,11 +311,18 @@ export async function adminToggleProductStatusAction(
 export async function adminDeleteProductAction(
   productId: string
 ): Promise<{ ok: true }> {
-  await requireAdminPerm(PERMISSIONS.PRODUCTS_DELETE)
+  const user = await requireAdminPerm(PERMISSIONS.PRODUCTS_DELETE)
   if (!productId) throw new Error("Product ID missing")
 
   await db.product.delete({
     where: { id: productId },
+  })
+
+  await audit({
+    userId: user.id,
+    action: "product.archive",
+    resource: "Product",
+    resourceId: productId,
   })
 
   revalidatePath("/admin/products")

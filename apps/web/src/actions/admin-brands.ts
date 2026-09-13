@@ -4,11 +4,12 @@ import { db } from "@tirajeh/database"
 import { revalidatePath } from "next/cache"
 import { requireAdminPerm } from "@/lib/admin-guard"
 import { PERMISSIONS } from "@tirajeh/shared"
+import { audit } from "@/lib/audit"
 
 export async function adminCreateBrandAction(
   formData: FormData
 ): Promise<{ brandId: string }> {
-  await requireAdminPerm(PERMISSIONS.BRANDS_ALL)
+  const user = await requireAdminPerm(PERMISSIONS.BRANDS_ALL)
 
   const nameFa = (formData.get("nameFa") as string | null)?.trim() ?? ""
   const nameEn = (formData.get("nameEn") as string | null)?.trim() || null
@@ -25,6 +26,15 @@ export async function adminCreateBrandAction(
       data: { nameFa, nameEn, slug, description, sortOrder, isActive },
       select: { id: true },
     })
+
+    await audit({
+      userId: user.id,
+      action: "brand.create",
+      resource: "Brand",
+      resourceId: brand.id,
+      after: { nameFa, slug },
+    })
+
     revalidatePath("/admin/brands")
     return { brandId: brand.id }
   } catch (err: unknown) {
@@ -43,7 +53,7 @@ export async function adminCreateBrandAction(
 export async function adminUpdateBrandAction(
   formData: FormData
 ): Promise<{ ok: true }> {
-  await requireAdminPerm(PERMISSIONS.BRANDS_ALL)
+  const user = await requireAdminPerm(PERMISSIONS.BRANDS_ALL)
 
   const brandId = (formData.get("brandId") as string | null)?.trim()
   if (!brandId) throw new Error("Brand ID missing")
@@ -62,6 +72,14 @@ export async function adminUpdateBrandAction(
     await db.brand.update({
       where: { id: brandId },
       data: { nameFa, nameEn, slug, description, sortOrder, isActive },
+    })
+
+    await audit({
+      userId: user.id,
+      action: "brand.update",
+      resource: "Brand",
+      resourceId: brandId,
+      after: { nameFa, slug },
     })
   } catch (err: unknown) {
     if (
@@ -82,7 +100,7 @@ export async function adminUpdateBrandAction(
 export async function adminDeleteBrandAction(
   formData: FormData
 ): Promise<{ ok: true }> {
-  await requireAdminPerm(PERMISSIONS.BRANDS_ALL)
+  const user = await requireAdminPerm(PERMISSIONS.BRANDS_ALL)
 
   const brandId = (formData.get("brandId") as string | null)?.trim()
   if (!brandId) throw new Error("Brand ID missing")
@@ -91,6 +109,14 @@ export async function adminDeleteBrandAction(
   if (productCount > 0) throw new Error(`این برند در ${productCount} محصول استفاده شده است`)
 
   await db.brand.delete({ where: { id: brandId } })
+
+  await audit({
+    userId: user.id,
+    action: "brand.delete",
+    resource: "Brand",
+    resourceId: brandId,
+  })
+
   revalidatePath("/admin/brands")
   return { ok: true }
 }

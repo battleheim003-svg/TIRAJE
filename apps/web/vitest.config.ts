@@ -7,6 +7,7 @@ export default defineConfig({
     globals: true,
     setupFiles: [],
     alias: {
+      "@": path.resolve(__dirname, "./src"),
       "@tirajeh/database": path.resolve(__dirname, "../../packages/database/src"),
       "@tirajeh/shared": path.resolve(__dirname, "../../packages/shared/src"),
       "@tirajeh/auth": path.resolve(__dirname, "../../packages/auth/src"),
