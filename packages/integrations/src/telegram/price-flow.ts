@@ -4,6 +4,7 @@
 import { InlineKeyboard, Context } from "grammy"
 import { createClient } from "redis"
 import { db } from "@tirajeh/database"
+import { escapeHtml } from "@tirajeh/shared"
 import { buildProductHashtags } from "./hashtags"
 
 export type PriceFlowStep =
@@ -242,7 +243,7 @@ export async function askNextPrice(
   const keyboard = new InlineKeyboard().text("❌ لغو", "price_cancel")
 
   await ctx.reply(
-    `💰 قیمت <b>${prodName}</b> را وارد کن (تومان):\n\n` +
+    `💰 قیمت <b>${escapeHtml(prodName)}</b> را وارد کن (تومان):\n\n` +
       `📌 محصول ${state.currentIdx + 1} از ${total}`,
     {
       parse_mode: "HTML",
@@ -264,7 +265,7 @@ export async function buildPricePostText(
   const lines: string[] = []
   lines.push("📦 <b>لیست قیمت محصولات تیراژه</b>")
   lines.push("━━━━━━━━━━━━━━━━━━━━━")
-  lines.push(`📅 <b>تاریخ:</b> ${jalaliDate}\n`)
+  lines.push(`📅 <b>تاریخ:</b> ${escapeHtml(jalaliDate)}\n`)
 
   const allCategories: string[] = []
   const brands: string[] = []
@@ -280,7 +281,7 @@ export async function buildPricePostText(
     else if (prod.packagingType === "JUMBO_1500KG") packLabel = " — جامبوبگ"
     else if (prod.packagingType === "BULK") packLabel = " — فله"
 
-    lines.push(`🔹 <b>${prod.nameFa}</b>${packLabel}`)
+    lines.push(`🔹 <b>${escapeHtml(prod.nameFa)}</b>${escapeHtml(packLabel)}`)
     lines.push(`💰 <b>${formattedPrice}</b> تومان\n`)
 
     if (prod.brand?.nameFa) brands.push(prod.brand.nameFa)
@@ -291,7 +292,7 @@ export async function buildPricePostText(
 
   for (const np of state.newProducts) {
     const formattedPrice = Math.round(np.price).toLocaleString("fa-IR")
-    lines.push(`🔹 <b>${np.name}</b>`)
+    lines.push(`🔹 <b>${escapeHtml(np.name)}</b>`)
     lines.push(`💰 <b>${formattedPrice}</b> تومان\n`)
   }
 

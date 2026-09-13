@@ -1,37 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@tirajeh/database"
 import { releaseOrderStock, PrismaTx } from "@/lib/stock"
-import crypto from "crypto"
+import { verifyCronSecret, cronUnauthorizedResponse } from "@/lib/cron-guard"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
 export async function GET(req: NextRequest) {
-  const cronSecret = process.env.CRON_SECRET
-  if (!cronSecret) {
-    return NextResponse.json({ error: "CRON_SECRET is not configured" }, { status: 503 })
-  }
-
-  const authHeader = req.headers.get("authorization") || ""
-  const token = authHeader.replace("Bearer ", "")
-
-  if (!token) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
-
-  let isValid = false
-  try {
-    const secretBuffer = Buffer.from(cronSecret)
-    const tokenBuffer = Buffer.from(token)
-    if (secretBuffer.length === tokenBuffer.length) {
-      isValid = crypto.timingSafeEqual(secretBuffer, tokenBuffer)
-    }
-  } catch (e) {
-    isValid = false
-  }
-
-  if (!isValid) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  if (!verifyCronSecret(req)) {
+    return cronUnauthorizedResponse()
   }
 
   const thirtyMinsAgo = new Date(Date.now() - 30 * 60 * 1000)

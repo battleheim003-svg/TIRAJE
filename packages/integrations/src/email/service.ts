@@ -6,6 +6,9 @@ import {
   QuoteResponseEmail,
   WelcomeEmail,
 } from "./templates"
+import { ContactNoticeEmail, type ContactNoticeEmailProps } from "./templates/contact-notice"
+
+export type { ContactNoticeEmailProps }
 
 let _resend: Resend | null = null
 
@@ -72,6 +75,15 @@ export class EmailService {
       params.to,
       "خوش آمدید به تیراژه",
       React.createElement(WelcomeEmail, { name: params.name })
+    )
+  }
+
+  async sendContactNotice(params: ContactNoticeEmailProps): Promise<void> {
+    const to = process.env.CONTACT_EMAIL || process.env.EMAIL_FROM || "info@tirajeconcrete.com"
+    await this.send(
+      to,
+      `پیام تماس جدید: ${params.subject} — از ${params.name}`,
+      React.createElement(ContactNoticeEmail, params)
     )
   }
 

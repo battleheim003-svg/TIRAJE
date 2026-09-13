@@ -5,6 +5,7 @@
 import { Bot, InlineKeyboard, webhookCallback } from "grammy"
 import { createClient } from "redis"
 import { db } from "@tirajeh/database"
+import { escapeHtml } from "@tirajeh/shared"
 import { notifyNewContact } from "./service"
 import {
   startPriceFlow,
@@ -176,7 +177,7 @@ function registerCommands(bot: Bot): void {
       // Admin verification for price callbacks
       const adminUserId = process.env.TELEGRAM_ADMIN_USER_ID
       const senderId = String(ctx.from?.id ?? "")
-      if (adminUserId && senderId !== adminUserId) {
+      if (!adminUserId || senderId !== adminUserId) {
         await ctx.answerCallbackQuery({ text: "⛔ دسترسی مجاز نیست", show_alert: true }).catch(() => {})
         return
       }
@@ -439,12 +440,13 @@ function registerCommands(bot: Bot): void {
         ) {
           try {
             const supportChatId = process.env.TELEGRAM_SUPPORT_CHAT_ID
+            const userHandle = ctx.from?.username ? `@${escapeHtml(ctx.from.username)}` : escapeHtml(ctx.from?.id)
             await ctx.api.sendMessage(
               supportChatId,
-              `🎫 <b>تیکت جدید [#${shortId}]</b>\n` +
-                `کاربر: ${fullName} (${ctx.from?.username ? `@${ctx.from.username}` : ctx.from?.id})\n` +
-                `دسته: ${categoryName}\n\n` +
-                `<b>پیام:</b>\n${ctx.message.text}`,
+              `🎫 <b>تیکت جدید [#${escapeHtml(shortId)}]</b>\n` +
+                `کاربر: ${escapeHtml(fullName)} (${userHandle})\n` +
+                `دسته: ${escapeHtml(categoryName)}\n\n` +
+                `<b>پیام:</b>\n${escapeHtml(ctx.message.text)}`,
               { parse_mode: "HTML" }
             )
           } catch (forumErr) {
@@ -469,6 +471,12 @@ function registerCommands(bot: Bot): void {
 let _handler: ((req: Request) => Promise<Response>) | null = null
 
 export function POST(req: Request): Promise<Response> {
+  if (!process.env.TELEGRAM_WEBHOOK_SECRET) {
+    console.error("TELEGRAM_WEBHOOK_SECRET not configured")
+    return Promise.resolve(
+      new Response(JSON.stringify({ error: "TELEGRAM_WEBHOOK_SECRET not configured" }), { status: 503 })
+    )
+  }
   if (!_handler) {
     const secret = process.env.TELEGRAM_WEBHOOK_SECRET
     const bot = createSupportBot()

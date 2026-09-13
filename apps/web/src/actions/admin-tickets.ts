@@ -4,7 +4,7 @@ import { db } from "@tirajeh/database"
 import { auth } from "@tirajeh/auth"
 import { revalidatePath } from "next/cache"
 import { sendTelegramDirectMessage } from "@tirajeh/integrations"
-import { ReplyTicketSchema } from "@tirajeh/shared"
+import { ReplyTicketSchema, escapeHtml } from "@tirajeh/shared"
 
 const ADMIN_ROLES = ["admin", "super_admin"]
 
@@ -56,9 +56,9 @@ export async function adminReplyTicketAction(formData: FormData): Promise<{ ok: 
   if (contact.source === "TELEGRAM" && contact.telegramChatId) {
     const shortId = contact.id.split("-")[0]?.toUpperCase() ?? contact.id
     const text = [
-      `📩 <b>پاسخ به تیکت پشتیبانی [#${shortId}]</b>`,
+      `📩 <b>پاسخ به تیکت پشتیبانی [#${escapeHtml(shortId)}]</b>`,
       "",
-      replyText,
+      escapeHtml(replyText),
       "",
       "تیراژه — همراه مطمئن پروژه‌های ساختمانی شما",
     ].join("\n")

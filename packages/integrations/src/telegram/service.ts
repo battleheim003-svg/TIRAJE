@@ -11,7 +11,7 @@
 import { Bot, InlineKeyboard } from "grammy"
 import { createClient } from "redis"
 import { db } from "@tirajeh/database"
-import { formatToman } from "@tirajeh/shared"
+import { formatToman, escapeHtml } from "@tirajeh/shared"
 import { buildPostHashtags, buildProductHashtags } from "./hashtags"
 
 const QUEUE_KEY = "tg:send_queue"
@@ -105,11 +105,11 @@ export async function notifyNewOrder(params: {
   const toman = formatToman(params.totalAmount, "fa")
   const text = [
     "🛒 <b>سفارش جدید</b>",
-    `شماره: <code>${params.orderNumber}</code>`,
-    `مشتری: ${params.customerName}`,
+    `شماره: <code>${escapeHtml(params.orderNumber)}</code>`,
+    `مشتری: ${escapeHtml(params.customerName)}`,
     `مبلغ: ${toman}`,
     `اقلام: ${params.itemCount} قلم`,
-    `شهر: ${params.city}`,
+    `شهر: ${escapeHtml(params.city)}`,
   ].join("\n")
 
   await enqueueTelegramMessage({ chatId: ADMIN_CHAT(), text, parseMode: "HTML" })
@@ -124,10 +124,10 @@ export async function notifyNewQuote(params: {
 }) {
   const text = [
     "📋 <b>استعلام قیمت جدید</b>",
-    `نام: ${params.name} (${params.customerType})`,
-    `محصول: ${params.productName}`,
+    `نام: ${escapeHtml(params.name)} (${escapeHtml(params.customerType)})`,
+    `محصول: ${escapeHtml(params.productName)}`,
     `مقدار: ${params.quantityTon} تن`,
-    `تلفن: <code>${params.phone}</code>`,
+    `تلفن: <code>${escapeHtml(params.phone)}</code>`,
   ].join("\n")
 
   await enqueueTelegramMessage({ chatId: ADMIN_CHAT(), text, parseMode: "HTML" })
@@ -141,9 +141,9 @@ export async function notifyPaymentReceived(params: {
   const toman = formatToman(params.amount, "fa")
   const text = [
     "✅ <b>پرداخت موفق</b>",
-    `سفارش: <code>${params.orderNumber}</code>`,
+    `سفارش: <code>${escapeHtml(params.orderNumber)}</code>`,
     `مبلغ: ${toman}`,
-    `کد پیگیری: <code>${params.refId}</code>`,
+    `کد پیگیری: <code>${escapeHtml(params.refId)}</code>`,
   ].join("\n")
 
   await enqueueTelegramMessage({ chatId: ADMIN_CHAT(), text, parseMode: "HTML" })
@@ -161,15 +161,15 @@ export async function notifyNewContact(params: {
   const sourceLabel = params.source === "TELEGRAM" ? "ربات تلگرام" : "وبسایت"
   const text = [
     "📩 <b>پیام تماس / پشتیبانی جدید</b>",
-    `منبع: <b>${sourceLabel}</b>`,
-    `نام: ${params.name}`,
-    params.email ? `ایمیل: <code>${params.email}</code>` : null,
-    params.phone ? `تلفن: <code>${params.phone}</code>` : null,
-    params.category ? `دسته‌بندی: <b>${params.category}</b>` : null,
-    `موضوع: ${params.subject}`,
+    `منبع: <b>${escapeHtml(sourceLabel)}</b>`,
+    `نام: ${escapeHtml(params.name)}`,
+    params.email ? `ایمیل: <code>${escapeHtml(params.email)}</code>` : null,
+    params.phone ? `تلفن: <code>${escapeHtml(params.phone)}</code>` : null,
+    params.category ? `دسته‌بندی: <b>${escapeHtml(params.category)}</b>` : null,
+    `موضوع: ${escapeHtml(params.subject)}`,
     "",
     "<b>پیام:</b>",
-    params.message,
+    escapeHtml(params.message),
   ]
     .filter(Boolean)
     .join("\n")
@@ -190,15 +190,15 @@ function buildCaption(params: {
   hashtags: string[]
   channelUsername: string
 }): string {
-  const parts = [`${params.emoji} <b>${params.title}</b>`, ""]
+  const parts = [`${params.emoji} <b>${escapeHtml(params.title)}</b>`, ""]
   if (params.body) {
-    parts.push(truncateCaption(params.body), "")
+    parts.push(escapeHtml(truncateCaption(params.body)), "")
   }
   if (params.hashtags.length > 0) {
-    parts.push(params.hashtags.join(" "), "")
+    parts.push(params.hashtags.map((h) => escapeHtml(h)).join(" "), "")
   }
   if (params.channelUsername) {
-    parts.push(params.channelUsername)
+    parts.push(escapeHtml(params.channelUsername))
   }
   return parts.join("\n").trim()
 }

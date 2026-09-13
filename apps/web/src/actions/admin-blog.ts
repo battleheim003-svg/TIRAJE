@@ -4,6 +4,22 @@ import { db } from "@tirajeh/database"
 import { auth } from "@tirajeh/auth"
 import { revalidatePath } from "next/cache"
 import { publishPostToChannel } from "@tirajeh/integrations"
+import sanitizeHtml from "sanitize-html"
+
+const ALLOWED_TAGS = [
+  "p", "br", "strong", "em", "u", "s", "a", "img",
+  "h2", "h3", "h4", "ul", "ol", "li", "blockquote",
+  "table", "thead", "tbody", "tr", "th", "td",
+]
+
+const sanitizeOptions: sanitizeHtml.IOptions = {
+  allowedTags: ALLOWED_TAGS,
+  allowedAttributes: {
+    a: ["href", "target", "rel"],
+    img: ["src", "alt", "width", "height"],
+  },
+  allowedSchemes: ["https", "http", "data"],
+}
 
 const ADMIN_ROLES = ["admin", "super_admin"]
 
@@ -58,6 +74,9 @@ export async function adminCreatePostAction(
     throw new Error("فیلدهای الزامی پر نشده‌اند")
   }
 
+  const cleanContentFa = contentFa ? sanitizeHtml(contentFa, sanitizeOptions) : null
+  const cleanContentEn = contentEn ? sanitizeHtml(contentEn, sanitizeOptions) : null
+
   let publishedAt: Date | null = null
   let scheduledAt: Date | null = null
   if (status === "PUBLISHED") {
@@ -73,8 +92,8 @@ export async function adminCreatePostAction(
         titleFa,
         titleEn,
         slug,
-        contentFa,
-        contentEn,
+        contentFa: cleanContentFa || "",
+        contentEn: cleanContentEn,
         excerptFa,
         excerptEn,
         featuredImage,
@@ -152,6 +171,9 @@ export async function adminUpdatePostAction(
     throw new Error("فیلدهای الزامی پر نشده‌اند")
   }
 
+  const cleanContentFa = contentFa ? sanitizeHtml(contentFa, sanitizeOptions) : null
+  const cleanContentEn = contentEn ? sanitizeHtml(contentEn, sanitizeOptions) : null
+
   const existing = await db.post.findUnique({ where: { id }, select: { publishedAt: true, status: true } })
   if (!existing) throw new Error("مقاله یافت نشد")
 
@@ -171,8 +193,8 @@ export async function adminUpdatePostAction(
         titleFa,
         titleEn,
         slug,
-        contentFa,
-        contentEn,
+        contentFa: cleanContentFa || "",
+        contentEn: cleanContentEn,
         excerptFa,
         excerptEn,
         featuredImage,

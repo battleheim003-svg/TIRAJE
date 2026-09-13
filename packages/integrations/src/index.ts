@@ -6,6 +6,7 @@ export { PaymentService, paymentService } from "./payment/service"
 // Email
 export { EmailService, emailService } from "./email/service"
 export { OrderConfirmEmail, QuoteResponseEmail, WelcomeEmail } from "./email/templates"
+export { ContactNoticeEmail } from "./email/templates/contact-notice"
 
 // Telegram
 export {
