@@ -14,6 +14,8 @@ export interface SiteSettings {
   defaultLowStockThreshold: number
   defaultMinOrderQty: number
   orderAutoCancelMinutes: number
+  nationalId: string
+  economicCode: string
 }
 
 export const DEFAULT_SITE_SETTINGS: SiteSettings = {
@@ -29,6 +31,8 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
   defaultLowStockThreshold: 50,
   defaultMinOrderQty: 1,
   orderAutoCancelMinutes: 60,
+  nationalId: "",
+  economicCode: "",
 }
 
 const SETTINGS_KEY = "site_settings"

@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@react-pdf/renderer": "^4.9.0",
     "@tirajeh/auth": "workspace:*",
     "@tirajeh/database": "workspace:*",
     "@tirajeh/integrations": "workspace:*",

@@ -7,6 +7,7 @@ import { Badge } from "@tirajeh/ui"
 import { formatToman } from "@/lib/cement"
 import { formatRelativeFa, formatJalali } from "@tirajeh/shared"
 import OrderStatusForm from "./order-status-form"
+import { FileText, Truck } from "lucide-react"
 import styles from "./OrderDetail.module.css"
 
 type Props = { params: Promise<{ locale: string; id: string }> }
@@ -82,9 +83,29 @@ export default async function AdminOrderDetailPage({ params }: Props) {
           </h1>
           <p className={styles["web-adm-ord__date"]}>{formattedDate}</p>
         </div>
-        <Badge variant={statusInfo.variant}>
-          {fa ? statusInfo.fa : statusInfo.en}
-        </Badge>
+        <div className={styles["web-adm-ord__pdfActions"]}>
+          <a
+            href={`/api/admin/orders/${order.id}/invoice`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles["web-adm-ord__pdfBtn"]}
+          >
+            <FileText style={{ width: "1rem", height: "1rem" }} />
+            <span>{fa ? "دانلود پیش‌فاکتور (PDF)" : "Download Invoice (PDF)"}</span>
+          </a>
+          <a
+            href={`/api/admin/orders/${order.id}/waybill`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles["web-adm-ord__pdfBtn"]}
+          >
+            <Truck style={{ width: "1rem", height: "1rem" }} />
+            <span>{fa ? "دانلود بارنامه (PDF)" : "Download Waybill (PDF)"}</span>
+          </a>
+          <Badge variant={statusInfo.variant}>
+            {fa ? statusInfo.fa : statusInfo.en}
+          </Badge>
+        </div>
       </div>
 
       {/* Status update */}
