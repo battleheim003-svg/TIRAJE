@@ -1,14 +1,13 @@
 // ─── Action Results ──────────────────────────────────────────────────────────
 
-export type ActionSuccess<T = void> = {
-  success: true
-  data: T
-}
+export type ActionSuccess<T = void> = [T] extends [void]
+  ? { success: true; data?: undefined }
+  : { success: true; data: T }
 
 export type ActionError = {
   success: false
   error: string
-  fieldErrors?: Record<string, string[]>
+  fieldErrors?: Record<string, string | string[]>
   retryAfterSec?: number
 }
 

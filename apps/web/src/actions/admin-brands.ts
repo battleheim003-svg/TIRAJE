@@ -6,20 +6,36 @@ import { requireAdminPerm } from "@/lib/admin-guard"
 import { PERMISSIONS } from "@tirajeh/shared"
 import { audit } from "@/lib/audit"
 
+import { z } from "zod"
+
+const CreateBrandSchema = z.object({
+  nameFa: z.string().min(1, "نام فارسی الزامی است").transform((s) => s.trim()),
+  nameEn: z.string().optional().nullable().transform((s) => s?.trim() || null),
+  slug: z.string().min(1, "اسلاگ الزامی است").regex(/^[a-z0-9-]+$/, "اسلاگ نامعتبر است").transform((s) => s.trim()),
+  description: z.string().optional().nullable().transform((s) => s?.trim() || null),
+  sortOrder: z.coerce.number().int().default(0),
+  isActive: z.preprocess((v) => v === "on" || v === "true" || v === true, z.boolean()).default(false),
+})
+
+const UpdateBrandSchema = CreateBrandSchema.extend({
+  brandId: z.string().min(1, "شناسه برند الزامی است").transform((s) => s.trim()),
+})
+
+const BrandIdSchema = z.object({
+  brandId: z.string().min(1, "شناسه برند الزامی است").transform((s) => s.trim()),
+})
+
 export async function adminCreateBrandAction(
   formData: FormData
 ): Promise<{ brandId: string }> {
   const user = await requireAdminPerm(PERMISSIONS.BRANDS_ALL)
 
-  const nameFa = (formData.get("nameFa") as string | null)?.trim() ?? ""
-  const nameEn = (formData.get("nameEn") as string | null)?.trim() || null
-  const slug = (formData.get("slug") as string | null)?.trim() ?? ""
-  const description = (formData.get("description") as string | null)?.trim() || null
-  const sortOrder = parseInt((formData.get("sortOrder") as string) || "0", 10)
-  const isActive = formData.get("isActive") === "on"
+  const parsed = CreateBrandSchema.safeParse(Object.fromEntries(formData.entries()))
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? "داده‌های ورودی نامعتبر است")
+  }
 
-  if (!nameFa) throw new Error("نام فارسی الزامی است")
-  if (!slug) throw new Error("اسلاگ الزامی است")
+  const { nameFa, nameEn, slug, description, sortOrder, isActive } = parsed.data
 
   try {
     const brand = await db.brand.create({
@@ -55,18 +71,12 @@ export async function adminUpdateBrandAction(
 ): Promise<{ ok: true }> {
   const user = await requireAdminPerm(PERMISSIONS.BRANDS_ALL)
 
-  const brandId = (formData.get("brandId") as string | null)?.trim()
-  if (!brandId) throw new Error("Brand ID missing")
+  const parsed = UpdateBrandSchema.safeParse(Object.fromEntries(formData.entries()))
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? "داده‌های ورودی نامعتبر است")
+  }
 
-  const nameFa = (formData.get("nameFa") as string | null)?.trim() ?? ""
-  const nameEn = (formData.get("nameEn") as string | null)?.trim() || null
-  const slug = (formData.get("slug") as string | null)?.trim() ?? ""
-  const description = (formData.get("description") as string | null)?.trim() || null
-  const sortOrder = parseInt((formData.get("sortOrder") as string) || "0", 10)
-  const isActive = formData.get("isActive") === "on"
-
-  if (!nameFa) throw new Error("نام فارسی الزامی است")
-  if (!slug) throw new Error("اسلاگ الزامی است")
+  const { brandId, nameFa, nameEn, slug, description, sortOrder, isActive } = parsed.data
 
   try {
     await db.brand.update({
@@ -102,8 +112,11 @@ export async function adminDeleteBrandAction(
 ): Promise<{ ok: true }> {
   const user = await requireAdminPerm(PERMISSIONS.BRANDS_ALL)
 
-  const brandId = (formData.get("brandId") as string | null)?.trim()
-  if (!brandId) throw new Error("Brand ID missing")
+  const parsed = BrandIdSchema.safeParse(Object.fromEntries(formData.entries()))
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? "شناسه برند نامعتبر است")
+  }
+  const { brandId } = parsed.data
 
   const productCount = await db.product.count({ where: { brandId } })
   if (productCount > 0) throw new Error(`این برند در ${productCount} محصول استفاده شده است`)
@@ -129,8 +142,11 @@ export async function adminRestoreBrandAction(
 ): Promise<{ ok: true }> {
   const user = await requireAdminPerm(PERMISSIONS.BRANDS_ALL)
 
-  const brandId = (formData.get("brandId") as string | null)?.trim()
-  if (!brandId) throw new Error("Brand ID missing")
+  const parsed = BrandIdSchema.safeParse(Object.fromEntries(formData.entries()))
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? "شناسه برند نامعتبر است")
+  }
+  const { brandId } = parsed.data
 
   await db.brand.update({
     where: { id: brandId },

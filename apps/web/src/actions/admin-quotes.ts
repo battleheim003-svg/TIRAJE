@@ -6,23 +6,34 @@ import { requireAdminPerm, AdminUser } from "@/lib/admin-guard"
 import { PERMISSIONS } from "@tirajeh/shared"
 import { audit } from "@/lib/audit"
 
+import { z } from "zod"
+
+const UpdateQuoteSchema = z.object({
+  quoteId: z.string().min(1, "شناسه استعلام الزامی است").transform((s) => s.trim()),
+  status: z.nativeEnum(QuoteStatus, { errorMap: () => ({ message: "وضعیت الزامی یا نامعتبر است" }) }),
+  quotedPrice: z.preprocess((v) => {
+    if (v === "" || v === null || v === undefined) return null
+    return Number(v)
+  }, z.number().int().nonnegative().nullable().optional()),
+  adminNote: z.string().optional().nullable().transform((s) => s?.trim() || null),
+  expiresAt: z.preprocess((v) => {
+    if (!v) return null
+    const d = new Date(String(v))
+    return isNaN(d.getTime()) ? null : d
+  }, z.date().nullable().optional()),
+})
+
 export async function adminUpdateQuoteAction(
   formData: FormData
 ): Promise<{ ok: true }> {
   const user: AdminUser = await requireAdminPerm(PERMISSIONS.QUOTES_UPDATE)
 
-  const quoteId = (formData.get("quoteId") as string | null)?.trim()
-  if (!quoteId) throw new Error("Quote ID missing")
+  const parsed = UpdateQuoteSchema.safeParse(Object.fromEntries(formData.entries()))
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? "داده‌های ورودی نامعتبر است")
+  }
 
-  const status = (formData.get("status") as string | null)?.trim()
-  if (!status) throw new Error("Status missing")
-
-  const quotedPriceRaw = (formData.get("quotedPrice") as string | null)?.trim()
-  const quotedPrice = quotedPriceRaw ? parseInt(quotedPriceRaw, 10) : null
-  const adminNote = (formData.get("adminNote") as string | null)?.trim() || null
-
-  const expiresAtRaw = (formData.get("expiresAt") as string | null)?.trim()
-  const expiresAt = expiresAtRaw ? new Date(expiresAtRaw) : null
+  const { quoteId, status, quotedPrice, adminNote, expiresAt } = parsed.data
 
   const quote = await db.quoteRequest.findUnique({ where: { id: quoteId }, select: { id: true } })
   if (!quote) throw new Error("Quote not found")

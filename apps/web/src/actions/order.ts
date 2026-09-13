@@ -1,7 +1,6 @@
 "use server"
 
-import { db } from "@tirajeh/database"
-import type { TruckType } from "@tirajeh/database"
+import { db, TruckType } from "@tirajeh/database"
 import { auth } from "@tirajeh/auth"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
@@ -17,7 +16,7 @@ export async function checkoutAction(
 ): Promise<{ success: false; error: string }> {
   const session = await auth()
   if (!session?.user) return { success: false, error: "لطفاً ابتدا وارد شوید" }
-  const userId = (session.user as any).id
+  const userId = session.user.id
   const locale = await getLocale()
 
   const cartItems = await db.cartItem.findMany({
@@ -38,37 +37,24 @@ export async function checkoutAction(
       return { success: false, error: `موجودی ${item.product.nameFa} کافی نیست` }
   }
 
-  const province = (formData.get("province") as string || "").trim()
-  const truckType = formData.get("truckType") as TruckType | null
-
-  if (!province || !truckType) {
-    return { success: false, error: "استان و نوع ماشین حمل الزامی است" }
-  }
-
   const CreateOrderSchema = z.object({
-    recipientName: z.string().min(2, "نام گیرنده حداقل باید ۲ کاراکتر باشد"),
-    phone: z.string().regex(/^09\d{9}$/, "شماره موبایل نامعتبر است"),
-    province: z.string().min(2, "استان الزامی است"),
-    city: z.string().min(2, "شهر الزامی است"),
-    street: z.string().min(5, "آدرس پستی نامعتبر است"),
-    postalCode: z.string().regex(/^\d{10}$/, "کد پستی باید ۱۰ رقم باشد").optional().nullable().or(z.literal("")),
-    note: z.string().optional().nullable(),
+    recipientName: z.string().min(2, "نام گیرنده حداقل باید ۲ کاراکتر باشد").transform((s) => s.trim()),
+    phone: z.string().regex(/^09\d{9}$/, "شماره موبایل نامعتبر است").transform((s) => s.trim()),
+    province: z.string().min(2, "استان الزامی است").transform((s) => s.trim()),
+    city: z.string().min(2, "شهر الزامی است").transform((s) => s.trim()),
+    street: z.string().min(5, "آدرس پستی نامعتبر است").transform((s) => s.trim()),
+    postalCode: z.string().regex(/^\d{10}$/, "کد پستی باید ۱۰ رقم باشد").optional().nullable().or(z.literal("")).transform((s) => s?.trim() || ""),
+    truckType: z.nativeEnum(TruckType, { errorMap: () => ({ message: "نوع ماشین حمل الزامی است" }) }),
+    note: z.string().optional().nullable().transform((s) => s?.trim() || ""),
   })
 
-  const formValues = {
-    recipientName: (formData.get("recipientName") as string || "").trim(),
-    phone: (formData.get("phone") as string || "").trim(),
-    province,
-    city: (formData.get("city") as string || "").trim(),
-    street: (formData.get("street") as string || "").trim(),
-    postalCode: (formData.get("postalCode") as string || "").trim(),
-    note: (formData.get("note") as string || "").trim(),
+  const raw = Object.fromEntries(formData.entries())
+  const parsed = CreateOrderSchema.safeParse(raw)
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? "اطلاعات فرم نامعتبر است" }
   }
 
-  const parsed = CreateOrderSchema.safeParse(formValues)
-  if (!parsed.success) {
-    return { success: false, error: parsed.error.errors[0].message }
-  }
+  const { province, truckType } = parsed.data
 
   const shippingAddress = {
     recipientName: parsed.data.recipientName,
@@ -199,15 +185,20 @@ export async function checkoutAction(
   }
 }
 
+const CancelOrderSchema = z.object({
+  orderId: z.string().min(1, "سفارش مشخص نشده").transform((s) => s.trim()),
+})
+
 export async function cancelOrderAction(
   formData: FormData
 ): Promise<{ success: boolean; error?: string }> {
   const session = await auth()
   if (!session?.user) return { success: false, error: "لطفاً وارد شوید" }
-  const userId = (session.user as any).id
+  const userId = session.user.id
 
-  const orderId = (formData.get("orderId") as string | null)?.trim()
-  if (!orderId) return { success: false, error: "سفارش مشخص نشده" }
+  const parsed = CancelOrderSchema.safeParse(Object.fromEntries(formData.entries()))
+  if (!parsed.success) return { success: false, error: parsed.error.issues[0]?.message ?? "سفارش مشخص نشده" }
+  const { orderId } = parsed.data
 
   const order = await db.order.findUnique({
     where: { id: orderId },
@@ -234,7 +225,7 @@ export async function retryPaymentAction(
 ): Promise<{ success: boolean; error?: string }> {
   const session = await auth()
   if (!session?.user) return { success: false, error: "لطفاً ابتدا وارد شوید" }
-  const userId = (session.user as any).id
+  const userId = session.user.id
   const locale = await getLocale()
 
   const order = await db.order.findUnique({

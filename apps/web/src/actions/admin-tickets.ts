@@ -10,13 +10,7 @@ import { audit } from "@/lib/audit"
 export async function adminReplyTicketAction(formData: FormData): Promise<{ ok: true }> {
   const user: AdminUser = await requireAdminPerm(PERMISSIONS.TICKETS_REPLY)
 
-  const raw = {
-    ticketId: (formData.get("ticketId") as string | null)?.trim() ?? "",
-    replyText: (formData.get("replyText") as string | null)?.trim() ?? "",
-    status: ((formData.get("status") as string | null)?.trim() || "REPLIED") as "READ" | "REPLIED",
-  }
-
-  const parsed = ReplyTicketSchema.safeParse(raw)
+  const parsed = ReplyTicketSchema.safeParse(Object.fromEntries(formData.entries()))
   if (!parsed.success) {
     const msg = parsed.error.issues[0]?.message ?? "اطلاعات نامعتبر است"
     throw new Error(msg)

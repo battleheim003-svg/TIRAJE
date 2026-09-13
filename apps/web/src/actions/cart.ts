@@ -44,7 +44,7 @@ export interface CartSummary {
 
 export async function getCartCountAction(): Promise<number> {
   const session = await auth()
-  const userId = session?.user ? (session.user as any).id : undefined
+  const userId = session?.user?.id
   const cookieStore = await cookies()
   const sessionId = userId ? undefined : cookieStore.get("session_id")?.value
 
@@ -60,7 +60,7 @@ export async function getCartCountAction(): Promise<number> {
 
 export async function getCartAction(): Promise<CartSummary> {
   const session = await auth()
-  const userId = session?.user ? (session.user as any).id : undefined
+  const userId = session?.user?.id
   const cookieStore = await cookies()
   const sessionId = userId ? undefined : cookieStore.get("session_id")?.value
 
@@ -137,22 +137,24 @@ export async function getCartAction(): Promise<CartSummary> {
   }
 }
 
+import { parseAction } from "@/lib/parse-action"
+
 const AddToCartSchema = z.object({
-  productId: z.string().uuid(),
-  quantity: z.coerce.number().int().positive().max(10_000),
+  productId: z.string().uuid("شناسه محصول نامعتبر است"),
+  quantity: z.coerce.number().int().positive("تعداد باید یک عدد مثبت باشد").max(10_000, "حداکثر تعداد ۱۰,۰۰۰ است"),
   packagingTier: z.nativeEnum(PackagingTier).nullish(),
 })
 
 export async function addToCartAction(input: unknown): Promise<ActionResult> {
-  const parsed = AddToCartSchema.safeParse(input)
-  if (!parsed.success) {
-    return { success: false, error: "ورودی نامعتبر" }
+  const parsed = parseAction(AddToCartSchema, input)
+  if ("error" in parsed) {
+    return parsed.error
   }
   const { productId, quantity, packagingTier } = parsed.data
   const tier = packagingTier ?? null
 
   const session = await auth()
-  const userId = session?.user ? (session.user as any).id : undefined
+  const userId = session?.user?.id
   const sessionId = userId ? undefined : await getSessionId()
 
   const product = await db.product.findUnique({
@@ -213,7 +215,7 @@ export async function addToCartAction(input: unknown): Promise<ActionResult> {
 
 export async function removeFromCartAction(itemId: string): Promise<ActionResult> {
   const session = await auth()
-  const userId = session?.user ? (session.user as any).id : undefined
+  const userId = session?.user?.id
   const sessionId = userId ? undefined : await getSessionId()
 
   const item = await db.cartItem.findUnique({ where: { id: itemId } })
@@ -233,7 +235,7 @@ export async function updateCartItemAction(
   quantity: number
 ): Promise<ActionResult> {
   const session = await auth()
-  const userId = session?.user ? (session.user as any).id : undefined
+  const userId = session?.user?.id
   const sessionId = userId ? undefined : await getSessionId()
 
   const item = await db.cartItem.findUnique({
@@ -261,7 +263,7 @@ export async function updateCartItemAction(
 export async function mergeCartAction(): Promise<void> {
   const session = await auth()
   if (!session?.user) return
-  const userId = (session.user as any).id
+  const userId = session.user.id
 
   const store = await cookies()
   const sessionId = store.get("session_id")?.value

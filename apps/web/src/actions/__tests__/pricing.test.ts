@@ -45,21 +45,37 @@ describe("resolveUnitPriceToman", () => {
 describe("addToCartAction validation", () => {
   it("rejects undefined input", async () => {
     const res = await addToCartAction(undefined)
-    expect(res).toEqual({ success: false, error: "ورودی نامعتبر" })
+    expect(res.success).toBe(false)
+    if (!res.success) {
+      expect(res.error).toBe("داده‌های ورودی معتبر نیستند.")
+      expect(res.fieldErrors).toBeDefined()
+    }
   })
 
   it("rejects quantity: 'abc'", async () => {
     const res = await addToCartAction({ productId: "123e4567-e89b-12d3-a456-426614174000", quantity: "abc" })
-    expect(res).toEqual({ success: false, error: "ورودی نامعتبر" })
+    expect(res.success).toBe(false)
+    if (!res.success) {
+      expect(res.error).toBe("داده‌های ورودی معتبر نیستند.")
+      expect(res.fieldErrors?.quantity).toBeDefined()
+    }
   })
 
   it("rejects quantity: 2.5", async () => {
     const res = await addToCartAction({ productId: "123e4567-e89b-12d3-a456-426614174000", quantity: 2.5 })
-    expect(res).toEqual({ success: false, error: "ورودی نامعتبر" })
+    expect(res.success).toBe(false)
+    if (!res.success) {
+      expect(res.error).toBe("داده‌های ورودی معتبر نیستند.")
+      expect(res.fieldErrors?.quantity).toBeDefined()
+    }
   })
 
   it("rejects quantity: -1", async () => {
     const res = await addToCartAction({ productId: "123e4567-e89b-12d3-a456-426614174000", quantity: -1 })
-    expect(res).toEqual({ success: false, error: "ورودی نامعتبر" })
+    expect(res.success).toBe(false)
+    if (!res.success) {
+      expect(res.error).toBe("داده‌های ورودی معتبر نیستند.")
+      expect(res.fieldErrors?.quantity).toBeDefined()
+    }
   })
 })

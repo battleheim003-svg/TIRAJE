@@ -190,4 +190,13 @@ describe("Cart Server Actions", () => {
       expect(mockCookieStore.delete).toHaveBeenCalledWith("session_id")
     })
   })
+
+  describe("addToCartAction", () => {
+    it("returns fieldErrors when input is undefined", async () => {
+      const { addToCartAction } = await import("../cart")
+      const result = await addToCartAction(undefined)
+      expect(result.success).toBe(false)
+      expect("fieldErrors" in result && result.fieldErrors).toBeDefined()
+    })
+  })
 })

@@ -29,9 +29,13 @@ const { mockDb, mockRequireAdminPerm } = vi.hoisted(() => {
   }
 })
 
-vi.mock("@tirajeh/database", () => ({
-  db: mockDb,
-}))
+vi.mock("@tirajeh/database", async (importOriginal) => {
+  const actual = await importOriginal<Record<string, any>>()
+  return {
+    ...actual,
+    db: mockDb,
+  }
+})
 
 vi.mock("@/lib/admin-guard", () => ({
   requireAdminPerm: (...args: unknown[]) => mockRequireAdminPerm(...args),

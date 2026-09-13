@@ -23,35 +23,72 @@ const sanitizeOptions: sanitizeHtml.IOptions = {
   allowedSchemes: ["https", "http", "data"],
 }
 
-function str(fd: FormData, key: string): string {
-  return ((fd.get(key) as string | null)?.trim() ?? "")
-}
-function strOrNull(fd: FormData, key: string): string | null {
-  const v = (fd.get(key) as string | null)?.trim()
-  return v || null
-}
+import { z } from "zod"
+
+const AdminPostSchema = z.object({
+  titleFa: z.string().min(1, "عنوان فارسی الزامی است").transform((s) => s.trim()),
+  titleEn: z.string().optional().nullable().transform((s) => s?.trim() || null),
+  slug: z.string().min(1, "اسلاگ الزامی است").regex(/^[a-z0-9-]+$/, "اسلاگ نامعتبر است").transform((s) => s.trim()),
+  contentFa: z.string().min(1, "متن فارسی الزامی است").transform((s) => s.trim()),
+  contentEn: z.string().optional().nullable().transform((s) => s?.trim() || null),
+  excerptFa: z.string().optional().nullable().transform((s) => s?.trim() || null),
+  excerptEn: z.string().optional().nullable().transform((s) => s?.trim() || null),
+  featuredImage: z.string().optional().nullable().transform((s) => s?.trim() || null),
+  categoryId: z.string().optional().nullable().transform((s) => s?.trim() || null),
+  status: z.enum(["DRAFT", "PUBLISHED", "SCHEDULED", "ARCHIVED"]).default("DRAFT"),
+  seoTitle: z.string().optional().nullable().transform((s) => s?.trim() || null),
+  seoDescription: z.string().optional().nullable().transform((s) => s?.trim() || null),
+  readingTimeMin: z.preprocess((v) => {
+    if (!v) return null
+    const n = parseInt(String(v), 10)
+    return isNaN(n) ? null : n
+  }, z.number().int().positive().nullable().optional()),
+  scheduledAt: z.preprocess((v) => {
+    if (!v) return null
+    const d = new Date(String(v))
+    return isNaN(d.getTime()) ? null : d
+  }, z.date().nullable().optional()),
+  channelUsername: z.string().optional().nullable().transform((s) => s?.trim() || undefined),
+  customHashtags: z.string().optional().nullable().transform((s) => s?.trim() || null),
+})
+
+const AdminPostIdSchema = z.object({
+  id: z.string().min(1, "شناسه مقاله الزامی است").transform((s) => s.trim()),
+})
+
+const AdminUpdatePostSchema = AdminPostSchema.extend({
+  id: z.string().min(1, "شناسه مقاله الزامی است").transform((s) => s.trim()),
+})
 
 export async function adminCreatePostAction(
   formData: FormData
 ): Promise<{ postId: string }> {
   const user: AdminUser = await requireAdminPerm(PERMISSIONS.BLOG_ALL)
 
-  const titleFa   = str(formData, "titleFa")
-  const titleEn   = strOrNull(formData, "titleEn")
-  const slug      = str(formData, "slug")
-  const contentFa = str(formData, "contentFa")
-  const contentEn = strOrNull(formData, "contentEn")
-  const excerptFa = strOrNull(formData, "excerptFa")
-  const excerptEn = strOrNull(formData, "excerptEn")
-  const featuredImage  = strOrNull(formData, "featuredImage")
-  const categoryId     = strOrNull(formData, "categoryId")
-  const status         = (str(formData, "status") || "DRAFT") as "DRAFT" | "PUBLISHED" | "SCHEDULED" | "ARCHIVED"
-  const seoTitle       = strOrNull(formData, "seoTitle")
-  const seoDescription = strOrNull(formData, "seoDescription")
-  const readingTimeMin = strOrNull(formData, "readingTimeMin")
-  const scheduledAtRaw = strOrNull(formData, "scheduledAt")
-  const channelUsername = strOrNull(formData, "channelUsername") || undefined
-  const customHashtagsRaw = strOrNull(formData, "customHashtags")
+  const parsed = AdminPostSchema.safeParse(Object.fromEntries(formData.entries()))
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? "داده‌های ورودی مقاله معتبر نیستند")
+  }
+
+  const {
+    titleFa,
+    titleEn,
+    slug,
+    contentFa,
+    contentEn,
+    excerptFa,
+    excerptEn,
+    featuredImage,
+    categoryId,
+    status,
+    seoTitle,
+    seoDescription,
+    readingTimeMin,
+    scheduledAt: scheduledAtDate,
+    channelUsername,
+    customHashtags: customHashtagsRaw,
+  } = parsed.data
+
   let customHashtags: string[] | undefined = undefined
   if (customHashtagsRaw) {
     try {
@@ -61,10 +98,6 @@ export async function adminCreatePostAction(
     }
   }
 
-  if (!titleFa || !slug || !contentFa) {
-    throw new Error("فیلدهای الزامی پر نشده‌اند")
-  }
-
   const cleanContentFa = contentFa ? sanitizeHtml(contentFa, sanitizeOptions) : null
   const cleanContentEn = contentEn ? sanitizeHtml(contentEn, sanitizeOptions) : null
 
@@ -72,8 +105,8 @@ export async function adminCreatePostAction(
   let scheduledAt: Date | null = null
   if (status === "PUBLISHED") {
     publishedAt = new Date()
-  } else if (status === "SCHEDULED" && scheduledAtRaw) {
-    scheduledAt = new Date(scheduledAtRaw)
+  } else if (status === "SCHEDULED" && scheduledAtDate) {
+    scheduledAt = scheduledAtDate
     publishedAt = scheduledAt
   }
 
@@ -93,7 +126,7 @@ export async function adminCreatePostAction(
         publishedAt,
         seoTitle,
         seoDescription,
-        readingTimeMin: readingTimeMin ? parseInt(readingTimeMin, 10) : null,
+        readingTimeMin,
         authorId: user.id,
       },
       select: { id: true },
@@ -146,23 +179,31 @@ export async function adminUpdatePostAction(
 ): Promise<{ ok: true }> {
   const user = await requireAdminPerm(PERMISSIONS.BLOG_ALL)
 
-  const id        = str(formData, "id")
-  const titleFa   = str(formData, "titleFa")
-  const titleEn   = strOrNull(formData, "titleEn")
-  const slug      = str(formData, "slug")
-  const contentFa = str(formData, "contentFa")
-  const contentEn = strOrNull(formData, "contentEn")
-  const excerptFa = strOrNull(formData, "excerptFa")
-  const excerptEn = strOrNull(formData, "excerptEn")
-  const featuredImage  = strOrNull(formData, "featuredImage")
-  const categoryId     = strOrNull(formData, "categoryId")
-  const status         = (str(formData, "status") || "DRAFT") as "DRAFT" | "PUBLISHED" | "SCHEDULED" | "ARCHIVED"
-  const seoTitle       = strOrNull(formData, "seoTitle")
-  const seoDescription = strOrNull(formData, "seoDescription")
-  const readingTimeMin = strOrNull(formData, "readingTimeMin")
-  const scheduledAtRaw = strOrNull(formData, "scheduledAt")
-  const channelUsername = strOrNull(formData, "channelUsername") || undefined
-  const customHashtagsRaw = strOrNull(formData, "customHashtags")
+  const parsed = AdminUpdatePostSchema.safeParse(Object.fromEntries(formData.entries()))
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? "داده‌های ورودی مقاله معتبر نیستند")
+  }
+
+  const {
+    id,
+    titleFa,
+    titleEn,
+    slug,
+    contentFa,
+    contentEn,
+    excerptFa,
+    excerptEn,
+    featuredImage,
+    categoryId,
+    status,
+    seoTitle,
+    seoDescription,
+    readingTimeMin,
+    scheduledAt: scheduledAtDate,
+    channelUsername,
+    customHashtags: customHashtagsRaw,
+  } = parsed.data
+
   let customHashtags: string[] | undefined = undefined
   if (customHashtagsRaw) {
     try {
@@ -170,10 +211,6 @@ export async function adminUpdatePostAction(
     } catch {
       customHashtags = customHashtagsRaw.split(",").map((s) => s.trim()).filter(Boolean)
     }
-  }
-
-  if (!id || !titleFa || !slug || !contentFa) {
-    throw new Error("فیلدهای الزامی پر نشده‌اند")
   }
 
   const cleanContentFa = contentFa ? sanitizeHtml(contentFa, sanitizeOptions) : null
@@ -185,9 +222,9 @@ export async function adminUpdatePostAction(
   let publishedAt: Date | null | undefined = undefined
   if (status === "PUBLISHED" && existing.status !== "PUBLISHED") {
     publishedAt = existing.publishedAt ?? new Date()
-  } else if (status === "SCHEDULED" && scheduledAtRaw) {
-    publishedAt = new Date(scheduledAtRaw)
-  } else if (status === "DRAFT" || status === "ARCHIVED") {
+  } else if (status === "SCHEDULED" && scheduledAtDate) {
+    publishedAt = null
+  } else if (status === "DRAFT") {
     publishedAt = null
   }
 
@@ -198,7 +235,7 @@ export async function adminUpdatePostAction(
         titleFa,
         titleEn,
         slug,
-        contentFa: cleanContentFa || "",
+        contentFa: cleanContentFa || undefined,
         contentEn: cleanContentEn,
         excerptFa,
         excerptEn,
@@ -207,14 +244,15 @@ export async function adminUpdatePostAction(
         status,
         seoTitle,
         seoDescription,
-        readingTimeMin: readingTimeMin ? parseInt(readingTimeMin, 10) : null,
-        ...(publishedAt !== undefined ? { publishedAt } : {}),
+        readingTimeMin,
+        publishedAt: publishedAt !== undefined ? publishedAt : undefined,
       },
     })
-    revalidatePath("/admin/blog")
-    revalidatePath(`/admin/blog/${id}`)
 
-    if (status === "PUBLISHED") {
+    revalidatePath(`/admin/blog/${id}`)
+    revalidatePath("/admin/blog")
+
+    if (status === "PUBLISHED" && existing.status !== "PUBLISHED") {
       const full = await db.post.findUnique({
         where: { id },
         include: { category: true, postTags: { include: { tag: true } } },
@@ -259,8 +297,10 @@ export async function adminDeletePostAction(
   formData: FormData
 ): Promise<{ ok: true }> {
   const user = await requireAdminPerm(PERMISSIONS.BLOG_ALL)
-  const id = str(formData, "id")
-  if (!id) throw new Error("شناسه مقاله الزامی است")
+  const parsed = AdminPostIdSchema.safeParse(Object.fromEntries(formData.entries()))
+  if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? "شناسه مقاله الزامی است")
+  const { id } = parsed.data
+
   await db.post.update({
     where: { id },
     data: { archivedAt: new Date() },
@@ -281,8 +321,9 @@ export async function adminRestorePostAction(
   formData: FormData
 ): Promise<{ ok: true }> {
   const user = await requireAdminPerm(PERMISSIONS.BLOG_ALL)
-  const id = str(formData, "id")
-  if (!id) throw new Error("شناسه مقاله الزامی است")
+  const parsed = AdminPostIdSchema.safeParse(Object.fromEntries(formData.entries()))
+  if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? "شناسه مقاله الزامی است")
+  const { id } = parsed.data
 
   await db.post.update({
     where: { id },

@@ -2,7 +2,7 @@
 
 import { db, OrderStatus } from "@tirajeh/database"
 import { revalidatePath } from "next/cache"
-import { releaseOrderStock, PrismaTx } from "@/lib/stock"
+import { releaseOrderStock } from "@/lib/stock"
 import { emailService, enqueue } from "@tirajeh/integrations"
 import { requireAdminPerm, AdminUser } from "@/lib/admin-guard"
 import { PERMISSIONS, canTransition, OUTBOX_EVENTS, OUTBOX_CHANNELS } from "@tirajeh/shared"
@@ -13,24 +13,23 @@ export type UpdateOrderStatusResult =
   | { ok: true; success: true }
   | { ok?: false; success: false; error: string }
 
+const UpdateOrderStatusSchema = z.object({
+  orderId: z.string().min(1, "شناسه سفارش الزامی است"),
+  status: z.nativeEnum(OrderStatus, { errorMap: () => ({ message: "وضعیت نامعتبر" }) }),
+  note: z.string().optional().nullable().transform((v) => v?.trim() || null),
+})
+
 export async function adminUpdateOrderStatusAction(
   formData: FormData
 ): Promise<UpdateOrderStatusResult> {
   const user: AdminUser = await requireAdminPerm(PERMISSIONS.ORDERS_UPDATE)
 
-  const orderId = (formData.get("orderId") as string | null)?.trim()
-  const rawStatus = (formData.get("status") as string | null)?.trim()
-  const note = (formData.get("note") as string | null)?.trim() || null
-
-  if (!orderId || !rawStatus) {
-    return { success: false, error: "شناسه سفارش و وضعیت الزامی است" }
-  }
-
-  const parsed = z.nativeEnum(OrderStatus).safeParse(rawStatus)
+  const raw = Object.fromEntries(formData.entries())
+  const parsed = UpdateOrderStatusSchema.safeParse(raw)
   if (!parsed.success) {
-    return { success: false, error: "وضعیت نامعتبر" }
+    return { success: false, error: parsed.error.issues[0]?.message ?? "داده‌های ورودی معتبر نیستند." }
   }
-  const newStatus = parsed.data
+  const { orderId, status: newStatus, note } = parsed.data
 
   const order = await db.order.findUnique({
     where: { id: orderId },
@@ -54,7 +53,7 @@ export async function adminUpdateOrderStatusAction(
     })
 
     if (newStatus === "CANCELLED" || newStatus === "REFUNDED") {
-      await releaseOrderStock(tx as unknown as PrismaTx, orderId)
+      await releaseOrderStock(tx, orderId)
     }
 
     await tx.orderEvent.create({
@@ -66,7 +65,7 @@ export async function adminUpdateOrderStatusAction(
       },
     })
 
-    await enqueue(tx as unknown as PrismaTx, {
+    await enqueue(tx, {
       event: OUTBOX_EVENTS.ORDER_STATUS_CHANGED,
       channel: OUTBOX_CHANNELS.TG_ADMIN,
       payload: {

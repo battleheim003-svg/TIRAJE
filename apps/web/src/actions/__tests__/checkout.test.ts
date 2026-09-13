@@ -172,7 +172,13 @@ describe("checkoutAction — transaction rollback safety", () => {
   beforeEach(async () => {
     vi.resetModules()
     db = makeDbMock()
-    vi.doMock("@tirajeh/database", () => ({ db }))
+    vi.doMock("@tirajeh/database", async (importOriginal) => {
+      const actual = await importOriginal<Record<string, any>>()
+      return {
+        ...actual,
+        db,
+      }
+    })
   })
 
   // ── Test 1: Stock too low before transaction ──────────────────────────────

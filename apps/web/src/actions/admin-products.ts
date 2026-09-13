@@ -8,52 +8,41 @@ import { requireAdminPerm } from "@/lib/admin-guard"
 import { PERMISSIONS } from "@tirajeh/shared"
 import { audit } from "@/lib/audit"
 
+import { z } from "zod"
+
+const ProductAdminSchema = z.object({
+  nameFa: z.string().min(1, "نام فارسی الزامی است").transform((s) => s.trim()),
+  nameEn: z.string().optional().nullable().transform((s) => s?.trim() || null),
+  slug: z.string().min(1, "اسلاگ الزامی است").regex(/^[a-z0-9-]+$/, "اسلاگ نامعتبر است").transform((s) => s.trim()),
+  brandId: z.string().min(1, "برند الزامی است").transform((s) => s.trim()),
+  cementType: z.nativeEnum(CementType).optional().nullable(),
+  packagingType: z.nativeEnum(PackagingType, { errorMap: () => ({ message: "نوع بسته‌بندی الزامی است" }) }),
+  weightKg: z.coerce.number().positive("وزن باید یک عدد مثبت باشد"),
+  price: z.coerce.number().int().nonnegative("قیمت باید یک عدد نامنفی باشد"),
+  comparePrice: z.preprocess((v) => {
+    if (v === "" || v === null || v === undefined) return null
+    return Number(v)
+  }, z.number().int().nonnegative().nullable().optional()),
+  stockStatus: z.nativeEnum(StockStatus).default("IN_STOCK"),
+  stockQty: z.coerce.number().int().default(0),
+  minOrderQty: z.coerce.number().int().positive().default(1),
+  factoryId: z.string().optional().nullable().transform((s) => s?.trim() || null),
+  isActive: z.preprocess((v) => v === "on" || v === "true" || v === true, z.boolean()).default(false),
+  isFeatured: z.preprocess((v) => v === "on" || v === "true" || v === true, z.boolean()).default(false),
+  descriptionFa: z.string().optional().nullable().transform((s) => s?.trim() || null),
+  descriptionEn: z.string().optional().nullable().transform((s) => s?.trim() || null),
+  images: z.string().optional().nullable().transform((s) => s?.trim() || null),
+  channelUsername: z.string().optional().nullable().transform((s) => s?.trim() || undefined),
+  customHashtags: z.string().optional().nullable().transform((s) => s?.trim() || null),
+})
+
 function parseProductFormData(fd: FormData) {
-  const nameFa = (fd.get("nameFa") as string | null)?.trim() ?? ""
-  const nameEn = (fd.get("nameEn") as string | null)?.trim() || null
-  const slug = (fd.get("slug") as string | null)?.trim() ?? ""
-  const brandId = (fd.get("brandId") as string | null)?.trim() ?? ""
-  const cementType = (fd.get("cementType") as string | null)?.trim() || null
-  const packagingType = (fd.get("packagingType") as string | null)?.trim() ?? ""
-  const weightKg = parseFloat(fd.get("weightKg") as string)
-  const price = parseInt(fd.get("price") as string, 10)
-  const comparePriceRaw = (fd.get("comparePrice") as string | null)?.trim()
-  const comparePrice = comparePriceRaw ? parseInt(comparePriceRaw, 10) : null
-  const stockStatus = (fd.get("stockStatus") as string | null)?.trim() ?? "IN_STOCK"
-  const stockQty = parseInt((fd.get("stockQty") as string) || "0", 10)
-  const minOrderQty = parseInt((fd.get("minOrderQty") as string) || "1", 10)
-  const factoryId = (fd.get("factoryId") as string | null)?.trim() || null
-  const isActive = fd.get("isActive") === "on"
-  const isFeatured = fd.get("isFeatured") === "on"
-  const descriptionFa = (fd.get("descriptionFa") as string | null)?.trim() || null
-  const descriptionEn = (fd.get("descriptionEn") as string | null)?.trim() || null
-
-  if (!nameFa) throw new Error("نام فارسی الزامی است")
-  if (!slug) throw new Error("اسلاگ الزامی است")
-  if (!brandId) throw new Error("برند الزامی است")
-  if (!packagingType) throw new Error("نوع بسته‌بندی الزامی است")
-  if (isNaN(weightKg) || weightKg <= 0) throw new Error("وزن نامعتبر است")
-  if (isNaN(price) || price < 0) throw new Error("قیمت نامعتبر است")
-
-  return {
-    nameFa,
-    nameEn,
-    slug,
-    brandId,
-    cementType: (cementType as CementType | null) ?? null,
-    packagingType: packagingType as PackagingType,
-    weightKg,
-    price,
-    comparePrice,
-    stockStatus: stockStatus as StockStatus,
-    stockQty,
-    minOrderQty,
-    factoryId,
-    isActive,
-    isFeatured,
-    descriptionFa,
-    descriptionEn,
+  const raw = Object.fromEntries(fd.entries())
+  const parsed = ProductAdminSchema.safeParse(raw)
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? "داده‌های ورودی محصول نامعتبر است")
   }
+  return parsed.data
 }
 
 export async function adminCreateProductAction(
@@ -96,7 +85,7 @@ export async function adminCreateProductAction(
 
     revalidatePath("/admin/products")
 
-    const imagesRaw = (formData.get("images") as string | null)?.trim()
+    const imagesRaw = data.images
     if (imagesRaw) {
       try {
         const parsedImages: Array<{ url: string; sortOrder: number; isPrimary: boolean }> = JSON.parse(imagesRaw)
@@ -113,8 +102,8 @@ export async function adminCreateProductAction(
       } catch(e) { console.error("Failed to parse images JSON", e) }
     }
 
-    const channelUsername = (formData.get("channelUsername") as string | null)?.trim() || undefined
-    const customHashtagsRaw = (formData.get("customHashtags") as string | null)?.trim()
+    const channelUsername = data.channelUsername
+    const customHashtagsRaw = data.customHashtags
     let customHashtags: string[] | undefined = undefined
     if (customHashtagsRaw) {
       try {
@@ -129,8 +118,15 @@ export async function adminCreateProductAction(
     }
 
     return { productId: product.id }
-  } catch (err: any) {
-    if (err?.code === "P2002") throw new Error("این اسلاگ قبلاً استفاده شده است")
+  } catch (err: unknown) {
+    if (
+      typeof err === "object" &&
+      err !== null &&
+      "code" in err &&
+      (err as { code: unknown }).code === "P2002"
+    ) {
+      throw new Error("این اسلاگ قبلاً استفاده شده است")
+    }
     throw err
   }
 }
@@ -177,13 +173,18 @@ async function syncProductToTelegram(
   }
 }
 
+const ProductIdSchema = z.object({
+  productId: z.string().min(1, "شناسه محصول الزامی است").transform((s) => s.trim()),
+})
+
 export async function adminUpdateProductAction(
   formData: FormData
 ): Promise<{ ok: true }> {
   const user = await requireAdminPerm(PERMISSIONS.PRODUCTS_UPDATE)
 
-  const productId = (formData.get("productId") as string | null)?.trim()
-  if (!productId) throw new Error("Product ID missing")
+  const parsedId = ProductIdSchema.safeParse(Object.fromEntries(formData.entries()))
+  if (!parsedId.success) throw new Error(parsedId.error.issues[0]?.message ?? "شناسه محصول نامعتبر است")
+  const { productId } = parsedId.data
 
   const data = parseProductFormData(formData)
 
@@ -239,7 +240,7 @@ export async function adminUpdateProductAction(
   revalidatePath(`/admin/products/${productId}`)
   revalidatePath("/admin/products")
 
-  const imagesRaw = (formData.get("images") as string | null)?.trim()
+  const imagesRaw = data.images
   if (imagesRaw) {
     try {
       const parsedImages: Array<{ url: string; sortOrder: number; isPrimary: boolean }> = JSON.parse(imagesRaw)
@@ -261,8 +262,8 @@ export async function adminUpdateProductAction(
     } catch(e) { console.error("Failed to parse images JSON", e) }
   }
 
-  const channelUsername = (formData.get("channelUsername") as string | null)?.trim() || undefined
-  const customHashtagsRaw = (formData.get("customHashtags") as string | null)?.trim()
+  const channelUsername = data.channelUsername
+  const customHashtagsRaw = data.customHashtags
   let customHashtags: string[] | undefined = undefined
   if (customHashtagsRaw) {
     try {

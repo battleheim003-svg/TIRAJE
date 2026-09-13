@@ -5,6 +5,7 @@ import { storageService, rateLimit } from "@tirajeh/integrations"
 import { requireAdminPerm } from "@/lib/admin-guard"
 import { PERMISSIONS } from "@tirajeh/shared"
 import { getClientIp } from "@/lib/ip"
+import { parseAction } from "@/lib/parse-action"
 
 export type ActionResult<T = void> = { success: true; data: T } | { success: false; error: string; retryAfterSec?: number }
 
@@ -41,9 +42,9 @@ export async function createUploadUrlAction(
     return { success: false, error: "احراز هویت انجام نشده است" }
   }
 
-  const parsed = UploadSchema.safeParse(input)
-  if (!parsed.success) {
-    return { success: false, error: parsed.error.errors[0].message }
+  const parsed = parseAction(UploadSchema, input)
+  if ("error" in parsed) {
+    return parsed.error
   }
 
   const { kind, contentType } = parsed.data

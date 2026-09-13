@@ -6,20 +6,36 @@ import { requireAdminPerm } from "@/lib/admin-guard"
 import { PERMISSIONS } from "@tirajeh/shared"
 import { audit } from "@/lib/audit"
 
+import { z } from "zod"
+
+const CreateCategorySchema = z.object({
+  nameFa: z.string().min(1, "نام فارسی الزامی است").transform((s) => s.trim()),
+  nameEn: z.string().optional().nullable().transform((s) => s?.trim() || null),
+  slug: z.string().min(1, "اسلاگ الزامی است").regex(/^[a-z0-9-]+$/, "اسلاگ نامعتبر است").transform((s) => s.trim()),
+  parentId: z.string().optional().nullable().transform((s) => s?.trim() || null),
+  sortOrder: z.coerce.number().int().default(0),
+  isActive: z.preprocess((v) => v === "on" || v === "true" || v === true, z.boolean()).default(false),
+})
+
+const UpdateCategorySchema = CreateCategorySchema.extend({
+  categoryId: z.string().min(1, "شناسه دسته‌بندی الزامی است").transform((s) => s.trim()),
+})
+
+const CategoryIdSchema = z.object({
+  categoryId: z.string().min(1, "شناسه دسته‌بندی الزامی است").transform((s) => s.trim()),
+})
+
 export async function adminCreateCategoryAction(
   formData: FormData
 ): Promise<{ categoryId: string }> {
   const user = await requireAdminPerm(PERMISSIONS.CATEGORIES_ALL)
 
-  const nameFa = (formData.get("nameFa") as string | null)?.trim() ?? ""
-  const nameEn = (formData.get("nameEn") as string | null)?.trim() || null
-  const slug = (formData.get("slug") as string | null)?.trim() ?? ""
-  const parentId = (formData.get("parentId") as string | null)?.trim() || null
-  const sortOrder = parseInt((formData.get("sortOrder") as string) || "0", 10)
-  const isActive = formData.get("isActive") === "on"
+  const parsed = CreateCategorySchema.safeParse(Object.fromEntries(formData.entries()))
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? "داده‌های ورودی نامعتبر است")
+  }
 
-  if (!nameFa) throw new Error("نام فارسی الزامی است")
-  if (!slug) throw new Error("اسلاگ الزامی است")
+  const { nameFa, nameEn, slug, parentId, sortOrder, isActive } = parsed.data
 
   try {
     const category = await db.category.create({
@@ -55,18 +71,12 @@ export async function adminUpdateCategoryAction(
 ): Promise<{ ok: true }> {
   const user = await requireAdminPerm(PERMISSIONS.CATEGORIES_ALL)
 
-  const categoryId = (formData.get("categoryId") as string | null)?.trim()
-  if (!categoryId) throw new Error("Category ID missing")
+  const parsed = UpdateCategorySchema.safeParse(Object.fromEntries(formData.entries()))
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? "داده‌های ورودی نامعتبر است")
+  }
 
-  const nameFa = (formData.get("nameFa") as string | null)?.trim() ?? ""
-  const nameEn = (formData.get("nameEn") as string | null)?.trim() || null
-  const slug = (formData.get("slug") as string | null)?.trim() ?? ""
-  const parentId = (formData.get("parentId") as string | null)?.trim() || null
-  const sortOrder = parseInt((formData.get("sortOrder") as string) || "0", 10)
-  const isActive = formData.get("isActive") === "on"
-
-  if (!nameFa) throw new Error("نام فارسی الزامی است")
-  if (!slug) throw new Error("اسلاگ الزامی است")
+  const { categoryId, nameFa, nameEn, slug, parentId, sortOrder, isActive } = parsed.data
 
   try {
     await db.category.update({
@@ -102,8 +112,11 @@ export async function adminDeleteCategoryAction(
 ): Promise<{ ok: true }> {
   const user = await requireAdminPerm(PERMISSIONS.CATEGORIES_ALL)
 
-  const categoryId = (formData.get("categoryId") as string | null)?.trim()
-  if (!categoryId) throw new Error("Category ID missing")
+  const parsed = CategoryIdSchema.safeParse(Object.fromEntries(formData.entries()))
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? "شناسه دسته‌بندی نامعتبر است")
+  }
+  const { categoryId } = parsed.data
 
   const childCount = await db.category.count({ where: { parentId: categoryId } })
   if (childCount > 0) throw new Error("این دسته‌بندی دارای زیردسته است. ابتدا زیردسته‌ها را حذف کنید")
@@ -132,8 +145,11 @@ export async function adminRestoreCategoryAction(
 ): Promise<{ ok: true }> {
   const user = await requireAdminPerm(PERMISSIONS.CATEGORIES_ALL)
 
-  const categoryId = (formData.get("categoryId") as string | null)?.trim()
-  if (!categoryId) throw new Error("Category ID missing")
+  const parsed = CategoryIdSchema.safeParse(Object.fromEntries(formData.entries()))
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? "شناسه دسته‌بندی نامعتبر است")
+  }
+  const { categoryId } = parsed.data
 
   await db.category.update({
     where: { id: categoryId },
