@@ -49,6 +49,7 @@ vi.mock("@tirajeh/integrations", () => ({
   emailService: {
     sendOrderStatusUpdate: (...args: unknown[]) => mockSendOrderStatusUpdate(...args),
   },
+  enqueue: vi.fn().mockResolvedValue(undefined),
 }))
 
 vi.mock("next/cache", () => ({

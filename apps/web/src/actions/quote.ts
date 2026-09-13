@@ -2,9 +2,9 @@
 
 import { db } from "@tirajeh/database"
 import { auth } from "@tirajeh/auth"
-import { CreateQuoteSchema } from "@tirajeh/shared"
+import { CreateQuoteSchema, OUTBOX_EVENTS, OUTBOX_CHANNELS } from "@tirajeh/shared"
 import type { ActionResult } from "@tirajeh/shared"
-import { notifyNewQuote, rateLimit } from "@tirajeh/integrations"
+import { rateLimit, enqueue } from "@tirajeh/integrations"
 import { getClientIp } from "@/lib/ip"
 
 const CUSTOMER_TYPE_LABELS: Record<string, string> = {
@@ -47,26 +47,31 @@ export async function createQuoteAction(formData: FormData): Promise<ActionResul
     }
   }
 
-  const quote = await db.quoteRequest.create({
-    data: {
-      ...parsed.data,
-      userId: session?.user?.id ?? null,
-      quantityTon: parsed.data.quantityTon,
-    },
-    include: { product: { select: { nameFa: true } } },
-  })
-
-  try {
-    await notifyNewQuote({
-      name: quote.name,
-      productName: quote.product.nameFa,
-      quantityTon: Number(quote.quantityTon),
-      phone: quote.phone,
-      customerType: (quote.customerType && CUSTOMER_TYPE_LABELS[quote.customerType]) || "عادی",
+  const quote = await db.$transaction(async (tx) => {
+    const q = await tx.quoteRequest.create({
+      data: {
+        ...parsed.data,
+        userId: session?.user?.id ?? null,
+        quantityTon: parsed.data.quantityTon,
+      },
+      include: { product: { select: { nameFa: true } } },
     })
-  } catch (e) {
-    console.error("[notify] quote:", e)
-  }
+
+    await enqueue(tx, {
+      event: OUTBOX_EVENTS.QUOTE_CREATED,
+      channel: OUTBOX_CHANNELS.TG_ADMIN,
+      payload: {
+        quoteId: q.id,
+        name: q.name,
+        productName: q.product.nameFa,
+        quantityTon: Number(q.quantityTon),
+        phone: q.phone,
+        customerType: (q.customerType && CUSTOMER_TYPE_LABELS[q.customerType]) || "عادی",
+      },
+    })
+
+    return q
+  })
 
   return { success: true, data: { id: quote.id } }
 }

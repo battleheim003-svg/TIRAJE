@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
-import { paymentService, notifyNewOrder, notifyPaymentReceived, emailService } from "@tirajeh/integrations"
+import { paymentService, enqueue } from "@tirajeh/integrations"
 import { db } from "@tirajeh/database"
+import { OUTBOX_EVENTS, OUTBOX_CHANNELS } from "@tirajeh/shared"
 import { releaseOrderStock, PrismaTx } from "../../../../lib/stock"
 import { getLocale } from "next-intl/server"
 
@@ -40,12 +41,13 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL(`/${locale}/checkout/failed?order=${orderId}`, req.url))
   }
 
-  // بیرون از $transaction — بعد از commit موفق
+  // بررسی وضعیت پرداخت و ثبت تراکنش Outbox در صورت نیاز
   const order = await db.order.findUnique({
     where: { id: orderId },
     include: {
       user: { select: { email: true, name: true } },
       items: { include: { product: { select: { nameFa: true } } } },
+      payments: { where: { status: "COMPLETED" } },
     },
   })
 
@@ -54,47 +56,57 @@ export async function GET(req: NextRequest) {
     const customerName = order.user?.name || shippingAddr.recipientName || "مشتری"
     const city = shippingAddr.city || order.shippingProvince || "نامشخص"
 
-    try {
-      await notifyNewOrder({
-        orderNumber: String(order.orderNumber),
-        customerName,
-        totalAmount: Number(order.totalAmount),
-        itemCount: order.items.length,
-        city,
-      })
-    } catch (e) {
-      console.error("[notify] telegram order:", e)
-    }
+    // بررسی اینکه آیا قبلاً این رویداد در outbox ثبت شده یا خیر (idempotent)
+    const existingOutbox = await db.outbox.findFirst({
+      where: {
+        event: OUTBOX_EVENTS.ORDER_PAID,
+        channel: OUTBOX_CHANNELS.TG_ADMIN,
+        payload: {
+          path: ["orderId"],
+          equals: orderId,
+        },
+      },
+    })
 
-    try {
-      await notifyPaymentReceived({
-        orderNumber: String(order.orderNumber),
-        amount: Number(order.totalAmount),
-        refId: String(verifyResult.refId ?? ""),
-      })
-    } catch (e) {
-      console.error("[notify] telegram payment:", e)
-    }
-
-    if (order.user?.email) {
-      try {
-        await emailService.sendOrderConfirmation({
-          to: order.user.email,
-          orderNumber: String(order.orderNumber),
-          customerName,
-          items: order.items.map((it) => ({
-            nameFa: it.product.nameFa,
-            quantity: it.quantity,
-            unitPriceToman: Number(it.unitPrice),
-          })),
-          subtotalToman: Number(order.subtotal),
-          shippingToman: Number(order.shippingCost),
-          totalToman: Number(order.totalAmount),
-          status: order.status,
+    if (!existingOutbox) {
+      await db.$transaction(async (tx) => {
+        // ۱. تلگرام ادمین: پرداخت موفق
+        await enqueue(tx, {
+          event: OUTBOX_EVENTS.ORDER_PAID,
+          channel: OUTBOX_CHANNELS.TG_ADMIN,
+          payload: {
+            orderId: order.id,
+            orderNumber: String(order.orderNumber),
+            amount: Number(order.totalAmount),
+            refId: String(verifyResult.refId ?? ""),
+            customerName,
+            city,
+          },
         })
-      } catch (e) {
-        console.error("[notify] email confirm:", e)
-      }
+
+        // ۲. ایمیل تأیید سفارش به مشتری
+        if (order.user?.email) {
+          await enqueue(tx, {
+            event: OUTBOX_EVENTS.ORDER_PAID,
+            channel: OUTBOX_CHANNELS.EMAIL,
+            payload: {
+              emailType: "order_confirmation",
+              to: order.user.email,
+              orderNumber: String(order.orderNumber),
+              customerName,
+              items: order.items.map((it) => ({
+                nameFa: it.product.nameFa,
+                quantity: it.quantity,
+                unitPriceToman: Number(it.unitPrice),
+              })),
+              totalAmount: Number(order.totalAmount),
+              freightCost: Number(order.shippingCost),
+              destinationCity: city,
+              paymentMethod: "ONLINE",
+            },
+          })
+        }
+      })
     }
   }
 

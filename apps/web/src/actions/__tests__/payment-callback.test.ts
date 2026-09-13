@@ -12,7 +12,11 @@ const mockDb = vi.hoisted(() => ({
   },
   product: {
     update: vi.fn(),
-  }
+  },
+  outbox: {
+    findFirst: vi.fn().mockResolvedValue(null),
+    create: vi.fn().mockResolvedValue({ id: "outbox-1" }),
+  },
 }))
 
 vi.mock("@tirajeh/database", () => ({

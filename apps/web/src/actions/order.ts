@@ -6,10 +6,10 @@ import { auth } from "@tirajeh/auth"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { getLocale } from "next-intl/server"
-import { AppError, OutOfStockError } from "@tirajeh/shared"
+import { AppError, OutOfStockError, OUTBOX_EVENTS, OUTBOX_CHANNELS } from "@tirajeh/shared"
 import { releaseOrderStock, PrismaTx } from "../lib/stock"
 import { calculateShippingCost } from "../lib/shipping"
-import { paymentService } from "@tirajeh/integrations"
+import { paymentService, enqueue } from "@tirajeh/integrations"
 import { z } from "zod"
 
 export async function checkoutAction(
@@ -151,6 +151,19 @@ export async function checkoutAction(
 
       await tx.orderEvent.create({
         data: { orderId: o.id, status: "AWAITING_PAYMENT", note: "سفارش ثبت شد و در انتظار پرداخت است" }
+      })
+
+      await enqueue(tx, {
+        event: OUTBOX_EVENTS.ORDER_CREATED,
+        channel: OUTBOX_CHANNELS.TG_ADMIN,
+        payload: {
+          orderId: o.id,
+          orderNumber: String(o.orderNumber),
+          customerName: parsed.data.recipientName,
+          totalAmount,
+          itemCount: cartItems.length,
+          city: parsed.data.city,
+        },
       })
 
       await tx.cartItem.deleteMany({ where: { userId } })

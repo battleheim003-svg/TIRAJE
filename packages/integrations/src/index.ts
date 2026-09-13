@@ -33,6 +33,12 @@ export { StorageService, storageService } from "./storage/service"
 export { rateLimit, type RateLimitResult } from "./rate-limit"
 export { getRedisClient } from "./redis"
 
+// Outbox Pattern
+export { enqueue, type OutboxEnqueueParams } from "./outbox/publish"
+export { drainOutbox, type DrainOutboxResult } from "./outbox/worker"
+export { channelHandlers, type OutboxHandler } from "./outbox/handlers"
+
 // Search — SQL file imported as string via ?raw bundler convention
 // consumers: import ftsSQL from "@tirajeh/integrations/search/fts-migration.sql?raw"
+
 

@@ -33,7 +33,8 @@ vi.mock("@tirajeh/integrations", () => ({
   paymentService: {
     initiatePayment: vi.fn().mockResolvedValue("https://sandbox.zarinpal.com/pg/StartPay/test-authority"),
     verifyPayment: vi.fn(),
-  }
+  },
+  enqueue: vi.fn().mockResolvedValue(undefined),
 }))
 
 vi.mock("@tirajeh/auth", () => ({
@@ -301,6 +302,7 @@ describe("checkoutAction — transaction rollback safety", () => {
         order: {
           create: vi.fn().mockResolvedValue({ id: "order-ok", orderNumber: "ORD-1234" }),
         },
+        outbox: { create: vi.fn().mockResolvedValue({ id: "outbox-1" }) },
         cartItem: { deleteMany: vi.fn() },
         orderEvent: { create: vi.fn() }
       }

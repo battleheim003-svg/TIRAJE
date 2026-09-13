@@ -1,5 +1,6 @@
 import { db } from "@tirajeh/database"
-import { tehranDayStart, tehranDateKey } from "@tirajeh/shared"
+import { tehranDayStart, tehranDateKey, OUTBOX_EVENTS, OUTBOX_CHANNELS } from "@tirajeh/shared"
+import { enqueue } from "../outbox/publish"
 import {
   buildPricePostText,
   getActiveProducts,
@@ -143,21 +144,33 @@ export async function publishDailyPrice(params: PublishDailyPriceParams): Promis
     }
   }
 
-  // 3. Bulk create bulletin items
-  if (bulletinItems.length > 0) {
-    await db.dailyPriceItem.createMany({
-      data: bulletinItems.map((item) => ({
-        bulletinId: bulletin.id,
-        productId: item.productId ?? null,
-        customName: item.customName ?? null,
-        price: item.price,
-        previousPrice: item.previousPrice ?? null,
-        sortOrder: item.sortOrder,
-      })),
-    })
-  }
+  // 3. Bulk create bulletin items and enqueue outbox event in transaction
+  await db.$transaction(async (tx) => {
+    if (bulletinItems.length > 0) {
+      await tx.dailyPriceItem.createMany({
+        data: bulletinItems.map((item) => ({
+          bulletinId: bulletin.id,
+          productId: item.productId ?? null,
+          customName: item.customName ?? null,
+          price: item.price,
+          previousPrice: item.previousPrice ?? null,
+          sortOrder: item.sortOrder,
+        })),
+      })
+    }
 
-  // 4. Send to Telegram channel
+    await enqueue(tx, {
+      event: OUTBOX_EVENTS.PRICE_PUBLISHED,
+      channel: OUTBOX_CHANNELS.TG_CHANNEL,
+      payload: {
+        bulletinId: bulletin.id,
+        dateKey,
+        source: params.source,
+      },
+    })
+  })
+
+  // 4. Send to Telegram channel directly (retained for immediate feedback, or fallback)
   let telegramSent = false
   let telegramError: string | undefined
   try {

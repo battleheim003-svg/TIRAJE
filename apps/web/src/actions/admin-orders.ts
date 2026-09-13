@@ -3,9 +3,9 @@
 import { db, OrderStatus } from "@tirajeh/database"
 import { revalidatePath } from "next/cache"
 import { releaseOrderStock, PrismaTx } from "@/lib/stock"
-import { emailService } from "@tirajeh/integrations"
+import { emailService, enqueue } from "@tirajeh/integrations"
 import { requireAdminPerm, AdminUser } from "@/lib/admin-guard"
-import { PERMISSIONS, canTransition } from "@tirajeh/shared"
+import { PERMISSIONS, canTransition, OUTBOX_EVENTS, OUTBOX_CHANNELS } from "@tirajeh/shared"
 import { audit } from "@/lib/audit"
 import { z } from "zod"
 
@@ -63,6 +63,18 @@ export async function adminUpdateOrderStatusAction(
         status: newStatus,
         note: note || "تغییر وضعیت توسط ادمین",
         createdBy: user.id,
+      },
+    })
+
+    await enqueue(tx as unknown as PrismaTx, {
+      event: OUTBOX_EVENTS.ORDER_STATUS_CHANGED,
+      channel: OUTBOX_CHANNELS.TG_ADMIN,
+      payload: {
+        orderId,
+        orderNumber: order.orderNumber,
+        from: order.status,
+        to: newStatus,
+        adminId: user.id,
       },
     })
   })
