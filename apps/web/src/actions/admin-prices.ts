@@ -10,7 +10,7 @@ import { z } from "zod"
 
 // ─── Inline Price Update ───────────────────────────────────────────────────
 
-export const InlinePriceUpdateSchema = z.object({
+const InlinePriceUpdateSchema = z.object({
   productId: IdSchema,
   newPrice: TomanSchema,
 })
@@ -80,7 +80,7 @@ export async function adminInlinePriceUpdateAction(input: unknown) {
 
 // ─── Bulk Price Adjustment ─────────────────────────────────────────────────
 
-export const BulkAdjustFilterSchema = z
+const BulkAdjustFilterSchema = z
   .object({
     brandId: z.string().uuid("شناسه برند نامعتبر است").optional().nullable().transform((v) => v?.trim() || null),
     categoryId: z.string().uuid("شناسه دسته‌بندی نامعتبر است").optional().nullable().transform((v) => v?.trim() || null),

@@ -111,7 +111,7 @@ export async function adminUpdateOrderStatusAction(
   return { ok: true, success: true }
 }
 
-export const MoveOrderSchema = z.object({
+const MoveOrderSchema = z.object({
   orderId: z.string().uuid("شناسه سفارش نامعتبر است"),
   newStatus: z.nativeEnum(OrderStatus, { errorMap: () => ({ message: "وضعیت جدید نامعتبر است" }) }),
 })
