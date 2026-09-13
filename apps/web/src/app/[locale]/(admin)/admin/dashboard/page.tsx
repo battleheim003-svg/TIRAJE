@@ -14,6 +14,8 @@ import {
 } from "lucide-react"
 import { Card, Badge } from "@tirajeh/ui"
 import { StatCard } from "@/components/admin/StatCard"
+import { TodayQueue } from "@/components/admin/TodayQueue"
+import { getTodayTasks } from "@/lib/admin-today-tasks"
 import { formatToman } from "@/lib/cement"
 import { formatRelativeFa } from "@tirajeh/shared"
 import styles from "./Dashboard.module.css"
@@ -53,6 +55,7 @@ export default async function DashboardPage() {
     activeProductsCount,
     unreadTicketsCount,
     recentOrders,
+    todayTasks,
   ] = await Promise.all([
     db.order.count({ where: { createdAt: { gte: startOfToday } } }),
     db.order.count({ where: { createdAt: { gte: startOfYesterday, lt: startOfToday } } }),
@@ -65,6 +68,7 @@ export default async function DashboardPage() {
       take: 8,
       include: { user: { select: { name: true, email: true } } },
     }),
+    getTodayTasks(),
   ])
 
   const orderDiff = todayOrdersCount - yesterdayOrdersCount
@@ -82,6 +86,9 @@ export default async function DashboardPage() {
             : "Performance summary, recent orders and key business metrics of Tirajeh"}
         </p>
       </div>
+
+      {/* Today's Queue (above KPIs) */}
+      <TodayQueue tasks={todayTasks} locale={locale} />
 
       {/* KPI Stat Cards */}
       <div className={styles["web-adm-dash__kpi-grid"]}>

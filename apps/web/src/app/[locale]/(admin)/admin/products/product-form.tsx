@@ -54,6 +54,7 @@ export interface Product {
   comparePrice: number | string | null
   stockStatus: string
   stockQty: number
+  lowStockThreshold?: number
   minOrderQty: number
   factoryId: string | null
   isActive: boolean
@@ -111,6 +112,7 @@ export default function ProductForm({
   const [comparePrice, setComparePrice] = useState(product?.comparePrice ? String(product.comparePrice) : "")
   const [stockStatus, setStockStatus] = useState(product?.stockStatus ?? "IN_STOCK")
   const [stockQty, setStockQty] = useState(product?.stockQty ? String(product.stockQty) : "100")
+  const [lowStockThreshold, setLowStockThreshold] = useState(product?.lowStockThreshold ? String(product.lowStockThreshold) : "0")
   const [minOrderQty, setMinOrderQty] = useState(product?.minOrderQty ? String(product.minOrderQty) : "1")
   const [isActive, setIsActive] = useState(product?.isActive ?? true)
   const [isFeatured] = useState(product?.isFeatured ?? false)
@@ -170,6 +172,7 @@ export default function ProductForm({
     if (comparePrice) fd.set("comparePrice", comparePrice)
     fd.set("stockStatus", stockStatus)
     fd.set("stockQty", stockQty)
+    fd.set("lowStockThreshold", lowStockThreshold)
     fd.set("minOrderQty", minOrderQty)
     if (isActive) fd.set("isActive", "on")
     if (isFeatured) fd.set("isFeatured", "on")
@@ -542,6 +545,21 @@ export default function ProductForm({
                   min="0"
                   value={stockQty}
                   onChange={(e) => setStockQty(e.target.value)}
+                  className={styles.tflInput}
+                />
+              </div>
+
+              <div className={styles.tflField}>
+                <label htmlFor="prod-lowStock" className={styles.tflLabel}>
+                  {fa ? "آستانه هشدار موجودی" : "Low Stock Alert Threshold"}
+                </label>
+                <input
+                  id="prod-lowStock"
+                  type="number"
+                  min="0"
+                  value={lowStockThreshold}
+                  onChange={(e) => setLowStockThreshold(e.target.value)}
+                  placeholder="0"
                   className={styles.tflInput}
                 />
               </div>

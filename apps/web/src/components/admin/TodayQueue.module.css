@@ -1,0 +1,175 @@
+/* prefix: web-adm-queue */
+
+.web-adm-queue__root {
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.web-adm-queue__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-block-end: 1px solid var(--color-border-subtle);
+  padding-block-end: var(--space-3);
+}
+
+.web-adm-queue__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  margin: 0;
+}
+
+.web-adm-queue__count-badge {
+  font-size: var(--font-size-xs);
+  padding-block: var(--space-0-5, 0.125rem);
+  padding-inline: var(--space-2);
+  border-radius: var(--radius-full);
+  background-color: var(--color-accent-subtle, var(--color-primary-100));
+  color: var(--color-accent);
+  font-weight: var(--font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.web-adm-queue__empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding-block: var(--space-8);
+  color: var(--color-success-600, #16a34a);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  background-color: var(--color-bg-surface);
+  border-radius: var(--radius-lg);
+  border: 1px dashed var(--color-border);
+}
+
+.web-adm-queue__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.web-adm-queue__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-block: var(--space-3);
+  padding-inline-start: var(--space-3);
+  padding-inline-end: var(--space-4);
+  background-color: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  border-inline-start-width: 4px;
+  border-inline-start-style: solid;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.web-adm-queue__item:hover {
+  background-color: var(--color-border-subtle);
+}
+
+.web-adm-queue__item--urgent {
+  border-inline-start-color: var(--color-error-500);
+}
+
+.web-adm-queue__item--warning {
+  border-inline-start-color: var(--color-warning-500);
+}
+
+.web-adm-queue__item--info {
+  border-inline-start-color: var(--color-info-500, var(--color-accent));
+}
+
+.web-adm-queue__item-start {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+  flex: 1;
+}
+
+.web-adm-queue__dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.web-adm-queue__dot--urgent {
+  background-color: var(--color-error-500);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+}
+
+.web-adm-queue__dot--warning {
+  background-color: var(--color-warning-500);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+}
+
+.web-adm-queue__dot--info {
+  background-color: var(--color-info-500, var(--color-accent));
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.web-adm-queue__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-0-5, 0.125rem);
+  min-width: 0;
+}
+
+.web-adm-queue__label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.web-adm-queue__label:hover {
+  color: var(--color-accent);
+}
+
+.web-adm-queue__sub-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.web-adm-queue__action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  padding-block: var(--space-1-5, 0.375rem);
+  padding-inline: var(--space-3);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  text-decoration: none;
+  flex-shrink: 0;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.web-adm-queue__action-btn:hover {
+  background-color: var(--color-accent);
+  color: var(--color-accent-foreground, #fff);
+  border-color: var(--color-accent);
+}

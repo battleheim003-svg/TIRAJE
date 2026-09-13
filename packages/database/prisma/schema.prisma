@@ -343,6 +343,7 @@ model Product {
   comparePrice    Decimal?      @map("compare_price") @db.Decimal(15, 0)
   stockStatus     StockStatus   @default(IN_STOCK) @map("stock_status")
   stockQty        Int           @default(0) @map("stock_qty")
+  lowStockThreshold Int         @default(0) @map("low_stock_threshold")
   minOrderQty     Int           @default(1) @map("min_order_qty")
   descriptionFa   String?       @map("description_fa") @db.Text
   descriptionEn   String?       @map("description_en") @db.Text

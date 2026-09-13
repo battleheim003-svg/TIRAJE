@@ -32,6 +32,7 @@ export default async function AdminProductEditPage({ params }: Props) {
         comparePrice: true,
         stockStatus: true,
         stockQty: true,
+        lowStockThreshold: true,
         minOrderQty: true,
         factoryId: true,
         isActive: true,
