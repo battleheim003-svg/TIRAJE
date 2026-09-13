@@ -2,18 +2,20 @@
 
 import { useState, useTransition } from "react"
 import { adminUpdateOrderStatusAction } from "@/actions/admin-orders"
+import { ORDER_TRANSITIONS } from "@tirajeh/shared"
+import type { OrderStatus } from "@tirajeh/database"
 import styles from "./OrderDetail.module.css"
 
-const ORDER_STATUSES = [
-  { value: "PENDING",          fa: "در انتظار",        en: "Pending"          },
-  { value: "AWAITING_PAYMENT", fa: "انتظار پرداخت",   en: "Awaiting Payment" },
-  { value: "CONFIRMED",        fa: "تأیید شده",        en: "Confirmed"        },
-  { value: "PROCESSING",       fa: "در حال پردازش",   en: "Processing"       },
-  { value: "SHIPPED",          fa: "ارسال شده",        en: "Shipped"          },
-  { value: "DELIVERED",        fa: "تحویل داده شده",  en: "Delivered"        },
-  { value: "CANCELLED",        fa: "لغو شده",          en: "Cancelled"        },
-  { value: "REFUNDED",         fa: "مسترد شده",        en: "Refunded"         },
-]
+const ORDER_STATUS_LABELS: Record<string, { fa: string; en: string }> = {
+  PENDING:          { fa: "در انتظار",        en: "Pending"          },
+  AWAITING_PAYMENT: { fa: "انتظار پرداخت",   en: "Awaiting Payment" },
+  CONFIRMED:        { fa: "تأیید شده",        en: "Confirmed"        },
+  PROCESSING:       { fa: "در حال پردازش",   en: "Processing"       },
+  SHIPPED:          { fa: "ارسال شده",        en: "Shipped"          },
+  DELIVERED:        { fa: "تحویل داده شده",  en: "Delivered"        },
+  CANCELLED:        { fa: "لغو شده",          en: "Cancelled"        },
+  REFUNDED:         { fa: "مسترد شده",        en: "Refunded"         },
+}
 
 interface Props {
   orderId: string
@@ -22,7 +24,8 @@ interface Props {
 }
 
 export default function OrderStatusForm({ orderId, currentStatus, fa }: Props) {
-  const [status, setStatus] = useState(currentStatus)
+  const allowedNextStatuses = ORDER_TRANSITIONS[currentStatus as OrderStatus] ?? []
+  const [status, setStatus] = useState<string>(allowedNextStatuses[0] ?? currentStatus)
   const [note, setNote] = useState("")
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -38,7 +41,11 @@ export default function OrderStatusForm({ orderId, currentStatus, fa }: Props) {
     fd.set("note", note)
     startTransition(async () => {
       try {
-        await adminUpdateOrderStatusAction(fd)
+        const res = await adminUpdateOrderStatusAction(fd)
+        if (res && "success" in res && !res.success) {
+          setError(res.error)
+          return
+        }
         setSuccess(true)
         setNote("")
       } catch (err: unknown) {
@@ -46,6 +53,12 @@ export default function OrderStatusForm({ orderId, currentStatus, fa }: Props) {
       }
     })
   }
+
+  const currentLabel = ORDER_STATUS_LABELS[currentStatus]
+    ? (fa ? ORDER_STATUS_LABELS[currentStatus].fa : ORDER_STATUS_LABELS[currentStatus].en)
+    : currentStatus
+
+  const isTerminal = allowedNextStatuses.length === 0
 
   return (
     <form onSubmit={handleSubmit} className={styles["web-adm-ord__form"]}>
@@ -58,13 +71,25 @@ export default function OrderStatusForm({ orderId, currentStatus, fa }: Props) {
             id="osf-status"
             value={status}
             onChange={(e) => { setStatus(e.target.value); setSuccess(false) }}
+            disabled={isPending || isTerminal}
             className={styles["web-adm-ord__select"]}
           >
-            {ORDER_STATUSES.map((s) => (
-              <option key={s.value} value={s.value}>
-                {fa ? s.fa : s.en}
-              </option>
-            ))}
+            {/* Current status as disabled option */}
+            <option value={currentStatus} disabled>
+              {fa ? `${currentLabel} (وضعیت فعلی)` : `${currentLabel} (Current)`}
+            </option>
+
+            {/* Allowed next transitions */}
+            {allowedNextStatuses.map((st) => {
+              const label = ORDER_STATUS_LABELS[st]
+                ? (fa ? ORDER_STATUS_LABELS[st].fa : ORDER_STATUS_LABELS[st].en)
+                : st
+              return (
+                <option key={st} value={st}>
+                  {label}
+                </option>
+              )
+            })}
           </select>
         </div>
 
@@ -77,6 +102,7 @@ export default function OrderStatusForm({ orderId, currentStatus, fa }: Props) {
             type="text"
             value={note}
             onChange={(e) => setNote(e.target.value)}
+            disabled={isPending || isTerminal}
             className={styles["web-adm-ord__input"]}
             placeholder={fa ? "دلیل تغییر وضعیت..." : "Reason for status change..."}
           />
@@ -84,7 +110,7 @@ export default function OrderStatusForm({ orderId, currentStatus, fa }: Props) {
 
         <button
           type="submit"
-          disabled={isPending || status === currentStatus}
+          disabled={isPending || isTerminal || status === currentStatus}
           className={styles["web-adm-ord__btn"]}
         >
           {isPending
@@ -92,6 +118,14 @@ export default function OrderStatusForm({ orderId, currentStatus, fa }: Props) {
             : (fa ? "ذخیره وضعیت" : "Save Status")}
         </button>
       </div>
+
+      {isTerminal && (
+        <p style={{ fontSize: "0.85rem", opacity: 0.8, marginTop: "0.5rem" }}>
+          {fa
+            ? "این سفارش در وضعیت نهایی است و امکان تغییر وضعیت وجود ندارد."
+            : "This order is in a final state and cannot be transitioned further."}
+        </p>
+      )}
 
       {success && (
         <p className={styles["web-adm-ord__success"]} role="status">
