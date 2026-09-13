@@ -15,6 +15,7 @@ export const PERMISSIONS = {
   SHIPPING_MANAGE: "shipping:manage",
   FACTORIES_MANAGE: "factories:manage",
   SETTINGS_MANAGE: "settings:manage",
+  TELEGRAM_MANAGE: "telegram:manage",
 } as const
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS]

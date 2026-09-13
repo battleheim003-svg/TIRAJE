@@ -22,6 +22,7 @@ import {
   Factory,
   Settings,
   ShieldCheck,
+  Send,
 } from "lucide-react"
 import { signOut } from "next-auth/react"
 import { PERMISSIONS } from "@tirajeh/shared"
@@ -85,6 +86,7 @@ const NAV_SECTIONS: NavSectionDef[] = [
       { key: "roles", href: "/admin/roles", icon: ShieldCheck, fa: "نقش‌ها و دسترسی‌ها", en: "Roles & Permissions", permission: PERMISSIONS.USERS_READ },
       { key: "tickets", href: "/admin/tickets", icon: LifeBuoy, fa: "تیکت‌های پشتیبانی", en: "Tickets", countKey: "openTickets", permission: PERMISSIONS.TICKETS_REPLY },
       { key: "blog", href: "/admin/blog", icon: FileText, fa: "مقالات وبلاگ", en: "Blog Posts", permission: PERMISSIONS.BLOG_ALL },
+      { key: "telegram", href: "/admin/telegram", icon: Send, fa: "مرکز انتشار تلگرام", en: "Telegram Center", permission: PERMISSIONS.TELEGRAM_MANAGE },
       { key: "settings", href: "/admin/settings", icon: Settings, fa: "تنظیمات سامانه", en: "Settings", permission: PERMISSIONS.SETTINGS_MANAGE },
     ],
   },

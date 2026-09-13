@@ -1,0 +1,332 @@
+/* TelegramCenter.module.css - prefix tc- */
+
+.tc-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  width: 100%;
+}
+
+.tc-header {
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  box-shadow: var(--shadow-sm);
+}
+
+.tc-headerMain {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.tc-headerIconBox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: var(--radius-lg);
+  background-color: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  color: var(--color-accent-text);
+  flex-shrink: 0;
+}
+
+.tc-title {
+  font-size: var(--font-size-2xl);
+  font-weight: 800;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.tc-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-block-start: var(--space-1);
+}
+
+.tc-tabs {
+  display: flex;
+  gap: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 0;
+}
+
+.tc-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-5);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--color-text-muted);
+  transition: all var(--transition-fast);
+}
+
+.tc-tab:hover {
+  color: var(--color-text);
+}
+
+.tc-tab-active {
+  border-bottom-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.tc-card {
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.tc-filterBar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.tc-select {
+  padding: 0.5rem 0.875rem;
+  font-size: var(--font-size-sm);
+  font-family: inherit;
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  outline: none;
+}
+
+.tc-select:focus {
+  border-color: var(--color-accent);
+}
+
+.tc-tableWrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.tc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+  text-align: start;
+}
+
+.tc-th {
+  background-color: var(--color-bg-subtle, rgba(0, 0, 0, 0.03));
+  color: var(--color-text-muted);
+  font-weight: 600;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+  text-align: start;
+}
+
+.tc-td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  text-align: start;
+}
+
+.tc-table tbody tr:last-child .tc-td {
+  border-bottom: none;
+}
+
+.tc-table tbody tr:hover {
+  background-color: var(--color-bg-subtle, rgba(0, 0, 0, 0.02));
+}
+
+.tc-badge {
+  display: inline-block;
+  padding: 0.2rem 0.625rem;
+  border-radius: var(--radius-full, 9999px);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  text-align: center;
+}
+
+.tc-badge-pending {
+  background-color: color-mix(in srgb, var(--color-warning) 15%, transparent);
+  color: var(--color-warning);
+}
+
+.tc-badge-sent {
+  background-color: color-mix(in srgb, var(--color-success) 15%, transparent);
+  color: var(--color-success);
+}
+
+.tc-badge-failed {
+  background-color: color-mix(in srgb, var(--color-danger) 15%, transparent);
+  color: var(--color-danger);
+}
+
+.tc-badge-dead {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.tc-retryBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0.35rem 0.75rem;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  background-color: var(--color-accent);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+}
+
+.tc-retryBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tc-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.tc-pageBtn {
+  padding: 0.4rem 0.875rem;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-bg-elevated);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.tc-pageBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Calendar styling */
+.tc-calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
+}
+
+.tc-calendar-title {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.tc-calendar-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.tc-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-2);
+  background-color: var(--color-bg);
+}
+
+.tc-calendar-dayname {
+  text-align: center;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--color-text-muted);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tc-calendar-day {
+  min-height: 4.5rem;
+  padding: 0.375rem;
+  position: relative;
+  text-align: center;
+  font-size: var(--font-size-xs);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-subtle, rgba(0, 0, 0, 0.04));
+  background-color: var(--color-bg-elevated);
+  transition: background-color var(--transition-fast);
+}
+
+.tc-calendar-day:hover {
+  background-color: var(--color-bg-subtle, rgba(0, 0, 0, 0.03));
+}
+
+.tc-calendar-day--today {
+  border-color: var(--color-accent);
+  font-weight: bold;
+}
+
+.tc-calendar-day--other {
+  opacity: 0.35;
+}
+
+.tc-calendar-dot {
+  width: 7px;
+  height: 7px;
+  background-color: var(--color-accent);
+  border-radius: 50%;
+  margin: 4px auto 0;
+}
+
+.tc-popover {
+  position: absolute;
+  z-index: 20;
+  top: 100%;
+  right: 0;
+  min-width: 200px;
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  box-shadow: var(--shadow-lg);
+  text-align: right;
+}
+
+.tc-popoverItem {
+  font-size: var(--font-size-xs);
+  padding: var(--space-1) 0;
+  border-bottom: 1px solid var(--color-border-subtle, rgba(0, 0, 0, 0.04));
+  color: var(--color-text);
+}
+
+.tc-popoverItem:last-child {
+  border-bottom: none;
+}
+
+.tc-empty {
+  padding: var(--space-8);
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
