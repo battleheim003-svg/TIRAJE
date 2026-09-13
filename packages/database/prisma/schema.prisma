@@ -160,6 +160,7 @@ model User {
   customerType  CustomerType @default(NORMAL) @map("customer_type")
   roleId        String       @map("role_id") @db.Uuid
   isActive      Boolean      @default(true) @map("is_active")
+  tokenVersion  Int          @default(0) @map("token_version")
   lastLoginAt   DateTime?    @map("last_login_at")
   createdAt     DateTime     @default(now()) @map("created_at")
   updatedAt     DateTime     @updatedAt @map("updated_at")

@@ -6,9 +6,13 @@ import bcrypt from "bcryptjs"
 import { LoginSchema, UnauthenticatedError, ForbiddenError } from "@tirajeh/shared"
 import type { SessionUser } from "@tirajeh/shared"
 import type { Session } from "next-auth"
+import { handleJwtCallback, type AuthJWT, type AuthUser } from "./jwt-refresh"
+
+export { handleJwtCallback } from "./jwt-refresh"
+export type { AuthJWT, AuthUser } from "./jwt-refresh"
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  session: { strategy: "jwt" },
+  session: { strategy: "jwt", maxAge: 7 * 24 * 60 * 60 },
   pages: {
     signIn: "/auth/login",
     error: "/auth/error",
@@ -40,41 +44,34 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const permissions =
           user.role?.rolePermissions.map(
-            (rp: any) => `${rp.permission.resource}:${rp.permission.action}`
+            (rp) => `${rp.permission.resource}:${rp.permission.action}`
           ) ?? []
 
         return {
           id: user.id,
           email: user.email,
           name: user.name,
-          image: (user as any).image ?? null,
+          image: null,
           customerType: user.customerType,
           roleId: user.roleId,
           roleName: user.role?.name ?? null,
           permissions,
+          tokenVersion: user.tokenVersion,
         }
       },
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        // First sign-in: user object is from authorize()
-        token.id = user.id
-        token.email = user.email
-        token.name = user.name
-        token.image = user.image
-        token.customerType = (user as any).customerType
-        token.roleId = (user as any).roleId
-        token.roleName = (user as any).roleName
-        token.permissions = (user as any).permissions
-      }
-      return token
+    jwt({ token, user }) {
+      return handleJwtCallback({
+        token: token as AuthJWT,
+        user: user as AuthUser | undefined,
+      })
     },
     async session({ session, token }) {
       const sessionUser: SessionUser = {
-        id: token.id as string,
-        email: token.email as string,
+        id: (token.id as string) ?? "",
+        email: (token.email as string) ?? "",
         name: (token.name as string) ?? null,
         image: (token.image as string) ?? null,
         customerType: (token.customerType ?? "NORMAL") as SessionUser["customerType"],
@@ -119,7 +116,8 @@ export async function requirePerm(
   permission: string | string[]
 ): Promise<Session & { user: NonNullable<Session["user"]> }> {
   const session = await requireAuth()
-  if (!hasPermission((session.user as any).permissions as string[], permission)) {
+  const userPerms = (session.user as { permissions?: string[] }).permissions ?? []
+  if (!hasPermission(userPerms, permission)) {
     throw new ForbiddenError()
   }
   return session

@@ -23,7 +23,10 @@ export async function adminToggleUserStatusAction(
 
   await db.user.update({
     where: { id: userId },
-    data: { isActive },
+    data: {
+      isActive,
+      tokenVersion: { increment: 1 },
+    },
   })
 
   await audit({

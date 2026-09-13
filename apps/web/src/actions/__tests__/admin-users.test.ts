@@ -90,7 +90,7 @@ describe("Admin Users Actions & Anti-self-destruction Guards", () => {
     )
   })
 
-  it("allows updating another user status and records audit log", async () => {
+  it("allows updating another user status, increments tokenVersion and records audit log", async () => {
     mockDb.user.update.mockResolvedValue({ id: "user-2", isActive: false })
     mockDb.auditLog.create.mockResolvedValue({ id: "audit-2" })
 
@@ -98,7 +98,10 @@ describe("Admin Users Actions & Anti-self-destruction Guards", () => {
     expect(result).toEqual({ ok: true, success: true })
     expect(mockDb.user.update).toHaveBeenCalledWith({
       where: { id: "user-2" },
-      data: { isActive: false },
+      data: {
+        isActive: false,
+        tokenVersion: { increment: 1 },
+      },
     })
     expect(mockDb.auditLog.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -110,6 +113,21 @@ describe("Admin Users Actions & Anti-self-destruction Guards", () => {
         }),
       })
     )
+  })
+
+  it("increments tokenVersion when activating or deactivating user to invalidate session", async () => {
+    mockDb.user.update.mockResolvedValue({ id: "user-3", isActive: true })
+    mockDb.auditLog.create.mockResolvedValue({ id: "audit-3" })
+
+    const result = await adminToggleUserStatusAction("user-3", true)
+    expect(result).toEqual({ ok: true, success: true })
+    expect(mockDb.user.update).toHaveBeenCalledWith({
+      where: { id: "user-3" },
+      data: {
+        isActive: true,
+        tokenVersion: { increment: 1 },
+      },
+    })
   })
 })
 
