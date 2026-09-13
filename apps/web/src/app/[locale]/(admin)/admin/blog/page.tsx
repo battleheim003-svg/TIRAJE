@@ -4,7 +4,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { Plus, FileText } from "lucide-react"
 import { Badge } from "@tirajeh/ui"
-import { formatRelativeTime } from "@/lib/cement"
+import { formatJalali } from "@tirajeh/shared"
 import PostActions from "./post-actions"
 import styles from "./BlogList.module.css"
 
@@ -183,7 +183,7 @@ export default async function AdminBlogPage({ searchParams }: Props) {
                     </td>
                     <td className={`${styles["web-adm-blg__td"]} ${styles["web-adm-blg__num"]}`}>{post.viewCount.toLocaleString()}</td>
                     <td className={`${styles["web-adm-blg__td"]} ${styles["web-adm-blg__date"]}`}>
-                      {formatRelativeTime(post.publishedAt ?? post.createdAt, fa ? "fa" : "en")}
+                      {formatJalali(post.publishedAt ?? post.createdAt)}
                     </td>
                     <td className={styles["web-adm-blg__td"]} style={{ textAlign: "end" }}>
                       <div style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>

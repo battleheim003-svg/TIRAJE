@@ -1,4 +1,5 @@
 import { db } from "@tirajeh/database"
+import { tehranDayStart, tehranDateKey } from "@tirajeh/shared"
 import {
   buildPricePostText,
   getActiveProducts,
@@ -39,12 +40,17 @@ export async function publishDailyPrice(params: PublishDailyPriceParams): Promis
   telegramSent: boolean
   error?: string
 }> {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
+  const today = tehranDayStart()
+  const dateKey = tehranDateKey(today)
 
   // 1. Upsert the bulletin for today (replace if same day)
-  const existingBulletin = await db.dailyPriceBulletin.findUnique({
-    where: { date: today },
+  const existingBulletin = await db.dailyPriceBulletin.findFirst({
+    where: {
+      OR: [
+        { dateKey },
+        { date: today },
+      ],
+    },
     include: { items: true },
   })
 
@@ -59,6 +65,7 @@ export async function publishDailyPrice(params: PublishDailyPriceParams): Promis
     ? await db.dailyPriceBulletin.update({
         where: { id: existingBulletin.id },
         data: {
+          dateKey,
           source: params.source,
           publishedBy: params.publishedBy ?? existingBulletin.publishedBy,
           isActive: true,
@@ -67,6 +74,7 @@ export async function publishDailyPrice(params: PublishDailyPriceParams): Promis
     : await db.dailyPriceBulletin.create({
         data: {
           date: today,
+          dateKey,
           source: params.source,
           publishedBy: params.publishedBy ?? null,
           isActive: true,
@@ -237,8 +245,8 @@ export async function publishDailyPrice(params: PublishDailyPriceParams): Promis
       })
       telegramSent = true
     }
-  } catch (err: any) {
-    telegramError = err?.message || String(err)
+  } catch (err: unknown) {
+    telegramError = err instanceof Error ? err.message : String(err)
     console.error("[daily-price] Failed to send to Telegram channel:", err)
   }
 

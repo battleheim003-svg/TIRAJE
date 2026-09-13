@@ -885,6 +885,7 @@ model TelegramLog {
 model DailyPriceBulletin {
   id              String            @id @default(uuid()) @db.Uuid
   date            DateTime          @db.Date
+  dateKey         String            @unique @map("date_key")
   publishedBy     String?           @map("published_by") @db.Uuid
   source          String            @default("ADMIN_PANEL") // "ADMIN_PANEL" | "TELEGRAM"
   telegramMsgId   String?           @map("telegram_msg_id")

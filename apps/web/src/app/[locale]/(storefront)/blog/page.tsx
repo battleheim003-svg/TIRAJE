@@ -4,6 +4,7 @@ import { getLocale } from "next-intl/server"
 import { db } from "@tirajeh/database"
 import type { Metadata } from "next"
 import { Card, Badge } from "@tirajeh/ui"
+import { formatJalali } from "@tirajeh/shared"
 import styles from "./Blog.module.css"
 
 export const metadata: Metadata = { title: "مقالات و اخبار تخصصی | تیراژه" }
@@ -56,10 +57,7 @@ export default async function BlogPage() {
                 : null
 
               const publishedAt = post.publishedAt
-                ? new Date(post.publishedAt).toLocaleDateString(
-                    fa ? "fa-IR" : "en-US",
-                    { year: "numeric", month: "short", day: "numeric" }
-                  )
+                ? formatJalali(post.publishedAt)
                 : null
 
               return (

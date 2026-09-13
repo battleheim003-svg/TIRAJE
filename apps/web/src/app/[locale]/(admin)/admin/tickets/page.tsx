@@ -4,7 +4,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { LifeBuoy, Send, Globe } from "lucide-react"
 import { Badge } from "@tirajeh/ui"
-import { formatRelativeTime } from "@/lib/cement"
+import { formatRelativeFa } from "@tirajeh/shared"
 import styles from "./TicketsList.module.css"
 
 export const metadata: Metadata = { title: "تیکت‌های پشتیبانی | پنل مدیریت تیراژه" }
@@ -207,7 +207,7 @@ export default async function AdminTicketsPage({ searchParams }: Props) {
                       </Badge>
                     </td>
                     <td className={`${styles["web-adm-tkt__td"]} ${styles["web-adm-tkt__date"]}`}>
-                      {formatRelativeTime(t.createdAt, fa ? "fa" : "en")}
+                      {formatRelativeFa(t.createdAt)}
                     </td>
                     <td className={styles["web-adm-tkt__td"]} style={{ textAlign: "end" }}>
                       <Link href={`/${locale}/admin/tickets/${t.id}`} className={styles["web-adm-tkt__viewBtn"]}>

@@ -1,4 +1,4 @@
-﻿import { redirect } from "next/navigation"
+import { redirect } from "next/navigation"
 import { getLocale } from "next-intl/server"
 import { auth } from "@tirajeh/auth"
 import { db } from "@tirajeh/database"
@@ -16,6 +16,7 @@ import {
 } from "lucide-react"
 import { Card, Badge } from "@tirajeh/ui"
 import { logoutAction } from "@/actions/auth"
+import { formatJalali } from "@tirajeh/shared"
 import styles from "./Account.module.css"
 
 export const metadata: Metadata = { title: "حساب کاربری | تیراژه" }
@@ -46,14 +47,7 @@ export default async function AccountPage() {
 
   const customerTypeLabel =
     CUSTOMER_TYPE_MAP[user.customerType] ?? CUSTOMER_TYPE_MAP.NORMAL!
-  const date = new Date(user.createdAt)
-  const registeredDate = fa
-    ? date.toLocaleDateString("fa-IR")
-    : date.toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      })
+  const registeredDate = formatJalali(user.createdAt)
 
   const isAdmin =
     user.role.name === "admin" || user.role.name === "super_admin"

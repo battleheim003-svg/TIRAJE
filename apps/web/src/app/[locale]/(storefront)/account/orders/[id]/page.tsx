@@ -8,6 +8,7 @@ import type { Metadata } from "next"
 import { ArrowLeft, ArrowRight, RotateCcw } from "lucide-react"
 import { Card, Badge, Button, type BadgeVariant } from "@tirajeh/ui"
 import { formatToman } from "@/lib/cement"
+import { formatJalali } from "@tirajeh/shared"
 import styles from "./OrderDetail.module.css"
 
 type Props = { params: Promise<{ locale: string; id: string }> }
@@ -61,9 +62,7 @@ export default async function OrderDetailPage({ params }: Props) {
     order.status === "CANCELLED" || order.status === "REFUNDED"
   const shippingAddress = order.shippingAddress as Record<string, string> | null
 
-  const formattedDate = fa
-    ? new Date(order.createdAt).toLocaleDateString("fa-IR", { dateStyle: "long" })
-    : new Date(order.createdAt).toLocaleDateString("en-US", { dateStyle: "long" })
+  const formattedDate = formatJalali(order.createdAt, { withTime: true })
 
   return (
     <div className={styles["web-ord"]}>

@@ -4,7 +4,8 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { MessageSquare } from "lucide-react"
 import { Badge } from "@tirajeh/ui"
-import { formatToman, formatRelativeTime } from "@/lib/cement"
+import { formatToman } from "@/lib/cement"
+import { formatJalali } from "@tirajeh/shared"
 import styles from "./QuotesList.module.css"
 
 export const metadata: Metadata = { title: "درخواست‌های قیمت | پنل مدیریت تیراژه" }
@@ -133,7 +134,7 @@ export default async function AdminQuotesPage({ searchParams }: Props) {
                     <td className={`${styles["web-adm-qt__td"]} ${styles["web-adm-qt__num"]}`}>
                       {q.quotedPrice != null ? formatToman(Number(q.quotedPrice), fa ? "fa" : "en") : <span className={styles["web-adm-qt__muted"]}>—</span>}
                     </td>
-                    <td className={`${styles["web-adm-qt__td"]} ${styles["web-adm-qt__date"]}`}>{formatRelativeTime(q.createdAt, fa ? "fa" : "en")}</td>
+                    <td className={`${styles["web-adm-qt__td"]} ${styles["web-adm-qt__date"]}`}>{formatJalali(q.createdAt, { withTime: true })}</td>
                     <td className={styles["web-adm-qt__td"]} style={{ textAlign: "end" }}>
                       <Link href={`/${locale}/admin/quotes/${q.id}`} className={styles["web-adm-qt__viewBtn"]}>{fa ? "مشاهده" : "View"}</Link>
                     </td>

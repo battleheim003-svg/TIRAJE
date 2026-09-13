@@ -5,7 +5,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { ChevronRight, ExternalLink } from "lucide-react"
 import { Badge } from "@tirajeh/ui"
-import { formatRelativeTime } from "@/lib/cement"
+import { formatRelativeFa } from "@tirajeh/shared"
 import { PostForm } from "../post-form"
 import styles from "../BlogForm.module.css"
 
@@ -94,8 +94,8 @@ export default async function AdminBlogEditPage({ params }: Props) {
               )}
               <span>
                 {fa
-                  ? `ویرایش ${formatRelativeTime(post.updatedAt, "fa")}`
-                  : `Updated ${formatRelativeTime(post.updatedAt, "en")}`}
+                  ? `ویرایش ${formatRelativeFa(post.updatedAt)}`
+                  : `Updated ${formatRelativeFa(post.updatedAt)}`}
               </span>
               <span>
                 {fa ? `${post.viewCount.toLocaleString()} بازدید` : `${post.viewCount.toLocaleString()} views`}

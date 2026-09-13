@@ -5,7 +5,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { ChevronRight, Send, Globe, MessageSquare } from "lucide-react"
 import { Badge } from "@tirajeh/ui"
-import { formatRelativeTime } from "@/lib/cement"
+import { formatRelativeFa } from "@tirajeh/shared"
 import TicketReplyForm from "./ticket-reply-form"
 import styles from "./TicketDetail.module.css"
 
@@ -68,7 +68,7 @@ export default async function AdminTicketDetailPage({ params }: Props) {
           <h1 className={styles["web-adm-tkt-d__title"]}>
             {fa ? "تیکت پشتیبانی" : "Support Ticket"}
           </h1>
-          <p className={styles["web-adm-tkt-d__meta"]}>{formatRelativeTime(ticket.createdAt, fa ? "fa" : "en")}</p>
+          <p className={styles["web-adm-tkt-d__meta"]}>{formatRelativeFa(ticket.createdAt)}</p>
         </div>
         <Badge variant={sl.variant}>
           {fa ? sl.fa : sl.en}
@@ -182,7 +182,7 @@ export default async function AdminTicketDetailPage({ params }: Props) {
             </div>
             {ticket.repliedAt && (
               <span className={styles["web-adm-tkt-d__meta"]}>
-                {formatRelativeTime(ticket.repliedAt, fa ? "fa" : "en")}
+                {formatRelativeFa(ticket.repliedAt)}
                 {ticket.handler && ` (${ticket.handler.name})`}
               </span>
             )}

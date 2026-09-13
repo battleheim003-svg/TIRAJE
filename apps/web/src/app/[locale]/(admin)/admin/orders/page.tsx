@@ -4,7 +4,8 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { Search } from "lucide-react"
 import { Badge } from "@tirajeh/ui"
-import { formatToman, formatRelativeTime } from "@/lib/cement"
+import { formatToman } from "@/lib/cement"
+import { formatJalali } from "@tirajeh/shared"
 import styles from "./Orders.module.css"
 
 export const metadata: Metadata = { title: "سفارش‌ها | پنل مدیریت تیراژه" }
@@ -184,7 +185,7 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
                     {formatToman(Number(order.totalAmount), locale as "fa" | "en")}
                   </td>
                   <td className={`${styles["web-adm-ords__td"]} ${styles["web-adm-ords__date"]}`}>
-                    {formatRelativeTime(order.createdAt, locale)}
+                    {formatJalali(order.createdAt, { withTime: true })}
                   </td>
                   <td className={styles["web-adm-ords__td"]}>
                     <Link

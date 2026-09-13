@@ -5,6 +5,7 @@ import { getLocale } from "next-intl/server"
 import { db } from "@tirajeh/database"
 import type { Metadata } from "next"
 import { Badge, Button } from "@tirajeh/ui"
+import { formatJalali } from "@tirajeh/shared"
 import styles from "./Post.module.css"
 
 type Props = { params: Promise<{ locale: string; slug: string }> }
@@ -44,10 +45,7 @@ export default async function BlogPostPage({ params }: Props) {
     : null
 
   const publishedAt = post.publishedAt
-    ? new Date(post.publishedAt).toLocaleDateString(
-        fa ? "fa-IR" : "en-US",
-        { dateStyle: "long" }
-      )
+    ? formatJalali(post.publishedAt)
     : null
 
   return (

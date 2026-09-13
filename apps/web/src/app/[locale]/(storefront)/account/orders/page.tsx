@@ -7,6 +7,7 @@ import type { Metadata } from "next"
 import { Package, User } from "lucide-react"
 import { Card, Badge, Button, type BadgeVariant } from "@tirajeh/ui"
 import { formatToman } from "@/lib/cement"
+import { formatJalali } from "@tirajeh/shared"
 import styles from "./Orders.module.css"
 
 export const metadata: Metadata = { title: "سفارش‌های من | تیراژه" }
@@ -84,14 +85,7 @@ export default async function OrdersPage() {
               {orders.map((order) => {
                 const statusInfo =
                   STATUS_MAP[order.status as string] ?? STATUS_MAP.PENDING!
-                const date = new Date(order.createdAt)
-                const formattedDate = fa
-                  ? date.toLocaleDateString("fa-IR")
-                  : date.toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    })
+                const formattedDate = formatJalali(order.createdAt)
 
                 return (
                   <Link

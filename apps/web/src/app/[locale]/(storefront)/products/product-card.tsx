@@ -9,7 +9,7 @@ import {
   STOCK_LABEL,
   STOCK_VARIANT,
   formatToman,
-  formatRelativeTime,
+  formatRelativeFa,
   formatWeight,
 } from "@/lib/cement"
 import styles from "./ProductCard.module.css"
@@ -186,7 +186,7 @@ export function ProductCard({ product, locale }: ProductCardProps) {
           />
           <span>
             {fa ? "آخرین به‌روزرسانی قیمت:" : "Price updated:"}{" "}
-            {formatRelativeTime(product.lastPriceUpdate, locale)}
+            {formatRelativeFa(product.lastPriceUpdate)}
           </span>
         </p>
       </div>

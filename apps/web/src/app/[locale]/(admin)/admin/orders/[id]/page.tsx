@@ -4,7 +4,8 @@ import { getLocale } from "next-intl/server"
 import { db } from "@tirajeh/database"
 import type { Metadata } from "next"
 import { Badge } from "@tirajeh/ui"
-import { formatToman, formatRelativeTime } from "@/lib/cement"
+import { formatToman } from "@/lib/cement"
+import { formatRelativeFa, formatJalali } from "@tirajeh/shared"
 import OrderStatusForm from "./order-status-form"
 import styles from "./OrderDetail.module.css"
 
@@ -61,9 +62,7 @@ export default async function AdminOrderDetailPage({ params }: Props) {
   }
 
   const shippingAddress = order.shippingAddress as Record<string, string> | null
-  const formattedDate = fa
-    ? new Date(order.createdAt).toLocaleDateString("fa-IR", { dateStyle: "long" })
-    : new Date(order.createdAt).toLocaleDateString("en-US", { dateStyle: "long" })
+  const formattedDate = formatJalali(order.createdAt, { withTime: true })
 
   return (
     <div className={styles["web-adm-ord__wrapper"]}>
@@ -235,7 +234,7 @@ export default async function AdminOrderDetailPage({ params }: Props) {
                         </Badge>
                       </td>
                       <td className={styles["web-adm-ord__td"]}>
-                        {formatRelativeTime(pmt.createdAt, locale)}
+                        {formatRelativeFa(pmt.createdAt)}
                       </td>
                       <td className={styles["web-adm-ord__td"]} dir="ltr">
                         {pmt.gatewayRef ?? "—"}
@@ -268,7 +267,7 @@ export default async function AdminOrderDetailPage({ params }: Props) {
                   <p className={styles["web-adm-ord__timelineTime"]}>
                     {ev.actor?.name ?? (fa ? "سیستم" : "System")}
                     {" · "}
-                    {formatRelativeTime(ev.createdAt, locale)}
+                    {formatRelativeFa(ev.createdAt)}
                   </p>
                 </div>
               )

@@ -5,7 +5,8 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { ChevronRight } from "lucide-react"
 import { Badge } from "@tirajeh/ui"
-import { formatToman, formatRelativeTime } from "@/lib/cement"
+import { formatToman } from "@/lib/cement"
+import { formatRelativeFa, formatJalali } from "@tirajeh/shared"
 import QuoteUpdateForm from "./quote-update-form"
 import styles from "./QuoteDetail.module.css"
 
@@ -63,7 +64,7 @@ export default async function AdminQuoteDetailPage({ params }: Props) {
       <div className={styles["web-adm-qt-d__header"]}>
         <div>
           <h1 className={styles["web-adm-qt-d__title"]}>{fa ? "درخواست قیمت" : "Quote Request"}</h1>
-          <p className={styles["web-adm-qt-d__meta"]}>{formatRelativeTime(quote.createdAt, fa ? "fa" : "en")}</p>
+          <p className={styles["web-adm-qt-d__meta"]}>{formatRelativeFa(quote.createdAt)}</p>
         </div>
         <Badge variant={sl.variant}>
           {fa ? sl.fa : sl.en}
@@ -99,7 +100,7 @@ export default async function AdminQuoteDetailPage({ params }: Props) {
             {quote.deliveryCity && <><dt>{fa ? "شهر تحویل" : "Delivery City"}</dt><dd>{quote.deliveryCity}</dd></>}
             {quote.message && <><dt>{fa ? "پیام" : "Message"}</dt><dd className={styles["web-adm-qt-d__message"]}>{quote.message}</dd></>}
             {quote.quotedPrice != null && <><dt>{fa ? "قیمت پیشنهادی" : "Quoted Price"}</dt><dd className={styles["web-adm-qt-d__price"]}>{formatToman(Number(quote.quotedPrice), fa ? "fa" : "en")}</dd></>}
-            {quote.expiresAt && <><dt>{fa ? "انقضای پیشنهاد" : "Offer Expires"}</dt><dd>{new Date(quote.expiresAt).toLocaleDateString(fa ? "fa-IR" : "en-US")}</dd></>}
+            {quote.expiresAt && <><dt>{fa ? "انقضای پیشنهاد" : "Offer Expires"}</dt><dd>{formatJalali(quote.expiresAt)}</dd></>}
             {quote.handler && <><dt>{fa ? "مسئول رسیدگی" : "Handler"}</dt><dd>{quote.handler.name}</dd></>}
           </dl>
         </div>

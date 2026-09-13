@@ -5,7 +5,7 @@ import { Users as UsersIcon, RotateCcw } from "lucide-react"
 import { DataTable, Column, InlineToggle } from "./DataTable"
 import { ConfirmDialog } from "./ConfirmDialog"
 import { useToast } from "./Toast"
-import { formatRelativeTime } from "@/lib/cement"
+import { formatRelativeFa } from "@tirajeh/shared"
 import {
   adminToggleUserStatusAction,
   adminDeleteUserAction,
@@ -172,7 +172,7 @@ export function UsersTableClient({
       header: fa ? "تاریخ عضویت" : "Joined",
       render: (row) => (
         <span style={{ color: "var(--color-text-muted)", fontVariantNumeric: "tabular-nums", fontSize: "0.8125rem" }}>
-          {formatRelativeTime(row.createdAt, locale)}
+          {formatRelativeFa(row.createdAt)}
         </span>
       ),
     },

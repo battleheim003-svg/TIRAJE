@@ -31,8 +31,9 @@ import {
   STOCK_VARIANT,
   PRICE_UNIT,
   formatToman,
-  formatRelativeTime,
   formatWeight,
+  formatJalali,
+  formatRelativeFa,
 } from "@/lib/cement"
 import { ImageGallery } from "./image-gallery"
 import AddToCartButton, { type PackagingOption } from "./add-to-cart"
@@ -159,15 +160,10 @@ export default async function ProductDetailPage({ params }: Props) {
   )
 
   const lastPriceUpdateJalali = product.lastPriceUpdate
-    ? new Intl.DateTimeFormat(fa ? "fa-IR" : "en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        timeZone: "Asia/Tehran",
-      }).format(new Date(product.lastPriceUpdate))
+    ? formatJalali(product.lastPriceUpdate)
     : null
 
-  const latestHistory = (product as any).priceHistory?.[0] ?? null
+  const latestHistory = product.priceHistory?.[0] ?? null
   const hasHistoryPriceDiff =
     latestHistory &&
     Number(latestHistory.oldPrice) > 0 &&
@@ -335,8 +331,8 @@ export default async function ProductDetailPage({ params }: Props) {
               <span className={styles["web-pdtl__price-time"]}>
                 <Clock style={{ width: "0.8125rem", height: "0.8125rem" }} />
                 {fa
-                  ? `آخرین به‌روزرسانی قیمت: ${lastPriceUpdateJalali || formatRelativeTime(product.lastPriceUpdate, locale)}`
-                  : `Price updated: ${lastPriceUpdateJalali || formatRelativeTime(product.lastPriceUpdate, locale)}`}
+                  ? `آخرین به‌روزرسانی قیمت: ${lastPriceUpdateJalali || (product.lastPriceUpdate ? formatRelativeFa(product.lastPriceUpdate) : "—")}`
+                  : `Price updated: ${lastPriceUpdateJalali || "—"}`}
               </span>
             </div>
 
