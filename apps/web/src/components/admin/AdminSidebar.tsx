@@ -23,15 +23,14 @@ import { signOut } from "next-auth/react"
 import { PERMISSIONS } from "@tirajeh/shared"
 import styles from "./AdminSidebar.module.css"
 
+import type { AdminCounts } from "@/lib/admin-counts"
+
 interface AdminSidebarProps {
   locale: string
   mobileOpen: boolean
   onCloseMobile: () => void
   userPermissions?: string[]
-  counts?: {
-    orders?: number
-    tickets?: number
-  }
+  counts?: AdminCounts
 }
 
 interface NavItemDef {
@@ -40,7 +39,7 @@ interface NavItemDef {
   icon: LucideIcon
   fa: string
   en: string
-  countKey?: "orders" | "tickets"
+  countKey?: "pendingOrders" | "openTickets" | "unansweredQuotes"
   permission?: string | string[]
 }
 
@@ -66,8 +65,8 @@ const NAV_SECTIONS: NavSectionDef[] = [
       { key: "products", href: "/admin/products", icon: Package, fa: "محصولات", en: "Products", permission: [PERMISSIONS.PRODUCTS_CREATE, PERMISSIONS.PRODUCTS_UPDATE] },
       { key: "categories", href: "/admin/categories", icon: Tag, fa: "دسته‌بندی‌ها", en: "Categories", permission: PERMISSIONS.CATEGORIES_ALL },
       { key: "brands", href: "/admin/brands", icon: Building2, fa: "برندها و کارخانجات", en: "Brands", permission: PERMISSIONS.BRANDS_ALL },
-      { key: "orders", href: "/admin/orders", icon: ShoppingCart, fa: "سفارش‌ها", en: "Orders", countKey: "orders", permission: PERMISSIONS.ORDERS_READ },
-      { key: "quotes", href: "/admin/quotes", icon: MessageSquare, fa: "استعلام‌های قیمت", en: "Quotes", permission: PERMISSIONS.QUOTES_UPDATE },
+      { key: "orders", href: "/admin/orders", icon: ShoppingCart, fa: "سفارش‌ها", en: "Orders", countKey: "pendingOrders", permission: PERMISSIONS.ORDERS_READ },
+      { key: "quotes", href: "/admin/quotes", icon: MessageSquare, fa: "استعلام‌های قیمت", en: "Quotes", countKey: "unansweredQuotes", permission: PERMISSIONS.QUOTES_UPDATE },
     ],
   },
   {
@@ -75,7 +74,7 @@ const NAV_SECTIONS: NavSectionDef[] = [
     labelEn: "Management & CRM",
     items: [
       { key: "users", href: "/admin/users", icon: Users, fa: "کاربران", en: "Users", permission: PERMISSIONS.USERS_READ },
-      { key: "tickets", href: "/admin/tickets", icon: LifeBuoy, fa: "تیکت‌های پشتیبانی", en: "Tickets", countKey: "tickets", permission: PERMISSIONS.TICKETS_REPLY },
+      { key: "tickets", href: "/admin/tickets", icon: LifeBuoy, fa: "تیکت‌های پشتیبانی", en: "Tickets", countKey: "openTickets", permission: PERMISSIONS.TICKETS_REPLY },
       { key: "blog", href: "/admin/blog", icon: FileText, fa: "مقالات وبلاگ", en: "Blog Posts", permission: PERMISSIONS.BLOG_ALL },
     ],
   },

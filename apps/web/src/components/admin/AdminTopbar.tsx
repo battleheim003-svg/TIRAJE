@@ -1,16 +1,30 @@
 "use client"
 
-import React, { useMemo } from "react"
+import React, { useMemo, useState, useRef, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Menu, Bell, ChevronLeft, ChevronRight } from "lucide-react"
+import {
+  Menu,
+  Bell,
+  ChevronLeft,
+  ChevronRight,
+  ShoppingCart,
+  MessageSquare,
+  LifeBuoy,
+  TrendingUp,
+  Package,
+  Clock,
+} from "lucide-react"
+import { formatRelativeFa } from "@tirajeh/shared"
+import type { ActivityItem } from "@/lib/admin-activity"
 import styles from "./AdminTopbar.module.css"
 
 interface AdminTopbarProps {
   locale: string
   user: { name?: string | null; email?: string | null; roleName?: string | null }
   onOpenMobileMenu: () => void
-  unreadNotificationsCount?: number
+  totalCount?: number
+  items?: ActivityItem[]
 }
 
 const ROUTE_LABELS: Record<string, { fa: string; en: string }> = {
@@ -33,10 +47,32 @@ export function AdminTopbar({
   locale,
   user,
   onOpenMobileMenu,
-  unreadNotificationsCount = 3,
+  totalCount = 0,
+  items = [],
 }: AdminTopbarProps) {
   const fa = locale === "fa"
   const pathname = usePathname()
+  const [popoverOpen, setPopoverOpen] = useState(false)
+  const notifRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
+        setPopoverOpen(false)
+      }
+    }
+    if (popoverOpen) {
+      document.addEventListener("mousedown", handleClickOutside)
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [popoverOpen])
+
+  // Close popover when pathname changes
+  useEffect(() => {
+    setPopoverOpen(false)
+  }, [pathname])
 
   const breadcrumbs = useMemo(() => {
     const segments = pathname.split("/").filter(Boolean)
@@ -111,18 +147,101 @@ export function AdminTopbar({
 
       {/* End: Notification & User */}
       <div className={styles["web-adm-tb__end"]}>
-        <button
-          type="button"
-          className={styles["web-adm-tb__notif-btn"]}
-          aria-label={fa ? "اعلان‌ها" : "Notifications"}
-        >
-          <Bell style={{ width: "1.125rem", height: "1.125rem" }} aria-hidden="true" />
-          {unreadNotificationsCount > 0 && (
-            <span className={styles["web-adm-tb__notif-badge"]}>
-              {fa ? unreadNotificationsCount.toLocaleString("fa-IR") : unreadNotificationsCount}
-            </span>
+        <div className={styles["web-adm-tb__notif-wrapper"]} ref={notifRef}>
+          <button
+            type="button"
+            className={[
+              styles["web-adm-tb__notif-btn"],
+              popoverOpen ? styles["web-adm-tb__notif-btn--active"] : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            aria-label={fa ? "اعلان‌ها" : "Notifications"}
+            aria-expanded={popoverOpen}
+            onClick={() => setPopoverOpen((prev) => !prev)}
+          >
+            <Bell style={{ width: "1.125rem", height: "1.125rem" }} aria-hidden="true" />
+            {totalCount > 0 && (
+              <span className={styles["web-adm-tb__notif-badge"]}>
+                {totalCount > 99
+                  ? "۹۹+"
+                  : fa
+                  ? totalCount.toLocaleString("fa-IR")
+                  : totalCount}
+              </span>
+            )}
+          </button>
+
+          {popoverOpen && (
+            <div className={styles["web-adm-tb__popover"]}>
+              <div className={styles["web-adm-tb__popover-header"]}>
+                <span className={styles["web-adm-tb__popover-title"]}>
+                  {fa ? "رویدادها و اعلان‌های اخیر" : "Recent Activity"}
+                </span>
+                {totalCount > 0 && (
+                  <span className={styles["web-adm-tb__popover-count"]}>
+                    {fa
+                      ? `${totalCount.toLocaleString("fa-IR")} مورد نیازمند بررسی`
+                      : `${totalCount} pending`}
+                  </span>
+                )}
+              </div>
+
+              {items.length === 0 ? (
+                <div className={styles["web-adm-tb__popover-empty"]}>
+                  {fa ? "هیچ رویداد جدیدی یافت نشد" : "No recent activity"}
+                </div>
+              ) : (
+                <ul className={styles["web-adm-tb__popover-list"]}>
+                  {items.map((item) => {
+                    const fullHref = `/${locale}${item.href}`
+                    const Icon =
+                      item.kind === "order"
+                        ? ShoppingCart
+                        : item.kind === "quote"
+                        ? MessageSquare
+                        : item.kind === "contact"
+                        ? LifeBuoy
+                        : item.kind === "price"
+                        ? TrendingUp
+                        : Package
+
+                    return (
+                      <li key={item.id} className={styles["web-adm-tb__popover-item"]}>
+                        <Link
+                          href={fullHref}
+                          className={styles["web-adm-tb__popover-link"]}
+                          onClick={() => setPopoverOpen(false)}
+                        >
+                          <div className={styles["web-adm-tb__popover-icon"]}>
+                            <Icon style={{ width: "1rem", height: "1rem" }} />
+                          </div>
+                          <div className={styles["web-adm-tb__popover-content"]}>
+                            <span className={styles["web-adm-tb__popover-label"]}>
+                              {item.label}
+                            </span>
+                            <span className={styles["web-adm-tb__popover-time"]}>
+                              <Clock
+                                style={{
+                                  width: "0.75rem",
+                                  height: "0.75rem",
+                                  display: "inline-block",
+                                  verticalAlign: "middle",
+                                  marginInlineEnd: "0.25rem",
+                                }}
+                              />
+                              {formatRelativeFa(item.createdAt)}
+                            </span>
+                          </div>
+                        </Link>
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
+            </div>
           )}
-        </button>
+        </div>
 
         <div className={styles["web-adm-tb__user"]}>
           <div className={styles["web-adm-tb__avatar"]}>{userInitial}</div>

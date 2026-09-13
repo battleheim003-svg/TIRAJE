@@ -3,6 +3,9 @@ import { getLocale } from "next-intl/server"
 import { auth } from "@tirajeh/auth"
 import { AdminShell } from "./admin/admin-shell"
 
+import { getAdminCounts } from "@/lib/admin-counts"
+import { getRecentActivity } from "@/lib/admin-activity"
+
 const ADMIN_ROLES = ["admin", "super_admin"]
 
 interface AdminUser {
@@ -27,5 +30,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     redirect(`/${locale}`)
   }
 
-  return <AdminShell locale={locale} user={user}>{children}</AdminShell>
+  const [counts, activity] = await Promise.all([
+    getAdminCounts(),
+    getRecentActivity(),
+  ])
+
+  return (
+    <AdminShell locale={locale} user={user} counts={counts} activity={activity}>
+      {children}
+    </AdminShell>
+  )
 }

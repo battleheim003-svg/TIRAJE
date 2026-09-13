@@ -6,15 +6,21 @@ import { AdminTopbar } from "@/components/admin/AdminTopbar"
 import { ToastProvider } from "@/components/admin/Toast"
 import styles from "@/components/admin/AdminShell.module.css"
 
+import type { AdminCounts } from "@/lib/admin-counts"
+import type { ActivityItem } from "@/lib/admin-activity"
+
 interface AdminShellProps {
   locale: string
   user: { name?: string | null; email?: string | null; roleName?: string | null; permissions?: string[] }
+  counts?: AdminCounts
+  activity?: ActivityItem[]
   children: React.ReactNode
 }
 
-export function AdminShell({ locale, user, children }: AdminShellProps) {
+export function AdminShell({ locale, user, counts, activity, children }: AdminShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const fa = locale === "fa"
+  const totalCount = (counts?.pendingOrders ?? 0) + (counts?.openTickets ?? 0) + (counts?.unansweredQuotes ?? 0)
 
   return (
     <ToastProvider>
@@ -25,6 +31,7 @@ export function AdminShell({ locale, user, children }: AdminShellProps) {
           mobileOpen={mobileOpen}
           onCloseMobile={() => setMobileOpen(false)}
           userPermissions={user.permissions}
+          counts={counts}
         />
 
         {/* Main Column */}
@@ -34,6 +41,8 @@ export function AdminShell({ locale, user, children }: AdminShellProps) {
             locale={locale}
             user={user}
             onOpenMobileMenu={() => setMobileOpen(true)}
+            totalCount={totalCount}
+            items={activity}
           />
 
           {/* Main Content Area */}
